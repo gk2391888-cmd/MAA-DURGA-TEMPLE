@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login — माँ मनोकामना</title>
+  <meta name="theme-color" content="#7f1111">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:#fffaf2;color:#35100d}
+    .wrap{max-width:900px;margin:auto;padding:24px}
+    .card{background:#fff;border:1px solid #ead8bd;border-radius:20px;padding:24px;box-shadow:0 10px 30px #7f11111a;margin-bottom:20px}
+    h1,h2{margin-top:0}
+    input,select,textarea{width:100%;padding:12px;border:1px solid #d8c4a6;border-radius:10px;margin:7px 0 14px;font:inherit}
+    textarea{min-height:100px;resize:vertical}
+    button{border:0;border-radius:10px;padding:12px 18px;background:#7f1111;color:#fff;font-weight:700;cursor:pointer}
+    button.secondary{background:#ead7b6;color:#4b1712}
+    button.danger{background:#a40000}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .hidden{display:none!important}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+    .status{padding:10px;border-radius:10px;background:#fff3d8;margin-bottom:15px}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+    .item{border:1px solid #ead8bd;border-radius:14px;padding:15px;margin-top:10px;background:#fffaf2}
+    @media(max-width:650px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loginCard" class="card">
+    <h1>🔐 Admin Login</h1>
+    <p>यहाँ केवल authorized committee admin login कर सकता है।</p>
+
+    <label>Email</label>
+    <input id="email" type="email" autocomplete="username" placeholder="Admin email">
+
+    <label>Password</label>
+    <input id="password" type="password" autocomplete="current-password" placeholder="Password">
+
+    <button id="loginBtn">Login</button>
+    <div id="loginMsg" class="status hidden"></div>
+  </div>
+
+  <div id="adminPanel" class="hidden">
+    <div class="card">
+      <div class="top">
+        <div>
+          <h1>🙏 Admin Dashboard</h1>
+          <p id="adminEmail"></p>
+        </div>
+        <button id="logoutBtn" class="secondary">Logout</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ Temple Settings</h2>
+      <div class="grid">
+        <div>
+          <label>UPI ID</label>
+          <input id="upiId" placeholder="example@upi">
+        </div>
+        <div>
+          <label>आज की आरती का समय</label>
+          <input id="aartiTime" placeholder="शाम 7:00 बजे">
+        </div>
+      </div>
+
+      <label>Live Aarti / YouTube URL</label>
+      <input id="liveUrl" placeholder="https://youtube.com/...">
+
+      <label>Donation QR Image URL</label>
+      <input id="qrUrl" placeholder="Firebase Storage या image URL">
+
+      <button id="saveSettingsBtn">Save Settings</button>
+      <div id="settingsMsg" class="status hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2>📅 Add Puja / Aarti Schedule</h2>
+
+      <div class="grid">
+        <div>
+          <label>Date</label>
+          <input id="scheduleDate" type="date">
+        </div>
+        <div>
+          <label>Time</label>
+          <input id="scheduleTime" placeholder="शाम 7:00 बजे">
+        </div>
+      </div>
+
+      <label>Title</label>
+      <input id="scheduleTitle" placeholder="संध्या आरती">
+
+      <label>Description</label>
+      <textarea id="scheduleDescription" placeholder="कार्यक्रम की जानकारी"></textarea>
+
+      <button id="addScheduleBtn">Add Schedule</button>
+      <div id="scheduleMsg" class="status hidden"></div>
+    </div>
+
+    <div class="card">
+      <h2>💰 Recent Donations</h2>
+      <div id="donationsList">Loading...</div>
+    </div>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  addDoc,
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+import firebaseConfig from "./firebase-config.js";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const loginCard = document.getElementById("loginCard");
+const adminPanel = document.getElementById("adminPanel");
+const loginMsg = document.getElementById("loginMsg");
+
+function message(el, text, show = true) {
+  el.textContent = text;
+  el.classList.toggle("hidden", !show);
+}
+
+async function isAdmin(user) {
+  const adminSnap = await getDoc(doc(db, "admins", user.uid));
+  return adminSnap.exists() && adminSnap.data().role === "admin";
+}
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    message(loginMsg, "Email और password भरें।");
+    return;
+  }
+
+  try {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+
+    if (!(await isAdmin(result.user))) {
+      await signOut(auth);
+      message(loginMsg, "Access denied. यह account admin नहीं है।");
+      return;
+    }
+
+    message(loginMsg, "");
+  } catch (error) {
+    console.error(error);
+    message(loginMsg, "Login failed. Email/password check करें।");
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth);
+});
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    loginCard.classList.remove("hidden");
+    adminPanel.classList.add("hidden");
+    return;
+  }
+
+  try {
+    if (!(await isAdmin(user))) {
+      await signOut(auth);
+      return;
+    }
+
+    loginCard.classList.add("hidden");
+    adminPanel.classList.remove("hidden");
+    document.getElementById("adminEmail").textContent = user.email || "";
+
+    await loadSettings();
+    await loadDonations();
+  } catch (error) {
+    console.error(error);
+    await signOut(auth);
+  }
+});
+
+async function loadSettings() {
+  const snap = await getDoc(doc(db, "temple", "settings"));
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+
+  document.getElementById("upiId").value = data.upiId || "";
+  document.getElementById("aartiTime").value = data.aartiTime || "";
+  document.getElementById("liveUrl").value = data.liveUrl || "";
+  document.getElementById("qrUrl").value = data.qrUrl || "";
+}
+
+document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
+  const msg = document.getElementById("settingsMsg");
+
+  try {
+    await setDoc(doc(db, "temple", "settings"), {
+      upiId: document.getElementById("upiId").value.trim(),
+      aartiTime: document.getElementById("aartiTime").value.trim(),
+      liveUrl: document.getElementById("liveUrl").value.trim(),
+      qrUrl: document.getElementById("qrUrl").value.trim(),
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+
+    message(msg, "Settings successfully save हो गईं।");
+  } catch (error) {
+    console.error(error);
+    message(msg, "Settings save नहीं हुईं।");
+  }
+});
+
+document.getElementById("addScheduleBtn").addEventListener("click", async () => {
+  const msg = document.getElementById("scheduleMsg");
+  const date = document.getElementById("scheduleDate").value;
+  const time = document.getElementById("scheduleTime").value.trim();
+  const title = document.getElementById("scheduleTitle").value.trim();
+  const description = document.getElementById("scheduleDescription").value.trim();
+
+  if (!date || !title) {
+    message(msg, "Date और Title जरूरी हैं।");
+    return;
+  }
+
+  try {
+    const d = new Date(date + "T00:00:00");
+
+    await addDoc(collection(db, "schedule"), {
+      date,
+      day: String(d.getDate()).padStart(2, "0"),
+      month: d.toLocaleDateString("hi-IN", { month: "short" }),
+      time,
+      title,
+      description,
+      createdAt: serverTimestamp()
+    });
+
+    message(msg, "Schedule add हो गया।");
+    document.getElementById("scheduleDate").value = "";
+    document.getElementById("scheduleTime").value = "";
+    document.getElementById("scheduleTitle").value = "";
+    document.getElementById("scheduleDescription").value = "";
+  } catch (error) {
+    console.error(error);
+    message(msg, "Schedule add नहीं हुआ।");
+  }
+});
+
+async function loadDonations() {
+  const box = document.getElementById("donationsList");
+
+  try {
+    const q = query(
+      collection(db, "donations"),
+      orderBy("createdAt", "desc"),
+      limit(30)
+    );
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      box.textContent = "अभी कोई donation नहीं है।";
+      return;
+    }
+
+    box.innerHTML = "";
+
+    snap.forEach(item => {
+      const d = item.data();
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <strong>₹${Number(d.amount || 0)}</strong><br>
+        Donor: ${escapeHtml(d.donorName || "Anonymous")}<br>
+        Purpose: ${escapeHtml(d.purpose || "")}<br>
+        UTR: ${escapeHtml(d.utr || "")}<br>
+        Status: ${escapeHtml(d.status || "pending")}
+      `;
+      box.appendChild(div);
+    });
+  } catch (error) {
+    console.error(error);
+    box.textContent = "Donations load नहीं हुईं।";
+  }
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+</script>
+</body>
+</html>
