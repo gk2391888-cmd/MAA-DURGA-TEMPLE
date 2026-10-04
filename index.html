@@ -1,963 +1,694 @@
-/* =========================================================
-   MAA MANOKAMANA TEMPLE — MAIN APP
-   Firebase + Public Website
-========================================================= */
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+  <title>श्री श्री १०८ माँ मनोकामना छोटी दुर्गा पूजा समिति</title>
 
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  collection,
-  addDoc,
-  query,
-  orderBy,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+  <meta name="description"
+    content="श्री श्री १०८ माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय।">
 
-import firebaseConfig from "./firebase-config.js";
+  <meta name="theme-color" content="#7f1111">
 
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="logo.png">
 
-/* =========================================================
-   FIREBASE
-========================================================= */
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp);
+  <link
+    href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
+  <link rel="stylesheet" href="style.css">
+</head>
 
-/* =========================================================
-   MOBILE MENU
-========================================================= */
+<body>
 
-const menuBtn = document.getElementById("menuBtn");
-const navMenu = document.getElementById("navMenu");
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
 
-if (menuBtn && navMenu) {
+      <a href="#home" class="brand">
+        <img src="logo.png" alt="माँ मनोकामना मंदिर Logo">
 
-  menuBtn.addEventListener("click", () => {
+        <div class="brand-text">
+          <strong>माँ मनोकामना</strong>
+          <span>छोटी दुर्गा पूजा समिति</span>
+        </div>
+      </a>
 
-    navMenu.classList.toggle("active");
+      <button class="menu-btn" id="menuBtn" aria-label="Menu">
+        ☰
+      </button>
 
-  });
+      <nav id="navMenu">
+        <a href="#home">होम</a>
+        <a href="#live">आरती</a>
+        <a href="#donate">दान</a>
+        <a href="#schedule">कार्यक्रम</a>
+        <a href="#gallery">गैलरी</a>
+        <a href="#contact">संपर्क</a>
 
-}
+        <button class="language-btn" id="languageBtn">
+          हिंदी | English
+        </button>
+      </nav>
 
+    </div>
+  </header>
 
-document.querySelectorAll("#navMenu a").forEach(link => {
 
-  link.addEventListener("click", () => {
+  <!-- HERO -->
+  <main>
 
-    if (navMenu) {
-      navMenu.classList.remove("active");
-    }
+    <section class="hero" id="home">
 
-  });
+      <div class="hero-content">
 
-});
+        <span class="eyebrow">
+          🙏 जय माता दी 🙏
+        </span>
 
+        <h1>
+          श्री श्री १०८<br>
+          <span>माँ मनोकामना</span>
+        </h1>
 
-/* =========================================================
-   YEAR
-========================================================= */
+        <h2>
+          छोटी दुर्गा पूजा समिति
+        </h2>
 
-const yearEl = document.getElementById("year");
+        <p>
+          तैलिक वैश्य बन्धु
+        </p>
 
-if (yearEl) {
+        <div class="address">
+          📍 चकशिवगंज, मौलानगर,<br>
+          सूर्यगढ़ा (लखीसराय)
+        </div>
 
-  yearEl.textContent =
-    new Date().getFullYear();
+        <div class="hero-buttons">
 
-}
+          <a href="#live" class="btn btn-primary">
+            🔴 Live Aarti
+          </a>
 
+          <a href="#donate" class="btn btn-secondary">
+            ❤️ Donate Now
+          </a>
 
-/* =========================================================
-   DONATION MODAL
-========================================================= */
+        </div>
 
-const donationModal =
-  document.getElementById("donationModal");
+      </div>
 
-const donateBtn =
-  document.getElementById("donateBtn");
 
-const closeModal =
-  document.getElementById("closeModal");
+      <div class="hero-logo">
 
-
-if (donateBtn && donationModal) {
-
-  donateBtn.addEventListener("click", () => {
-
-    donationModal.classList.add("active");
-
-  });
-
-}
-
-
-if (closeModal && donationModal) {
-
-  closeModal.addEventListener("click", () => {
-
-    donationModal.classList.remove("active");
-
-  });
-
-}
-
-
-if (donationModal) {
-
-  donationModal.addEventListener("click", event => {
-
-    if (event.target === donationModal) {
-
-      donationModal.classList.remove("active");
-
-    }
-
-  });
-
-}
-
-
-/* =========================================================
-   DONATION FORM
-========================================================= */
-
-const donationForm =
-  document.getElementById("donationForm");
-
-
-if (donationForm) {
-
-  donationForm.addEventListener("submit", async event => {
-
-    event.preventDefault();
-
-
-    const donorName =
-      document.getElementById("donorName")?.value.trim() || "";
-
-
-    const amount =
-      Number(
-        document.getElementById("donationAmount")?.value || 0
-      );
-
-
-    const purpose =
-      document.getElementById("donationPurpose")?.value ||
-      "मंदिर सेवा";
-
-
-    const utr =
-      document.getElementById("utr")?.value.trim() || "";
-
-
-    /* ---------- VALIDATION ---------- */
-
-    if (!amount || amount < 1 || !utr) {
-
-      showToast(
-        "कृपया Amount और UTR / Transaction ID भरें।"
-      );
-
-      return;
-
-    }
-
-
-    const submitButton =
-      donationForm.querySelector(
-        "button[type='submit']"
-      );
-
-
-    if (submitButton) {
-
-      submitButton.disabled = true;
-
-      submitButton.textContent =
-        "Submitting...";
-
-    }
-
-
-    /* ---------- SAVE TO FIRESTORE ---------- */
-
-    try {
-
-      const donationRef =
-        await addDoc(
-          collection(db, "donations"),
-          {
-
-            donorName:
-              donorName || "Anonymous",
-
-            amount:
-              amount,
-
-            purpose:
-              purpose,
-
-            utr:
-              utr,
-
-            status:
-              "pending",
-
-            createdAt:
-              new Date().toISOString()
-
-          }
-        );
-
-
-      console.log(
-        "Donation submitted:",
-        donationRef.id
-      );
-
-
-      showToast(
-        "Donation details submit हो गईं। Verification के बाद receipt जारी होगी।"
-      );
-
-
-      donationForm.reset();
-
-
-      if (donationModal) {
-
-        donationModal.classList.remove(
-          "active"
-        );
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "Donation error:",
-        error
-      );
-
-
-      showToast(
-        "Donation submit नहीं हो पाई। कृपया दोबारा कोशिश करें।"
-      );
-
-    }
-
-
-    /* ---------- RESET BUTTON ---------- */
-
-    finally {
-
-      if (submitButton) {
-
-        submitButton.disabled = false;
-
-        submitButton.textContent =
-          "Submit Donation";
-
-      }
-
-    }
-
-  });
-
-}
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-function showToast(message) {
-
-  const toast =
-    document.getElementById("toast");
-
-
-  if (!toast) return;
-
-
-  toast.textContent =
-    message;
-
-
-  toast.classList.add(
-    "show"
-  );
-
-
-  setTimeout(() => {
-
-    toast.classList.remove(
-      "show"
-    );
-
-  }, 3500);
-
-}
-
-
-/* =========================================================
-   GOOGLE MAPS
-========================================================= */
-
-const mapBtn =
-  document.getElementById("mapBtn");
-
-
-if (mapBtn) {
-
-  mapBtn.addEventListener("click", () => {
-
-    const address =
-      encodeURIComponent(
-        "Chakshivganj, Maulanagar, Suryagarha, Lakhisarai, Bihar"
-      );
-
-
-    window.open(
-      "https://www.google.com/maps/search/?api=1&query=" +
-      address,
-      "_blank"
-    );
-
-  });
-
-}
-
-
-/* =========================================================
-   LANGUAGE
-========================================================= */
-
-const languageBtn =
-  document.getElementById("languageBtn");
-
-
-let englishMode =
-  localStorage.getItem("language") === "en";
-
-
-if (languageBtn) {
-
-  languageBtn.textContent =
-    englishMode
-      ? "हिंदी | English"
-      : "English | हिंदी";
-
-
-  languageBtn.addEventListener(
-    "click",
-    () => {
-
-      englishMode =
-        !englishMode;
-
-
-      localStorage.setItem(
-        "language",
-        englishMode
-          ? "en"
-          : "hi"
-      );
-
-
-      showToast(
-
-        englishMode
-
-          ? "English interface will be expanded in the next update."
-
-          : "हिंदी भाषा चयनित है।"
-
-      );
-
-
-      languageBtn.textContent =
-        englishMode
-          ? "हिंदी | English"
-          : "English | हिंदी";
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   LOAD TEMPLE SETTINGS FROM FIRESTORE
-========================================================= */
-
-async function loadTempleSettings() {
-
-  try {
-
-    const settingsRef =
-      doc(
-        db,
-        "temple",
-        "settings"
-      );
-
-
-    const snap =
-      await getDoc(
-        settingsRef
-      );
-
-
-    if (!snap.exists()) {
-
-      console.warn(
-        "temple/settings does not exist yet."
-      );
-
-      return;
-
-    }
-
-
-    const settings =
-      snap.data();
-
-
-    /* ---------- ELEMENTS ---------- */
-
-    const todayAartiTime =
-      document.getElementById(
-        "todayAartiTime"
-      );
-
-
-    const liveAartiTime =
-      document.getElementById(
-        "liveAartiTime"
-      );
-
-
-    const upiId =
-      document.getElementById(
-        "upiId"
-      );
-
-
-    const qrBox =
-      document.getElementById(
-        "qrBox"
-      );
-
-
-    const liveVideo =
-      document.getElementById(
-        "liveVideo"
-      );
-
-
-    /* ---------- AARTI TIME ---------- */
-
-    if (
-      todayAartiTime &&
-      settings.aartiTime
-    ) {
-
-      todayAartiTime.textContent =
-        settings.aartiTime;
-
-    }
-
-
-    if (
-      liveAartiTime &&
-      settings.aartiTime
-    ) {
-
-      liveAartiTime.textContent =
-        settings.aartiTime;
-
-    }
-
-
-    /* ---------- UPI ---------- */
-
-    if (
-      upiId &&
-      settings.upiId
-    ) {
-
-      upiId.textContent =
-        settings.upiId;
-
-    }
-
-
-    /* ---------- QR CODE ---------- */
-
-    if (
-      qrBox &&
-      settings.qrUrl
-    ) {
-
-      qrBox.innerHTML = `
+        <div class="logo-glow"></div>
 
         <img
-          src="${escapeHtml(settings.qrUrl)}"
-          alt="Donation QR Code"
-          style="
-            width:100%;
-            max-width:260px;
-            display:block;
-            margin:auto;
-            border-radius:14px;
-          "
+          src="logo.png"
+          alt="माँ मनोकामना"
         >
 
-      `;
+      </div>
 
-    }
-
-
-    /* ---------- LIVE AARTI ---------- */
-
-    if (
-      liveVideo &&
-      settings.liveUrl
-    ) {
-
-      const youtubeId =
-        getYouTubeId(
-          settings.liveUrl
-        );
+    </section>
 
 
-      if (youtubeId) {
+    <!-- TODAY AARTI -->
+    <section class="today-card-section">
 
-        liveVideo.innerHTML = `
+      <div class="today-card">
 
-          <iframe
+        <div class="today-icon">
+          🪔
+        </div>
 
-            src="https://www.youtube.com/embed/${youtubeId}"
+        <div>
 
-            title="Live Aarti"
+          <small>
+            आज की आरती
+          </small>
 
-            allow="autoplay; encrypted-media; picture-in-picture"
+          <h3 id="todayAartiTime">
+            समय जल्द अपडेट होगा
+          </h3>
 
-            allowfullscreen
+        </div>
 
-            style="
-              width:100%;
-              height:100%;
-              min-height:320px;
-              border:0;
-              border-radius:18px;
-            "
+        <span class="live-dot"></span>
 
-          ></iframe>
+      </div>
 
-        `;
+    </section>
 
-      }
 
-      else {
+    <!-- LIVE AARTI -->
+    <section class="section" id="live">
 
-        liveVideo.innerHTML = `
+      <div class="section-heading">
+
+        <span>
+          🔴 LIVE
+        </span>
+
+        <h2>
+          संध्या आरती
+        </h2>
+
+        <p>
+          माँ मनोकामना की आरती में ऑनलाइन शामिल हों।
+        </p>
+
+      </div>
+
+
+      <div class="live-container">
+
+        <div class="video-wrapper">
 
           <div
-            style="
-              padding:30px;
-              text-align:center;
-            "
+            class="video-placeholder"
+            id="liveVideo"
           >
+
+            <div class="play-icon">
+              ▶
+            </div>
 
             <h3>
               Live Aarti
             </h3>
 
             <p>
-              आरती शुरू होने पर यहाँ Live उपलब्ध होगा।
+              आरती शुरू होने पर यहाँ Live दिखाई देगा।
             </p>
-
-            <a
-              class="btn btn-primary"
-              href="${escapeHtml(settings.liveUrl)}"
-              target="_blank"
-              rel="noopener"
-            >
-              Open Live
-            </a>
 
           </div>
 
-        `;
-
-      }
-
-    }
-
-  }
-
-  catch (error) {
-
-    console.error(
-      "Settings load error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =========================================================
-   LOAD PUJA SCHEDULE
-========================================================= */
-
-async function loadSchedule() {
-
-  const list =
-    document.getElementById(
-      "scheduleList"
-    );
-
-
-  if (!list) return;
-
-
-  try {
-
-    const scheduleQuery =
-      query(
-
-        collection(
-          db,
-          "schedule"
-        ),
-
-        orderBy(
-          "date",
-          "asc"
-        )
-
-      );
-
-
-    const snap =
-      await getDocs(
-        scheduleQuery
-      );
-
-
-    if (snap.empty) {
-
-      return;
-
-    }
-
-
-    list.innerHTML =
-      "";
-
-
-    snap.forEach(item => {
-
-      const data =
-        item.data();
-
-
-      const wrapper =
-        document.createElement(
-          "div"
-        );
-
-
-      wrapper.className =
-        "schedule-item";
-
-
-      wrapper.innerHTML = `
-
-        <div class="schedule-date">
-
-          <strong>
-            ${escapeHtml(
-              data.day || "—"
-            )}
-          </strong>
-
-          <span>
-            ${escapeHtml(
-              data.month || ""
-            )}
-          </span>
-
         </div>
 
 
-        <div class="schedule-info">
+        <div class="live-info">
+
+          <div class="live-status">
+            <span></span>
+            LIVE
+          </div>
 
           <h3>
-            ${escapeHtml(
-              data.title ||
-              "कार्यक्रम"
-            )}
+            संध्या आरती
           </h3>
 
-
           <p>
-            ${escapeHtml(
-              data.description ||
-              ""
-            )}
+            आरती के समय यहाँ Live प्रसारण उपलब्ध होगा।
           </p>
 
+          <div class="aarti-time">
 
-          ${
-            data.time
+            🕯️
+            <strong>
+              आरती समय
+            </strong>
 
-              ? `
+            <span id="liveAartiTime">
+              जल्द अपडेट होगा
+            </span>
 
-                <p>
-                  <strong>
-                    समय:
-                  </strong>
-
-                  ${escapeHtml(
-                    data.time
-                  )}
-
-                </p>
-
-              `
-
-              : ""
-          }
+          </div>
 
         </div>
 
-      `;
+      </div>
 
+    </section>
 
-      list.appendChild(
-        wrapper
-      );
 
-    });
+    <!-- DONATION -->
+    <section
+      class="section donation-section"
+      id="donate"
+    >
 
-  }
+      <div class="section-heading">
 
-  catch (error) {
+        <span>
+          ❤️ सेवा
+        </span>
 
-    console.error(
-      "Schedule load error:",
-      error
-    );
+        <h2>
+          माँ के चरणों में सहयोग
+        </h2>
 
-  }
+        <p>
+          मंदिर एवं पूजा समिति के कार्यों में अपना सहयोग प्रदान करें।
+        </p>
 
-}
+      </div>
 
 
-/* =========================================================
-   YOUTUBE ID
-========================================================= */
+      <div class="donation-card">
 
-function getYouTubeId(url) {
+        <div class="donation-icon">
+          🙏
+        </div>
 
-  try {
+        <h3>
+          Donate Now
+        </h3>
 
-    const parsed =
-      new URL(url);
+        <p>
+          UPI के माध्यम से सुरक्षित रूप से दान करें।
+        </p>
 
 
-    /* youtu.be */
+        <div class="qr-area">
 
-    if (
-      parsed.hostname.includes(
-        "youtu.be"
-      )
-    ) {
+          <div
+            class="qr-placeholder"
+            id="qrBox"
+          >
 
-      return parsed.pathname
-        .replace("/", "");
+            <span>
+              QR
+            </span>
 
-    }
+            <small>
+              QR Code यहाँ दिखेगा
+            </small>
 
+          </div>
 
-    /* youtube.com */
+        </div>
 
-    if (
-      parsed.hostname.includes(
-        "youtube.com"
-      )
-    ) {
 
-      /* watch?v= */
+        <div class="upi-box">
 
-      if (
-        parsed.pathname ===
-        "/watch"
-      ) {
+          <span>
+            UPI ID
+          </span>
 
-        return parsed.searchParams.get(
-          "v"
-        );
+          <strong id="upiId">
+            Admin Panel से अपडेट होगा
+          </strong>
 
-      }
+        </div>
 
 
-      const parts =
-        parsed.pathname.split(
-          "/"
-        );
+        <button
+          class="btn btn-primary full-width"
+          id="donateBtn"
+        >
+          ❤️ Donate Now
+        </button>
 
 
-      /* embed */
+        <p class="small-note">
+          Donation के बाद UTR / Transaction ID सुरक्षित रखें।
+        </p>
 
-      const embedIndex =
-        parts.indexOf(
-          "embed"
-        );
+      </div>
 
+    </section>
 
-      if (
-        embedIndex !== -1 &&
-        parts[embedIndex + 1]
-      ) {
 
-        return parts[
-          embedIndex + 1
-        ];
+    <!-- SCHEDULE -->
+    <section
+      class="section"
+      id="schedule"
+    >
 
-      }
+      <div class="section-heading">
 
+        <span>
+          📅 कार्यक्रम
+        </span>
 
-      /* live */
+        <h2>
+          पूजा एवं आरती कार्यक्रम
+        </h2>
 
-      const liveIndex =
-        parts.indexOf(
-          "live"
-        );
+        <p>
+          माँ दुर्गा पूजा से जुड़े सभी प्रमुख कार्यक्रम।
+        </p>
 
+      </div>
 
-      if (
-        liveIndex !== -1 &&
-        parts[liveIndex + 1]
-      ) {
 
-        return parts[
-          liveIndex + 1
-        ];
+      <div
+        class="schedule-list"
+        id="scheduleList"
+      >
 
-      }
+        <div class="schedule-item">
 
-    }
+          <div class="schedule-date">
 
-  }
+            <strong>
+              —
+            </strong>
 
-  catch (_) {
+            <span>
+              DATE
+            </span>
 
-    return null;
+          </div>
 
-  }
 
+          <div class="schedule-info">
 
-  return null;
+            <h3>
+              कार्यक्रम जल्द अपडेट होगा
+            </h3>
 
-}
+            <p>
+              Admin Panel से कार्यक्रम जोड़ा जाएगा।
+            </p>
 
+          </div>
 
-/* =========================================================
-   SECURITY / HTML ESCAPE
-========================================================= */
+        </div>
 
-function escapeHtml(value) {
+      </div>
 
-  return String(
-    value ?? ""
-  )
+    </section>
 
-    .replaceAll(
-      "&",
-      "&amp;"
-    )
 
-    .replaceAll(
-      "<",
-      "&lt;"
-    )
+    <!-- GALLERY -->
+    <section
+      class="section"
+      id="gallery"
+    >
 
-    .replaceAll(
-      ">",
-      "&gt;"
-    )
+      <div class="section-heading">
 
-    .replaceAll(
-      '"',
-      "&quot;"
-    )
+        <span>
+          📸 दर्शन
+        </span>
 
-    .replaceAll(
-      "'",
-      "&#039;"
-    );
+        <h2>
+          फोटो गैलरी
+        </h2>
 
-}
+        <p>
+          मंदिर एवं पूजा की यादगार तस्वीरें।
+        </p>
 
+      </div>
 
-/* =========================================================
-   SERVICE WORKER / PWA
-========================================================= */
 
-if (
-  "serviceWorker" in navigator
-) {
+      <div class="gallery-grid">
 
-  window.addEventListener(
-    "load",
-    () => {
+        <div class="gallery-placeholder">
 
-      navigator.serviceWorker
-        .register(
-          "./sw.js"
-        )
+          <span>
+            🛕
+          </span>
 
-        .then(() => {
+          <p>
+            Photos जल्द जोड़ी जाएंगी
+          </p>
 
-          console.log(
-            "Service Worker registered successfully."
-          );
+        </div>
 
-        })
 
-        .catch(error => {
+        <div class="gallery-placeholder">
 
-          console.error(
-            "Service Worker registration failed:",
-            error
-          );
+          <span>
+            🙏
+          </span>
 
-        });
+          <p>
+            माँ के दर्शन
+          </p>
 
-    }
-  );
+        </div>
 
-}
 
+        <div class="gallery-placeholder">
 
-/* =========================================================
-   START APP
-========================================================= */
+          <span>
+            🪔
+          </span>
 
-loadTempleSettings();
+          <p>
+            आरती
+          </p>
 
-loadSchedule();
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- CONTACT -->
+    <section
+      class="section contact-section"
+      id="contact"
+    >
+
+      <div class="section-heading">
+
+        <span>
+          📍 संपर्क
+        </span>
+
+        <h2>
+          हमसे संपर्क करें
+        </h2>
+
+      </div>
+
+
+      <div class="contact-grid">
+
+
+        <div class="contact-card">
+
+          <div class="contact-icon">
+            📍
+          </div>
+
+          <h3>
+            मंदिर का पता
+          </h3>
+
+          <p>
+            श्री श्री १०८ माँ मनोकामना<br>
+            छोटी दुर्गा पूजा समिति<br>
+            तैलिक वैश्य बन्धु<br>
+            चकशिवगंज, मौलानगर,<br>
+            सूर्यगढ़ा (लखीसराय)
+          </p>
+
+        </div>
+
+
+        <div class="contact-card">
+
+          <div class="contact-icon">
+            📞
+          </div>
+
+          <h3>
+            संपर्क
+          </h3>
+
+          <p>
+            संपर्क नंबर जल्द अपडेट होगा।
+          </p>
+
+        </div>
+
+
+        <div class="contact-card">
+
+          <div class="contact-icon">
+            🗺️
+          </div>
+
+          <h3>
+            Google Maps
+          </h3>
+
+          <p>
+            मंदिर का सही Maps Location जल्द जोड़ा जाएगा।
+          </p>
+
+          <button
+            class="outline-btn"
+            id="mapBtn"
+          >
+            📍 View Location
+          </button>
+
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- FOOTER -->
+  <footer>
+
+    <div class="footer-logo">
+
+      <img
+        src="logo.png"
+        alt="Logo"
+      >
+
+    </div>
+
+
+    <h3>
+      श्री श्री १०८ माँ मनोकामना
+    </h3>
+
+
+    <p>
+      छोटी दुर्गा पूजा समिति • तैलिक वैश्य बन्धु
+    </p>
+
+
+    <p>
+      चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय)
+    </p>
+
+
+    <div class="footer-line"></div>
+
+
+    <small>
+      © <span id="year"></span> माँ मनोकामना मंदिर
+    </small>
+
+  </footer>
+
+
+  <!-- DONATION MODAL -->
+  <div
+    class="modal"
+    id="donationModal"
+  >
+
+    <div class="modal-box">
+
+      <button
+        class="modal-close"
+        id="closeModal"
+      >
+        ×
+      </button>
+
+
+      <h2>
+        ❤️ Donation
+      </h2>
+
+
+      <p>
+        Donation करने के बाद नीचे transaction details भरें।
+      </p>
+
+
+      <form id="donationForm">
+
+
+        <label>
+          आपका नाम
+        </label>
+
+        <input
+          type="text"
+          id="donorName"
+          placeholder="नाम (Optional)"
+        >
+
+
+        <label>
+          Donation Amount
+        </label>
+
+        <input
+          type="number"
+          id="donationAmount"
+          placeholder="₹ Amount"
+          min="1"
+          required
+        >
+
+
+        <label>
+          Purpose
+        </label>
+
+        <select id="donationPurpose">
+
+          <option value="मंदिर सेवा">
+            मंदिर सेवा
+          </option>
+
+          <option value="दुर्गा पूजा">
+            दुर्गा पूजा
+          </option>
+
+          <option value="आरती">
+            आरती
+          </option>
+
+          <option value="अन्य">
+            अन्य
+          </option>
+
+        </select>
+
+
+        <label>
+          UTR / Transaction ID
+        </label>
+
+        <input
+          type="text"
+          id="utr"
+          placeholder="Transaction ID / UTR"
+          required
+        >
+
+
+        <button
+          type="submit"
+          class="btn btn-primary full-width"
+        >
+          Submit Donation
+        </button>
+
+      </form>
+
+    </div>
+
+  </div>
+
+
+  <!-- TOAST -->
+  <div
+    class="toast"
+    id="toast"
+  ></div>
+
+
+  <!-- MAIN JAVASCRIPT -->
+  <script
+    type="module"
+    src="app.js"
+  ></script>
+
+</body>
+</html>
