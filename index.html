@@ -1,39 +1,80 @@
-/* =========================================
-   MAA MANOKAMANA TEMPLE
-   Main App JavaScript
-========================================= */
+/* =========================================================
+   MAA MANOKAMANA TEMPLE — MAIN APP
+   Firebase + Public Website
+========================================================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  query,
+  orderBy,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+import firebaseConfig from "./firebase-config.js";
 
 
-/* ---------- MOBILE MENU ---------- */
+/* =========================================================
+   FIREBASE
+========================================================= */
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
+
+
+/* =========================================================
+   MOBILE MENU
+========================================================= */
 
 const menuBtn = document.getElementById("menuBtn");
 const navMenu = document.getElementById("navMenu");
 
-if (menuBtn) {
+if (menuBtn && navMenu) {
+
   menuBtn.addEventListener("click", () => {
+
     navMenu.classList.toggle("active");
+
   });
+
 }
 
-
-/* Close menu after clicking link */
 
 document.querySelectorAll("#navMenu a").forEach(link => {
 
   link.addEventListener("click", () => {
-    navMenu.classList.remove("active");
+
+    if (navMenu) {
+      navMenu.classList.remove("active");
+    }
+
   });
 
 });
 
 
-/* ---------- YEAR ---------- */
+/* =========================================================
+   YEAR
+========================================================= */
 
-document.getElementById("year").textContent =
-  new Date().getFullYear();
+const yearEl = document.getElementById("year");
+
+if (yearEl) {
+
+  yearEl.textContent =
+    new Date().getFullYear();
+
+}
 
 
-/* ---------- DONATION MODAL ---------- */
+/* =========================================================
+   DONATION MODAL
+========================================================= */
 
 const donationModal =
   document.getElementById("donationModal");
@@ -45,7 +86,7 @@ const closeModal =
   document.getElementById("closeModal");
 
 
-if (donateBtn) {
+if (donateBtn && donationModal) {
 
   donateBtn.addEventListener("click", () => {
 
@@ -56,7 +97,7 @@ if (donateBtn) {
 }
 
 
-if (closeModal) {
+if (closeModal && donationModal) {
 
   closeModal.addEventListener("click", () => {
 
@@ -82,7 +123,9 @@ if (donationModal) {
 }
 
 
-/* ---------- DONATION FORM ---------- */
+/* =========================================================
+   DONATION FORM
+========================================================= */
 
 const donationForm =
   document.getElementById("donationForm");
@@ -90,27 +133,36 @@ const donationForm =
 
 if (donationForm) {
 
-  donationForm.addEventListener("submit", event => {
+  donationForm.addEventListener("submit", async event => {
 
     event.preventDefault();
 
+
     const donorName =
-      document.getElementById("donorName").value.trim();
+      document.getElementById("donorName")?.value.trim() || "";
+
 
     const amount =
-      document.getElementById("donationAmount").value;
+      Number(
+        document.getElementById("donationAmount")?.value || 0
+      );
+
 
     const purpose =
-      document.getElementById("donationPurpose").value;
+      document.getElementById("donationPurpose")?.value ||
+      "मंदिर सेवा";
+
 
     const utr =
-      document.getElementById("utr").value.trim();
+      document.getElementById("utr")?.value.trim() || "";
 
 
-    if (!amount || !utr) {
+    /* ---------- VALIDATION ---------- */
+
+    if (!amount || amount < 1 || !utr) {
 
       showToast(
-        "Please amount और UTR भरें।"
+        "कृपया Amount और UTR / Transaction ID भरें।"
       );
 
       return;
@@ -118,52 +170,151 @@ if (donationForm) {
     }
 
 
-    console.log({
-      donorName,
-      amount,
-      purpose,
-      utr
-    });
+    const submitButton =
+      donationForm.querySelector(
+        "button[type='submit']"
+      );
 
 
-    showToast(
-      "Donation details submit हो गईं। Verification के बाद receipt जारी होगी।"
-    );
+    if (submitButton) {
+
+      submitButton.disabled = true;
+
+      submitButton.textContent =
+        "Submitting...";
+
+    }
 
 
-    donationForm.reset();
+    /* ---------- SAVE TO FIRESTORE ---------- */
 
-    donationModal.classList.remove("active");
+    try {
+
+      const donationRef =
+        await addDoc(
+          collection(db, "donations"),
+          {
+
+            donorName:
+              donorName || "Anonymous",
+
+            amount:
+              amount,
+
+            purpose:
+              purpose,
+
+            utr:
+              utr,
+
+            status:
+              "pending",
+
+            createdAt:
+              new Date().toISOString()
+
+          }
+        );
+
+
+      console.log(
+        "Donation submitted:",
+        donationRef.id
+      );
+
+
+      showToast(
+        "Donation details submit हो गईं। Verification के बाद receipt जारी होगी।"
+      );
+
+
+      donationForm.reset();
+
+
+      if (donationModal) {
+
+        donationModal.classList.remove(
+          "active"
+        );
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Donation error:",
+        error
+      );
+
+
+      showToast(
+        "Donation submit नहीं हो पाई। कृपया दोबारा कोशिश करें।"
+      );
+
+    }
+
+
+    /* ---------- RESET BUTTON ---------- */
+
+    finally {
+
+      if (submitButton) {
+
+        submitButton.disabled = false;
+
+        submitButton.textContent =
+          "Submit Donation";
+
+      }
+
+    }
 
   });
 
 }
 
 
-/* ---------- TOAST ---------- */
+/* =========================================================
+   TOAST
+========================================================= */
 
 function showToast(message) {
 
   const toast =
     document.getElementById("toast");
 
-  toast.textContent = message;
 
-  toast.classList.add("show");
+  if (!toast) return;
+
+
+  toast.textContent =
+    message;
+
+
+  toast.classList.add(
+    "show"
+  );
+
 
   setTimeout(() => {
 
-    toast.classList.remove("show");
+    toast.classList.remove(
+      "show"
+    );
 
   }, 3500);
 
 }
 
 
-/* ---------- GOOGLE MAPS ---------- */
+/* =========================================================
+   GOOGLE MAPS
+========================================================= */
 
 const mapBtn =
   document.getElementById("mapBtn");
+
 
 if (mapBtn) {
 
@@ -174,8 +325,10 @@ if (mapBtn) {
         "Chakshivganj, Maulanagar, Suryagarha, Lakhisarai, Bihar"
       );
 
+
     window.open(
-      "https://www.google.com/maps/search/?api=1&query=" + address,
+      "https://www.google.com/maps/search/?api=1&query=" +
+      address,
       "_blank"
     );
 
@@ -184,120 +337,627 @@ if (mapBtn) {
 }
 
 
-/* ---------- LANGUAGE ---------- */
+/* =========================================================
+   LANGUAGE
+========================================================= */
 
 const languageBtn =
   document.getElementById("languageBtn");
 
-let englishMode = false;
+
+let englishMode =
+  localStorage.getItem("language") === "en";
 
 
 if (languageBtn) {
 
-  languageBtn.addEventListener("click", () => {
+  languageBtn.textContent =
+    englishMode
+      ? "हिंदी | English"
+      : "English | हिंदी";
 
-    englishMode = !englishMode;
 
-    if (englishMode) {
+  languageBtn.addEventListener(
+    "click",
+    () => {
 
-      languageBtn.textContent = "English | हिंदी";
+      englishMode =
+        !englishMode;
 
-      showToast(
-        "English interface जल्द पूरी तरह उपलब्ध होगा।"
+
+      localStorage.setItem(
+        "language",
+        englishMode
+          ? "en"
+          : "hi"
       );
 
-    } else {
-
-      languageBtn.textContent = "हिंदी | English";
 
       showToast(
-        "हिंदी भाषा चयनित है।"
+
+        englishMode
+
+          ? "English interface will be expanded in the next update."
+
+          : "हिंदी भाषा चयनित है।"
+
       );
+
+
+      languageBtn.textContent =
+        englishMode
+          ? "हिंदी | English"
+          : "English | हिंदी";
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   LOAD TEMPLE SETTINGS FROM FIRESTORE
+========================================================= */
+
+async function loadTempleSettings() {
+
+  try {
+
+    const settingsRef =
+      doc(
+        db,
+        "temple",
+        "settings"
+      );
+
+
+    const snap =
+      await getDoc(
+        settingsRef
+      );
+
+
+    if (!snap.exists()) {
+
+      console.warn(
+        "temple/settings does not exist yet."
+      );
+
+      return;
 
     }
 
-  });
 
-}
+    const settings =
+      snap.data();
 
 
-/* ---------- PWA ---------- */
+    /* ---------- ELEMENTS ---------- */
 
-if ("serviceWorker" in navigator) {
+    const todayAartiTime =
+      document.getElementById(
+        "todayAartiTime"
+      );
 
-  window.addEventListener("load", () => {
 
-    navigator.serviceWorker
-      .register("./sw.js")
-      .then(() => {
+    const liveAartiTime =
+      document.getElementById(
+        "liveAartiTime"
+      );
 
-        console.log(
-          "Service Worker registered successfully."
+
+    const upiId =
+      document.getElementById(
+        "upiId"
+      );
+
+
+    const qrBox =
+      document.getElementById(
+        "qrBox"
+      );
+
+
+    const liveVideo =
+      document.getElementById(
+        "liveVideo"
+      );
+
+
+    /* ---------- AARTI TIME ---------- */
+
+    if (
+      todayAartiTime &&
+      settings.aartiTime
+    ) {
+
+      todayAartiTime.textContent =
+        settings.aartiTime;
+
+    }
+
+
+    if (
+      liveAartiTime &&
+      settings.aartiTime
+    ) {
+
+      liveAartiTime.textContent =
+        settings.aartiTime;
+
+    }
+
+
+    /* ---------- UPI ---------- */
+
+    if (
+      upiId &&
+      settings.upiId
+    ) {
+
+      upiId.textContent =
+        settings.upiId;
+
+    }
+
+
+    /* ---------- QR CODE ---------- */
+
+    if (
+      qrBox &&
+      settings.qrUrl
+    ) {
+
+      qrBox.innerHTML = `
+
+        <img
+          src="${escapeHtml(settings.qrUrl)}"
+          alt="Donation QR Code"
+          style="
+            width:100%;
+            max-width:260px;
+            display:block;
+            margin:auto;
+            border-radius:14px;
+          "
+        >
+
+      `;
+
+    }
+
+
+    /* ---------- LIVE AARTI ---------- */
+
+    if (
+      liveVideo &&
+      settings.liveUrl
+    ) {
+
+      const youtubeId =
+        getYouTubeId(
+          settings.liveUrl
         );
 
-      })
-      .catch(error => {
 
-        console.error(
-          "Service Worker registration failed:",
-          error
+      if (youtubeId) {
+
+        liveVideo.innerHTML = `
+
+          <iframe
+
+            src="https://www.youtube.com/embed/${youtubeId}"
+
+            title="Live Aarti"
+
+            allow="autoplay; encrypted-media; picture-in-picture"
+
+            allowfullscreen
+
+            style="
+              width:100%;
+              height:100%;
+              min-height:320px;
+              border:0;
+              border-radius:18px;
+            "
+
+          ></iframe>
+
+        `;
+
+      }
+
+      else {
+
+        liveVideo.innerHTML = `
+
+          <div
+            style="
+              padding:30px;
+              text-align:center;
+            "
+          >
+
+            <h3>
+              Live Aarti
+            </h3>
+
+            <p>
+              आरती शुरू होने पर यहाँ Live उपलब्ध होगा।
+            </p>
+
+            <a
+              class="btn btn-primary"
+              href="${escapeHtml(settings.liveUrl)}"
+              target="_blank"
+              rel="noopener"
+            >
+              Open Live
+            </a>
+
+          </div>
+
+        `;
+
+      }
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Settings load error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   LOAD PUJA SCHEDULE
+========================================================= */
+
+async function loadSchedule() {
+
+  const list =
+    document.getElementById(
+      "scheduleList"
+    );
+
+
+  if (!list) return;
+
+
+  try {
+
+    const scheduleQuery =
+      query(
+
+        collection(
+          db,
+          "schedule"
+        ),
+
+        orderBy(
+          "date",
+          "asc"
+        )
+
+      );
+
+
+    const snap =
+      await getDocs(
+        scheduleQuery
+      );
+
+
+    if (snap.empty) {
+
+      return;
+
+    }
+
+
+    list.innerHTML =
+      "";
+
+
+    snap.forEach(item => {
+
+      const data =
+        item.data();
+
+
+      const wrapper =
+        document.createElement(
+          "div"
         );
 
-      });
 
-  });
+      wrapper.className =
+        "schedule-item";
+
+
+      wrapper.innerHTML = `
+
+        <div class="schedule-date">
+
+          <strong>
+            ${escapeHtml(
+              data.day || "—"
+            )}
+          </strong>
+
+          <span>
+            ${escapeHtml(
+              data.month || ""
+            )}
+          </span>
+
+        </div>
+
+
+        <div class="schedule-info">
+
+          <h3>
+            ${escapeHtml(
+              data.title ||
+              "कार्यक्रम"
+            )}
+          </h3>
+
+
+          <p>
+            ${escapeHtml(
+              data.description ||
+              ""
+            )}
+          </p>
+
+
+          ${
+            data.time
+
+              ? `
+
+                <p>
+                  <strong>
+                    समय:
+                  </strong>
+
+                  ${escapeHtml(
+                    data.time
+                  )}
+
+                </p>
+
+              `
+
+              : ""
+          }
+
+        </div>
+
+      `;
+
+
+      list.appendChild(
+        wrapper
+      );
+
+    });
+
+  }
+
+  catch (error) {
+
+    console.error(
+      "Schedule load error:",
+      error
+    );
+
+  }
 
 }
 
 
-/* ---------- DEMO CONFIG ---------- */
-/*
-  Phase 2 में ये values Firebase
-  Admin Panel से आएंगी.
-*/
+/* =========================================================
+   YOUTUBE ID
+========================================================= */
 
-const templeSettings = {
+function getYouTubeId(url) {
 
-  aartiTime: "जल्द अपडेट होगा",
+  try {
 
-  upiId: "Admin Panel से अपडेट होगा",
-
-  liveUrl: "",
-
-};
+    const parsed =
+      new URL(url);
 
 
-/* Display settings */
+    /* youtu.be */
 
-const todayAartiTime =
-  document.getElementById("todayAartiTime");
+    if (
+      parsed.hostname.includes(
+        "youtu.be"
+      )
+    ) {
 
-const liveAartiTime =
-  document.getElementById("liveAartiTime");
+      return parsed.pathname
+        .replace("/", "");
 
-const upiId =
-  document.getElementById("upiId");
+    }
 
 
-if (todayAartiTime) {
+    /* youtube.com */
 
-  todayAartiTime.textContent =
-    templeSettings.aartiTime;
+    if (
+      parsed.hostname.includes(
+        "youtube.com"
+      )
+    ) {
+
+      /* watch?v= */
+
+      if (
+        parsed.pathname ===
+        "/watch"
+      ) {
+
+        return parsed.searchParams.get(
+          "v"
+        );
+
+      }
+
+
+      const parts =
+        parsed.pathname.split(
+          "/"
+        );
+
+
+      /* embed */
+
+      const embedIndex =
+        parts.indexOf(
+          "embed"
+        );
+
+
+      if (
+        embedIndex !== -1 &&
+        parts[embedIndex + 1]
+      ) {
+
+        return parts[
+          embedIndex + 1
+        ];
+
+      }
+
+
+      /* live */
+
+      const liveIndex =
+        parts.indexOf(
+          "live"
+        );
+
+
+      if (
+        liveIndex !== -1 &&
+        parts[liveIndex + 1]
+      ) {
+
+        return parts[
+          liveIndex + 1
+        ];
+
+      }
+
+    }
+
+  }
+
+  catch (_) {
+
+    return null;
+
+  }
+
+
+  return null;
 
 }
 
 
-if (liveAartiTime) {
+/* =========================================================
+   SECURITY / HTML ESCAPE
+========================================================= */
 
-  liveAartiTime.textContent =
-    templeSettings.aartiTime;
+function escapeHtml(value) {
+
+  return String(
+    value ?? ""
+  )
+
+    .replaceAll(
+      "&",
+      "&amp;"
+    )
+
+    .replaceAll(
+      "<",
+      "&lt;"
+    )
+
+    .replaceAll(
+      ">",
+      "&gt;"
+    )
+
+    .replaceAll(
+      '"',
+      "&quot;"
+    )
+
+    .replaceAll(
+      "'",
+      "&#039;"
+    );
 
 }
 
 
-if (upiId) {
+/* =========================================================
+   SERVICE WORKER / PWA
+========================================================= */
 
-  upiId.textContent =
-    templeSettings.upiId;
+if (
+  "serviceWorker" in navigator
+) {
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register(
+          "./sw.js"
+        )
+
+        .then(() => {
+
+          console.log(
+            "Service Worker registered successfully."
+          );
+
+        })
+
+        .catch(error => {
+
+          console.error(
+            "Service Worker registration failed:",
+            error
+          );
+
+        });
+
+    }
+  );
 
 }
+
+
+/* =========================================================
+   START APP
+========================================================= */
+
+loadTempleSettings();
+
+loadSchedule();
