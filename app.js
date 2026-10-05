@@ -2,6 +2,7 @@
    MAA MANOKAMANA TEMPLE
    Main App JavaScript
    Firebase + Firestore Integration
+   Donation Receipt System
 ========================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
@@ -221,6 +222,714 @@ document.addEventListener("keydown", (event) => {
 
 
 /* =========================================================
+   DONATION RECEIPT
+========================================================= */
+
+/*
+   Receipt number format:
+
+   DPG-2026-XXXXXX
+
+   Example:
+   DPG-2026-482913
+*/
+
+function generateReceiptNumber() {
+
+  const year = new Date().getFullYear();
+
+  const randomNumber =
+    Math.floor(
+      100000 +
+      Math.random() * 900000
+    );
+
+  return `DPG-${year}-${randomNumber}`;
+
+}
+
+
+/* =========================================================
+   FORMAT RECEIPT DATE
+========================================================= */
+
+function formatReceiptDate(date = new Date()) {
+
+  try {
+
+    return date.toLocaleString(
+      "en-IN",
+      {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true
+      }
+    );
+
+  } catch {
+
+    return String(date);
+
+  }
+
+}
+
+
+/* =========================================================
+   ESCAPE RECEIPT HTML
+========================================================= */
+
+function receiptEscape(value) {
+
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
+    return "";
+
+  }
+
+  return String(value)
+
+    .replace(/&/g, "&amp;")
+
+    .replace(/</g, "&lt;")
+
+    .replace(/>/g, "&gt;")
+
+    .replace(/"/g, "&quot;")
+
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   SHOW DONATION RECEIPT
+========================================================= */
+
+function showDonationReceipt(data) {
+
+  const existingReceipt =
+    $("donationReceiptModal");
+
+  if (existingReceipt) {
+    existingReceipt.remove();
+  }
+
+
+  const receiptModal =
+    document.createElement("div");
+
+  receiptModal.id =
+    "donationReceiptModal";
+
+
+  receiptModal.innerHTML = `
+
+    <div class="donation-receipt-overlay">
+
+      <div class="donation-receipt-card">
+
+        <div class="receipt-top">
+
+          <div class="receipt-temple-icon">
+            🛕
+          </div>
+
+          <h2>
+            श्री श्री 108 माँ मनोकामना
+          </h2>
+
+          <h3>
+            छोटी दुर्गा पूजा समिति
+          </h3>
+
+          <p>
+            चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय), बिहार
+          </p>
+
+          <div class="receipt-puja-title">
+            दुर्गा पूजा 2026
+          </div>
+
+        </div>
+
+
+        <div class="receipt-status pending">
+          ✓ Donation Submitted
+        </div>
+
+
+        <div class="receipt-number-row">
+
+          <span>
+            Receipt No.
+          </span>
+
+          <strong>
+            ${receiptEscape(data.receiptNumber)}
+          </strong>
+
+        </div>
+
+
+        <div class="receipt-divider"></div>
+
+
+        <div class="receipt-details">
+
+          <div class="receipt-row">
+
+            <span>Donor Name</span>
+
+            <strong>
+              ${receiptEscape(data.donorName)}
+            </strong>
+
+          </div>
+
+
+          <div class="receipt-row">
+
+            <span>Donation Purpose</span>
+
+            <strong>
+              ${receiptEscape(data.purpose)}
+            </strong>
+
+          </div>
+
+
+          <div class="receipt-row amount-row">
+
+            <span>Donation Amount</span>
+
+            <strong>
+              ₹${receiptEscape(
+                Number(data.amount).toLocaleString("en-IN")
+              )}
+            </strong>
+
+          </div>
+
+
+          <div class="receipt-row">
+
+            <span>Transaction / UTR</span>
+
+            <strong class="receipt-utr">
+              ${receiptEscape(data.utr)}
+            </strong>
+
+          </div>
+
+
+          <div class="receipt-row">
+
+            <span>Date & Time</span>
+
+            <strong>
+              ${receiptEscape(data.dateTime)}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="receipt-note">
+
+          <strong>धन्यवाद 🙏</strong>
+
+          <p>
+            माँ दुर्गा पूजा समिति में आपके सहयोग के लिए
+            हृदय से धन्यवाद।
+          </p>
+
+          <small>
+            यह receipt donation submission का acknowledgement है।
+            Final verification committee द्वारा की जाएगी।
+          </small>
+
+        </div>
+
+
+        <div class="receipt-actions">
+
+          <button
+            type="button"
+            id="printDonationReceipt"
+            class="receipt-print-btn"
+          >
+            🖨️ Print / Save PDF
+          </button>
+
+          <button
+            type="button"
+            id="closeDonationReceipt"
+            class="receipt-close-btn"
+          >
+            बंद करें
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  document.body.appendChild(receiptModal);
+
+
+  /* Print button */
+
+  const printBtn =
+    $("printDonationReceipt");
+
+
+  if (printBtn) {
+
+    printBtn.addEventListener(
+      "click",
+      () => {
+
+        printDonationReceipt(
+          data
+        );
+
+      }
+    );
+
+  }
+
+
+  /* Close button */
+
+  const closeReceiptBtn =
+    $("closeDonationReceipt");
+
+
+  if (closeReceiptBtn) {
+
+    closeReceiptBtn.addEventListener(
+      "click",
+      () => {
+
+        receiptModal.remove();
+
+      }
+    );
+
+  }
+
+
+  /* Click outside receipt */
+
+  const overlay =
+    receiptModal.querySelector(
+      ".donation-receipt-overlay"
+    );
+
+
+  if (overlay) {
+
+    overlay.addEventListener(
+      "click",
+      (event) => {
+
+        if (
+          event.target === overlay
+        ) {
+
+          receiptModal.remove();
+
+        }
+
+      }
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PRINT DONATION RECEIPT
+========================================================= */
+
+function printDonationReceipt(data) {
+
+  const printWindow =
+    window.open(
+      "",
+      "_blank",
+      "width=800,height=900"
+    );
+
+
+  if (!printWindow) {
+
+    showToast(
+      "Print window open नहीं हो सकी। Browser popup allow करें।"
+    );
+
+    return;
+
+  }
+
+
+  const amount =
+    Number(data.amount)
+      .toLocaleString("en-IN");
+
+
+  printWindow.document.write(`
+
+    <!DOCTYPE html>
+
+    <html lang="hi">
+
+    <head>
+
+      <meta charset="UTF-8">
+
+      <title>
+        Donation Receipt - ${receiptEscape(data.receiptNumber)}
+      </title>
+
+      <style>
+
+        * {
+          box-sizing: border-box;
+        }
+
+        body {
+          margin: 0;
+          padding: 30px;
+          background: #f5f5f5;
+          font-family:
+            Arial,
+            "Noto Sans Devanagari",
+            sans-serif;
+          color: #24120f;
+        }
+
+        .receipt {
+          width: 100%;
+          max-width: 720px;
+          margin: 0 auto;
+          background: #ffffff;
+          border: 2px solid #7f1111;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+
+        .header {
+          text-align: center;
+          padding: 28px 25px 20px;
+          border-bottom: 1px solid #ead6d0;
+        }
+
+        .icon {
+          font-size: 42px;
+          margin-bottom: 8px;
+        }
+
+        h1 {
+          margin: 0;
+          font-size: 25px;
+          color: #7f1111;
+        }
+
+        h2 {
+          margin: 6px 0;
+          font-size: 18px;
+        }
+
+        .address {
+          margin: 8px 0 0;
+          font-size: 13px;
+          color: #666;
+          line-height: 1.6;
+        }
+
+        .puja {
+          display: inline-block;
+          margin-top: 15px;
+          padding: 8px 16px;
+          border-radius: 30px;
+          background: #fff3e5;
+          color: #7f1111;
+          font-weight: 800;
+        }
+
+        .status {
+          margin: 22px 25px 10px;
+          padding: 10px;
+          text-align: center;
+          border-radius: 8px;
+          background: #fff8df;
+          color: #765600;
+          font-weight: 800;
+        }
+
+        .receipt-no {
+          display: flex;
+          justify-content: space-between;
+          gap: 20px;
+          padding: 12px 25px;
+          font-size: 14px;
+        }
+
+        .divider {
+          height: 1px;
+          background: #ead6d0;
+          margin: 5px 25px;
+        }
+
+        .details {
+          padding: 12px 25px;
+        }
+
+        .row {
+          display: flex;
+          justify-content: space-between;
+          gap: 20px;
+          padding: 13px 0;
+          border-bottom: 1px dashed #ddd;
+        }
+
+        .row:last-child {
+          border-bottom: 0;
+        }
+
+        .row span {
+          color: #666;
+        }
+
+        .row strong {
+          text-align: right;
+          word-break: break-word;
+        }
+
+        .amount {
+          font-size: 22px;
+          color: #7f1111;
+        }
+
+        .note {
+          margin: 10px 25px 25px;
+          padding: 18px;
+          background: #fffaf4;
+          border-radius: 12px;
+          text-align: center;
+          line-height: 1.6;
+        }
+
+        .note strong {
+          display: block;
+          color: #7f1111;
+          font-size: 18px;
+          margin-bottom: 5px;
+        }
+
+        .note p {
+          margin: 5px 0;
+        }
+
+        .note small {
+          display: block;
+          margin-top: 10px;
+          color: #777;
+        }
+
+        @media print {
+
+          body {
+            background: #ffffff;
+            padding: 0;
+          }
+
+          .receipt {
+            max-width: none;
+            border: 2px solid #7f1111;
+          }
+
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <div class="receipt">
+
+        <div class="header">
+
+          <div class="icon">
+            🛕
+          </div>
+
+          <h1>
+            श्री श्री 108 माँ मनोकामना
+          </h1>
+
+          <h2>
+            छोटी दुर्गा पूजा समिति
+          </h2>
+
+          <div class="address">
+            चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय), बिहार
+          </div>
+
+          <div class="puja">
+            दुर्गा पूजा 2026
+          </div>
+
+        </div>
+
+
+        <div class="status">
+          ✓ Donation Submitted — Verification Pending
+        </div>
+
+
+        <div class="receipt-no">
+
+          <span>
+            Receipt No.
+          </span>
+
+          <strong>
+            ${receiptEscape(data.receiptNumber)}
+          </strong>
+
+        </div>
+
+
+        <div class="divider"></div>
+
+
+        <div class="details">
+
+          <div class="row">
+
+            <span>
+              Donor Name
+            </span>
+
+            <strong>
+              ${receiptEscape(data.donorName)}
+            </strong>
+
+          </div>
+
+
+          <div class="row">
+
+            <span>
+              Donation Purpose
+            </span>
+
+            <strong>
+              ${receiptEscape(data.purpose)}
+            </strong>
+
+          </div>
+
+
+          <div class="row">
+
+            <span>
+              Donation Amount
+            </span>
+
+            <strong class="amount">
+              ₹${receiptEscape(amount)}
+            </strong>
+
+          </div>
+
+
+          <div class="row">
+
+            <span>
+              Transaction / UTR
+            </span>
+
+            <strong>
+              ${receiptEscape(data.utr)}
+            </strong>
+
+          </div>
+
+
+          <div class="row">
+
+            <span>
+              Date & Time
+            </span>
+
+            <strong>
+              ${receiptEscape(data.dateTime)}
+            </strong>
+
+          </div>
+
+        </div>
+
+
+        <div class="note">
+
+          <strong>
+            धन्यवाद 🙏
+          </strong>
+
+          <p>
+            माँ दुर्गा पूजा समिति में आपके सहयोग के लिए
+            हृदय से धन्यवाद।
+          </p>
+
+          <small>
+            यह receipt donation submission का acknowledgement है।
+            Final verification committee द्वारा की जाएगी।
+          </small>
+
+        </div>
+
+      </div>
+
+
+      <script>
+
+        window.onload = function() {
+          window.print();
+        };
+
+      <\/script>
+
+    </body>
+
+    </html>
+
+  `);
+
+
+  printWindow.document.close();
+
+}
+
+
+/* =========================================================
    DONATION SUBMISSION
 ========================================================= */
 
@@ -238,7 +947,8 @@ if (donationForm) {
       $("donationAmount")?.value.trim() || "";
 
     const purpose =
-      $("donationPurpose")?.value || "मंदिर सेवा";
+      $("donationPurpose")?.value ||
+      "दुर्गा पूजा सेवा";
 
     const utr =
       $("utr")?.value.trim() || "";
@@ -246,18 +956,28 @@ if (donationForm) {
 
     if (!amountValue) {
 
-      showToast("कृपया Donation Amount भरें।");
+      showToast(
+        "कृपया Donation Amount भरें।"
+      );
+
       return;
 
     }
 
 
-    const amount = Number(amountValue);
+    const amount =
+      Number(amountValue);
 
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0
+    ) {
 
-      showToast("कृपया सही Donation Amount डालें।");
+      showToast(
+        "कृपया सही Donation Amount डालें।"
+      );
+
       return;
 
     }
@@ -265,7 +985,10 @@ if (donationForm) {
 
     if (!utr) {
 
-      showToast("कृपया UTR / Transaction ID भरें।");
+      showToast(
+        "कृपया UTR / Transaction ID भरें।"
+      );
+
       return;
 
     }
@@ -273,7 +996,10 @@ if (donationForm) {
 
     if (utr.length < 4) {
 
-      showToast("कृपया सही UTR / Transaction ID डालें।");
+      showToast(
+        "कृपया सही UTR / Transaction ID डालें।"
+      );
+
       return;
 
     }
@@ -284,44 +1010,145 @@ if (donationForm) {
         'button[type="submit"]'
       );
 
+
     const oldButtonText =
-      submitBtn ? submitBtn.textContent : "";
+      submitBtn
+        ? submitBtn.textContent
+        : "";
 
 
     if (submitBtn) {
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Submitting...";
+      submitBtn.disabled =
+        true;
+
+      submitBtn.textContent =
+        "Submitting...";
 
     }
 
 
     try {
 
-      await addDoc(
-        collection(db, "donations"),
-        {
-          donorName: donorName,
-          amount: amount,
-          purpose: purpose,
-          utr: utr,
-          status: "pending",
-          createdAt: serverTimestamp()
-        }
+      const receiptNumber =
+        generateReceiptNumber();
+
+
+      const now =
+        new Date();
+
+
+      /*
+        Donation Firestore में save.
+      */
+
+      const donationRef =
+        await addDoc(
+          collection(
+            db,
+            "donations"
+          ),
+          {
+            donorName:
+              donorName,
+
+            amount:
+              amount,
+
+            purpose:
+              purpose,
+
+            utr:
+              utr,
+
+            receiptNumber:
+              receiptNumber,
+
+            status:
+              "pending",
+
+            createdAt:
+              serverTimestamp()
+          }
+        );
+
+
+      console.log(
+        "Donation saved:",
+        donationRef.id
       );
 
 
-      showToast(
-        "Donation details successfully submit हो गईं। Verification के बाद donation approve होगी।"
-      );
+      /*
+        Receipt data
+      */
 
+      const receiptData = {
+
+        receiptNumber:
+          receiptNumber,
+
+        donorName:
+          donorName,
+
+        amount:
+          amount,
+
+        purpose:
+          purpose,
+
+        utr:
+          utr,
+
+        dateTime:
+          formatReceiptDate(now),
+
+        status:
+          "pending"
+
+      };
+
+
+      /*
+        Modal close
+      */
+
+      if (donationModal) {
+
+        donationModal.classList.remove(
+          "active"
+        );
+
+      }
+
+
+      /*
+        Form reset
+      */
 
       donationForm.reset();
 
 
-      if (donationModal) {
-        donationModal.classList.remove("active");
-      }
+      /*
+        Success message
+      */
+
+      showToast(
+        "Donation submit हो गई। आपकी receipt तैयार है।"
+      );
+
+
+      /*
+        Receipt दिखाएँ
+      */
+
+      setTimeout(() => {
+
+        showDonationReceipt(
+          receiptData
+        );
+
+      }, 250);
 
 
     } catch (error) {
@@ -341,8 +1168,11 @@ if (donationForm) {
 
       if (submitBtn) {
 
-        submitBtn.disabled = false;
-        submitBtn.textContent = oldButtonText;
+        submitBtn.disabled =
+          false;
+
+        submitBtn.textContent =
+          oldButtonText;
 
       }
 
@@ -362,10 +1192,17 @@ async function loadTempleSettings() {
   try {
 
     const settingsRef =
-      doc(db, "temple", "settings");
+      doc(
+        db,
+        "temple",
+        "settings"
+      );
+
 
     const settingsSnap =
-      await getDoc(settingsRef);
+      await getDoc(
+        settingsRef
+      );
 
 
     if (settingsSnap.exists()) {
@@ -422,7 +1259,11 @@ function listenToTempleSettings() {
   try {
 
     const settingsRef =
-      doc(db, "temple", "settings");
+      doc(
+        db,
+        "temple",
+        "settings"
+      );
 
 
     onSnapshot(
@@ -550,7 +1391,9 @@ function renderContactNumber() {
     contactPhone.textContent =
       "संपर्क नंबर जल्द अपडेट होगा।";
 
-    contactPhone.removeAttribute("href");
+    contactPhone.removeAttribute(
+      "href"
+    );
 
     contactPhone.style.pointerEvents =
       "none";
@@ -565,7 +1408,10 @@ function renderContactNumber() {
 
 
   const cleanNumber =
-    number.replace(/[^\d+]/g, "");
+    number.replace(
+      /[^\d+]/g,
+      ""
+    );
 
 
   if (cleanNumber) {
@@ -599,8 +1445,15 @@ function renderQRCode() {
   if (!qrUrl) {
 
     qrBox.innerHTML = `
-      <span>QR</span>
-      <small>QR Code यहाँ दिखेगा</small>
+
+      <span>
+        QR
+      </span>
+
+      <small>
+        QR Code यहाँ दिखेगा
+      </small>
+
     `;
 
     return;
@@ -609,27 +1462,45 @@ function renderQRCode() {
 
 
   const img =
-    document.createElement("img");
+    document.createElement(
+      "img"
+    );
 
 
-  img.src = qrUrl;
+  img.src =
+    qrUrl;
 
   img.alt =
     "माँ मनोकामना मंदिर Donation QR Code";
 
-  img.loading = "lazy";
+  img.loading =
+    "lazy";
 
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.objectFit = "contain";
-  img.style.display = "block";
+  img.style.width =
+    "100%";
+
+  img.style.height =
+    "100%";
+
+  img.style.objectFit =
+    "contain";
+
+  img.style.display =
+    "block";
 
 
   img.onerror = () => {
 
     qrBox.innerHTML = `
-      <span>QR</span>
-      <small>QR Code load नहीं हो सका</small>
+
+      <span>
+        QR
+      </span>
+
+      <small>
+        QR Code load नहीं हो सका
+      </small>
+
     `;
 
   };
@@ -637,7 +1508,9 @@ function renderQRCode() {
 
   qrBox.innerHTML = "";
 
-  qrBox.appendChild(img);
+  qrBox.appendChild(
+    img
+  );
 
 }
 
@@ -660,9 +1533,19 @@ function renderLiveVideo() {
   if (!liveUrl) {
 
     liveVideo.innerHTML = `
-      <div class="play-icon">▶</div>
-      <h3>Live Aarti</h3>
-      <p>आरती शुरू होने पर यहाँ Live दिखाई देगा।</p>
+
+      <div class="play-icon">
+        ▶
+      </div>
+
+      <h3>
+        Live Aarti
+      </h3>
+
+      <p>
+        आरती शुरू होने पर यहाँ Live दिखाई देगा।
+      </p>
+
     `;
 
     return;
@@ -671,12 +1554,15 @@ function renderLiveVideo() {
 
 
   const embedUrl =
-    getYouTubeEmbedUrl(liveUrl);
+    getYouTubeEmbedUrl(
+      liveUrl
+    );
 
 
   if (embedUrl) {
 
     liveVideo.innerHTML = `
+
       <iframe
         src="${escapeHtml(embedUrl)}"
         title="माँ मनोकामना Live Aarti"
@@ -687,6 +1573,7 @@ function renderLiveVideo() {
         allowfullscreen
         style="border:0; width:100%; height:100%; display:block;"
       ></iframe>
+
     `;
 
     return;
@@ -695,9 +1582,14 @@ function renderLiveVideo() {
 
 
   liveVideo.innerHTML = `
-    <div class="play-icon">▶</div>
 
-    <h3>Live Aarti</h3>
+    <div class="play-icon">
+      ▶
+    </div>
+
+    <h3>
+      Live Aarti
+    </h3>
 
     <p>
       Live Aarti देखने के लिए नीचे दिए बटन पर जाएँ।
@@ -712,6 +1604,7 @@ function renderLiveVideo() {
     >
       🔴 Open Live
     </a>
+
   `;
 
 }
@@ -735,12 +1628,17 @@ function getYouTubeEmbedUrl(url) {
 
 
     if (
-      parsed.hostname.includes("youtube.com") &&
-      parsed.pathname === "/watch"
+      parsed.hostname.includes(
+        "youtube.com"
+      ) &&
+      parsed.pathname ===
+        "/watch"
     ) {
 
       const videoId =
-        parsed.searchParams.get("v");
+        parsed.searchParams.get(
+          "v"
+        );
 
 
       if (videoId) {
@@ -753,12 +1651,17 @@ function getYouTubeEmbedUrl(url) {
 
 
     if (
-      parsed.hostname === "youtu.be" ||
-      parsed.hostname === "www.youtu.be"
+      parsed.hostname ===
+        "youtu.be" ||
+      parsed.hostname ===
+        "www.youtu.be"
     ) {
 
       const videoId =
-        parsed.pathname.replace("/", "");
+        parsed.pathname.replace(
+          "/",
+          ""
+        );
 
 
       if (videoId) {
@@ -771,12 +1674,18 @@ function getYouTubeEmbedUrl(url) {
 
 
     if (
-      parsed.hostname.includes("youtube.com") &&
-      parsed.pathname.startsWith("/live/")
+      parsed.hostname.includes(
+        "youtube.com"
+      ) &&
+      parsed.pathname.startsWith(
+        "/live/"
+      )
     ) {
 
       const videoId =
-        parsed.pathname.split("/")[2];
+        parsed.pathname.split(
+          "/"
+        )[2];
 
 
       if (videoId) {
@@ -789,8 +1698,12 @@ function getYouTubeEmbedUrl(url) {
 
 
     if (
-      parsed.hostname.includes("youtube.com") &&
-      parsed.pathname.startsWith("/embed/")
+      parsed.hostname.includes(
+        "youtube.com"
+      ) &&
+      parsed.pathname.startsWith(
+        "/embed/"
+      )
     ) {
 
       return url;
@@ -809,6 +1722,7 @@ function getYouTubeEmbedUrl(url) {
 
 
   return "";
+
 }
 
 
@@ -827,14 +1741,22 @@ async function loadSchedule() {
 
     const scheduleQuery =
       query(
-        collection(db, "schedule"),
-        orderBy("date", "asc"),
+        collection(
+          db,
+          "schedule"
+        ),
+        orderBy(
+          "date",
+          "asc"
+        ),
         limit(30)
       );
 
 
     const snapshot =
-      await getDocs(scheduleQuery);
+      await getDocs(
+        scheduleQuery
+      );
 
 
     if (snapshot.empty) {
@@ -849,21 +1771,25 @@ async function loadSchedule() {
     const schedules = [];
 
 
-    snapshot.forEach((scheduleDoc) => {
+    snapshot.forEach(
+      (scheduleDoc) => {
 
-      schedules.push({
+        schedules.push({
 
-        id:
-          scheduleDoc.id,
+          id:
+            scheduleDoc.id,
 
-        ...scheduleDoc.data()
+          ...scheduleDoc.data()
 
-      });
+        });
 
-    });
+      }
+    );
 
 
-    renderSchedule(schedules);
+    renderSchedule(
+      schedules
+    );
 
 
   } catch (error) {
@@ -898,8 +1824,14 @@ function listenToSchedule() {
 
     const scheduleQuery =
       query(
-        collection(db, "schedule"),
-        orderBy("date", "asc"),
+        collection(
+          db,
+          "schedule"
+        ),
+        orderBy(
+          "date",
+          "asc"
+        ),
         limit(30)
       );
 
@@ -912,21 +1844,25 @@ function listenToSchedule() {
         const schedules = [];
 
 
-        snapshot.forEach((scheduleDoc) => {
+        snapshot.forEach(
+          (scheduleDoc) => {
 
-          schedules.push({
+            schedules.push({
 
-            id:
-              scheduleDoc.id,
+              id:
+                scheduleDoc.id,
 
-            ...scheduleDoc.data()
+              ...scheduleDoc.data()
 
-          });
+            });
 
-        });
+          }
+        );
 
 
-        if (schedules.length === 0) {
+        if (
+          schedules.length === 0
+        ) {
 
           renderEmptySchedule();
 
@@ -935,7 +1871,9 @@ function listenToSchedule() {
         }
 
 
-        renderSchedule(schedules);
+        renderSchedule(
+          schedules
+        );
 
       },
 
@@ -965,81 +1903,96 @@ function listenToSchedule() {
    RENDER SCHEDULE
 ========================================================= */
 
-function renderSchedule(schedules) {
+function renderSchedule(
+  schedules
+) {
 
   if (!scheduleList) {
     return;
   }
 
 
-  scheduleList.innerHTML = "";
+  scheduleList.innerHTML =
+    "";
 
 
-  schedules.forEach((item) => {
+  schedules.forEach(
+    (item) => {
 
-    const scheduleItem =
-      document.createElement("div");
-
-
-    scheduleItem.className =
-      "schedule-item";
-
-
-    const dateInfo =
-      formatScheduleDate(item.date);
+      const scheduleItem =
+        document.createElement(
+          "div"
+        );
 
 
-    scheduleItem.innerHTML = `
-
-      <div class="schedule-date">
-
-        <strong>
-          ${escapeHtml(dateInfo.day)}
-        </strong>
-
-        <span>
-          ${escapeHtml(dateInfo.month)}
-        </span>
-
-      </div>
+      scheduleItem.className =
+        "schedule-item";
 
 
-      <div class="schedule-info">
-
-        <h3>
-          ${escapeHtml(
-            item.title ||
-            "कार्यक्रम"
-          )}
-        </h3>
-
-        <p>
-          ${escapeHtml(
-            item.description ||
-            ""
-          )}
-        </p>
-
-        ${
-          item.time
-            ? `
-              <small>
-                🕐 ${escapeHtml(item.time)}
-              </small>
-            `
-            : ""
-        }
-
-      </div>
-
-    `;
+      const dateInfo =
+        formatScheduleDate(
+          item.date
+        );
 
 
-    scheduleList.appendChild(
-      scheduleItem
-    );
+      scheduleItem.innerHTML = `
 
-  });
+        <div class="schedule-date">
+
+          <strong>
+            ${escapeHtml(
+              dateInfo.day
+            )}
+          </strong>
+
+          <span>
+            ${escapeHtml(
+              dateInfo.month
+            )}
+          </span>
+
+        </div>
+
+
+        <div class="schedule-info">
+
+          <h3>
+            ${escapeHtml(
+              item.title ||
+              "कार्यक्रम"
+            )}
+          </h3>
+
+          <p>
+            ${escapeHtml(
+              item.description ||
+              ""
+            )}
+          </p>
+
+          ${
+            item.time
+              ? `
+                <small>
+                  🕐 ${escapeHtml(
+                    item.time
+                  )}
+                </small>
+              `
+              : ""
+          }
+
+        </div>
+
+      `;
+
+
+      scheduleList.appendChild(
+        scheduleItem
+      );
+
+    }
+  );
 
 }
 
@@ -1049,7 +2002,8 @@ function renderSchedule(schedules) {
 ========================================================= */
 
 function renderEmptySchedule(
-  message = "कार्यक्रम जल्द अपडेट होगा।"
+  message =
+    "कार्यक्रम जल्द अपडेट होगा।"
 ) {
 
   if (!scheduleList) {
@@ -1063,9 +2017,13 @@ function renderEmptySchedule(
 
       <div class="schedule-date">
 
-        <strong>—</strong>
+        <strong>
+          —
+        </strong>
 
-        <span>DATE</span>
+        <span>
+          DATE
+        </span>
 
       </div>
 
@@ -1073,7 +2031,9 @@ function renderEmptySchedule(
       <div class="schedule-info">
 
         <h3>
-          ${escapeHtml(message)}
+          ${escapeHtml(
+            message
+          )}
         </h3>
 
         <p>
@@ -1093,7 +2053,9 @@ function renderEmptySchedule(
    FORMAT SCHEDULE DATE
 ========================================================= */
 
-function formatScheduleDate(dateValue) {
+function formatScheduleDate(
+  dateValue
+) {
 
   if (!dateValue) {
 
@@ -1108,20 +2070,32 @@ function formatScheduleDate(dateValue) {
   try {
 
     const date =
-      new Date(dateValue);
+      new Date(
+        dateValue
+      );
 
 
-    if (Number.isNaN(date.getTime())) {
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
 
       return {
-        day: dateValue,
-        month: "DATE"
+
+        day:
+          dateValue,
+
+        month:
+          "DATE"
+
       };
 
     }
 
 
     const months = [
+
       "JAN",
       "FEB",
       "MAR",
@@ -1134,6 +2108,7 @@ function formatScheduleDate(dateValue) {
       "OCT",
       "NOV",
       "DEC"
+
     ];
 
 
@@ -1142,10 +2117,15 @@ function formatScheduleDate(dateValue) {
       day:
         String(
           date.getDate()
-        ).padStart(2, "0"),
+        ).padStart(
+          2,
+          "0"
+        ),
 
       month:
-        months[date.getMonth()]
+        months[
+          date.getMonth()
+        ]
 
     };
 
@@ -1155,7 +2135,9 @@ function formatScheduleDate(dateValue) {
     return {
 
       day:
-        String(dateValue),
+        String(
+          dateValue
+        ),
 
       month:
         "DATE"
@@ -1182,34 +2164,46 @@ async function loadGallery() {
 
     const galleryQuery =
       query(
-        collection(db, "gallery"),
-        orderBy("createdAt", "desc"),
+        collection(
+          db,
+          "gallery"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        ),
         limit(30)
       );
 
 
     const snapshot =
-      await getDocs(galleryQuery);
+      await getDocs(
+        galleryQuery
+      );
 
 
     const items = [];
 
 
-    snapshot.forEach((galleryDoc) => {
+    snapshot.forEach(
+      (galleryDoc) => {
 
-      items.push({
+        items.push({
 
-        id:
-          galleryDoc.id,
+          id:
+            galleryDoc.id,
 
-        ...galleryDoc.data()
+          ...galleryDoc.data()
 
-      });
+        });
 
-    });
+      }
+    );
 
 
-    renderGallery(items);
+    renderGallery(
+      items
+    );
 
 
   } catch (error) {
@@ -1244,8 +2238,14 @@ function listenToGallery() {
 
     const galleryQuery =
       query(
-        collection(db, "gallery"),
-        orderBy("createdAt", "desc"),
+        collection(
+          db,
+          "gallery"
+        ),
+        orderBy(
+          "createdAt",
+          "desc"
+        ),
         limit(30)
       );
 
@@ -1258,21 +2258,25 @@ function listenToGallery() {
         const items = [];
 
 
-        snapshot.forEach((galleryDoc) => {
+        snapshot.forEach(
+          (galleryDoc) => {
 
-          items.push({
+            items.push({
 
-            id:
-              galleryDoc.id,
+              id:
+                galleryDoc.id,
 
-            ...galleryDoc.data()
+              ...galleryDoc.data()
 
-          });
+            });
 
-        });
+          }
+        );
 
 
-        renderGallery(items);
+        renderGallery(
+          items
+        );
 
       },
 
@@ -1302,14 +2306,19 @@ function listenToGallery() {
    RENDER GALLERY
 ========================================================= */
 
-function renderGallery(items) {
+function renderGallery(
+  items
+) {
 
   if (!galleryGrid) {
     return;
   }
 
 
-  if (!items || items.length === 0) {
+  if (
+    !items ||
+    items.length === 0
+  ) {
 
     renderEmptyGallery();
 
@@ -1318,87 +2327,110 @@ function renderGallery(items) {
   }
 
 
-  galleryGrid.innerHTML = "";
+  galleryGrid.innerHTML =
+    "";
 
 
-  items.forEach((item) => {
+  items.forEach(
+    (item) => {
 
-    const galleryItem =
-      document.createElement("article");
-
-
-    galleryItem.className =
-      "gallery-item";
-
-
-    const image =
-      document.createElement("img");
+      const galleryItem =
+        document.createElement(
+          "article"
+        );
 
 
-    image.src =
-      item.imageUrl || "";
+      galleryItem.className =
+        "gallery-item";
 
 
-    image.alt =
-      item.title ||
-      "माँ मनोकामना मंदिर";
+      const image =
+        document.createElement(
+          "img"
+        );
 
 
-    image.loading =
-      "lazy";
+      image.src =
+        item.imageUrl || "";
 
 
-    image.decoding =
-      "async";
+      image.alt =
+        item.title ||
+        "माँ मनोकामना मंदिर";
 
 
-    image.onerror = () => {
-
-      image.style.display =
-        "none";
-
-    };
+      image.loading =
+        "lazy";
 
 
-    const caption =
-      document.createElement("div");
+      image.decoding =
+        "async";
 
 
-    caption.className =
-      "gallery-caption";
+      image.onerror = () => {
+
+        image.style.display =
+          "none";
+
+      };
 
 
-    const title =
-      document.createElement("h3");
+      const caption =
+        document.createElement(
+          "div"
+        );
 
 
-    title.textContent =
-      item.title ||
-      "मंदिर दर्शन";
+      caption.className =
+        "gallery-caption";
 
 
-    const category =
-      document.createElement("span");
+      const title =
+        document.createElement(
+          "h3"
+        );
 
 
-    category.textContent =
-      item.category ||
-      "मंदिर";
+      title.textContent =
+        item.title ||
+        "मंदिर दर्शन";
 
 
-    caption.appendChild(title);
-    caption.appendChild(category);
+      const category =
+        document.createElement(
+          "span"
+        );
 
 
-    galleryItem.appendChild(image);
-    galleryItem.appendChild(caption);
+      category.textContent =
+        item.category ||
+        "मंदिर";
 
 
-    galleryGrid.appendChild(
-      galleryItem
-    );
+      caption.appendChild(
+        title
+      );
 
-  });
+      caption.appendChild(
+        category
+      );
+
+
+      galleryItem.appendChild(
+        image
+      );
+
+      galleryItem.appendChild(
+        caption
+      );
+
+
+      galleryGrid.appendChild(
+        galleryItem
+      );
+
+    }
+  );
 
 }
 
@@ -1408,7 +2440,8 @@ function renderGallery(items) {
 ========================================================= */
 
 function renderEmptyGallery(
-  message = "अभी कोई फोटो उपलब्ध नहीं है।"
+  message =
+    "अभी कोई फोटो उपलब्ध नहीं है।"
 ) {
 
   if (!galleryGrid) {
@@ -1420,10 +2453,14 @@ function renderEmptyGallery(
 
     <div class="gallery-placeholder">
 
-      <span>📸</span>
+      <span>
+        📸
+      </span>
 
       <p>
-        ${escapeHtml(message)}
+        ${escapeHtml(
+          message
+        )}
       </p>
 
     </div>
@@ -1439,26 +2476,29 @@ function renderEmptyGallery(
 
 if (mapBtn) {
 
-  mapBtn.addEventListener("click", () => {
+  mapBtn.addEventListener(
+    "click",
+    () => {
 
-    const address =
-      encodeURIComponent(
-        "श्री श्री 108 माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय, बिहार"
+      const address =
+        encodeURIComponent(
+          "श्री श्री 108 माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय, बिहार"
+        );
+
+
+      const mapsUrl =
+        "https://www.google.com/maps/search/?api=1&query=" +
+        address;
+
+
+      window.open(
+        mapsUrl,
+        "_blank",
+        "noopener,noreferrer"
       );
 
-
-    const mapsUrl =
-      "https://www.google.com/maps/search/?api=1&query=" +
-      address;
-
-
-    window.open(
-      mapsUrl,
-      "_blank",
-      "noopener,noreferrer"
-    );
-
-  });
+    }
+  );
 
 }
 
@@ -1467,40 +2507,44 @@ if (mapBtn) {
    LANGUAGE BUTTON
 ========================================================= */
 
-let englishMode = false;
+let englishMode =
+  false;
 
 
 if (languageBtn) {
 
-  languageBtn.addEventListener("click", () => {
+  languageBtn.addEventListener(
+    "click",
+    () => {
 
-    englishMode =
-      !englishMode;
-
-
-    if (englishMode) {
-
-      languageBtn.textContent =
-        "English | हिंदी";
+      englishMode =
+        !englishMode;
 
 
-      showToast(
-        "English interface जल्द पूरी तरह उपलब्ध होगा।"
-      );
+      if (englishMode) {
 
-    } else {
-
-      languageBtn.textContent =
-        "हिंदी | English";
+        languageBtn.textContent =
+          "English | हिंदी";
 
 
-      showToast(
-        "हिंदी भाषा चयनित है।"
-      );
+        showToast(
+          "English interface जल्द पूरी तरह उपलब्ध होगा।"
+        );
+
+      } else {
+
+        languageBtn.textContent =
+          "हिंदी | English";
+
+
+        showToast(
+          "हिंदी भाषा चयनित है।"
+        );
+
+      }
 
     }
-
-  });
+  );
 
 }
 
@@ -1509,7 +2553,9 @@ if (languageBtn) {
    ESCAPE HTML
 ========================================================= */
 
-function escapeHtml(value) {
+function escapeHtml(
+  value
+) {
 
   if (
     value === null ||
@@ -1555,33 +2601,44 @@ function escapeHtml(value) {
    PWA SERVICE WORKER
 ========================================================= */
 
-if ("serviceWorker" in navigator) {
+if (
+  "serviceWorker" in navigator
+) {
 
-  window.addEventListener("load", () => {
+  window.addEventListener(
+    "load",
+    () => {
 
-    navigator.serviceWorker
+      navigator.serviceWorker
 
-      .register("./sw.js")
+        .register(
+          "./sw.js"
+        )
 
-      .then((registration) => {
+        .then(
+          (registration) => {
 
-        console.log(
-          "Service Worker registered successfully.",
-          registration
+            console.log(
+              "Service Worker registered successfully.",
+              registration
+            );
+
+          }
+        )
+
+        .catch(
+          (error) => {
+
+            console.error(
+              "Service Worker registration failed:",
+              error
+            );
+
+          }
         );
 
-      })
-
-      .catch((error) => {
-
-        console.error(
-          "Service Worker registration failed:",
-          error
-        );
-
-      });
-
-  });
+    }
+  );
 
 }
 
@@ -1590,23 +2647,7 @@ if ("serviceWorker" in navigator) {
    PWA INSTALL BUTTON
 ========================================================= */
 
-/*
-   IMPORTANT:
-
-   Button page open होते ही दिखाई देगा।
-
-   Native Chrome install prompt जब available होगा,
-   button उसी prompt को खोल देगा।
-
-   Browser अगर अभी native prompt नहीं देता,
-   तो button फिर भी दिखाई देगा और user को
-   simple message मिलेगा.
-*/
-
-
 function createInstallButton() {
-
-  /* अगर पहले से मौजूद है तो वही use करें */
 
   const existingButton =
     $("installAppBtn");
@@ -1620,7 +2661,9 @@ function createInstallButton() {
   } else {
 
     installButton =
-      document.createElement("button");
+      document.createElement(
+        "button"
+      );
 
     installButton.id =
       "installAppBtn";
@@ -1637,12 +2680,6 @@ function createInstallButton() {
 
   }
 
-
-  /*
-    Professional floating style.
-    Inline style इसलिए ताकि style.css पर
-    dependency न रहे.
-  */
 
   installButton.style.position =
     "fixed";
@@ -1698,15 +2735,12 @@ function createInstallButton() {
   installButton.style.transition =
     "transform .2s ease, opacity .2s ease";
 
+
   installButton.setAttribute(
     "aria-label",
     "Install App"
   );
 
-
-  /*
-    Button click सिर्फ एक बार attach होगा.
-  */
 
   if (
     !installButton.dataset.installListener
@@ -1723,10 +2757,6 @@ function createInstallButton() {
   }
 
 
-  /*
-    Hover effect
-  */
-
   if (
     !installButton.dataset.hoverListener
   ) {
@@ -1734,8 +2764,10 @@ function createInstallButton() {
     installButton.addEventListener(
       "mouseenter",
       () => {
+
         installButton.style.transform =
           "translateY(-2px)";
+
       }
     );
 
@@ -1743,8 +2775,10 @@ function createInstallButton() {
     installButton.addEventListener(
       "mouseleave",
       () => {
+
         installButton.style.transform =
           "translateY(0)";
+
       }
     );
 
@@ -1757,20 +2791,17 @@ function createInstallButton() {
 }
 
 
-/*
-   Page render होते ही button create करो.
-
-   इससे beforeinstallprompt का wait नहीं होगा.
-*/
-
 if (
-  document.readyState === "loading"
+  document.readyState ===
+  "loading"
 ) {
 
   document.addEventListener(
     "DOMContentLoaded",
     createInstallButton,
-    { once: true }
+    {
+      once: true
+    }
   );
 
 } else {
@@ -1788,11 +2819,6 @@ window.addEventListener(
   "beforeinstallprompt",
   (event) => {
 
-    /*
-      Browser का native prompt रोकते हैं.
-      बाद में हमारे Install button से खोलेंगे.
-    */
-
     event.preventDefault();
 
     deferredInstallPrompt =
@@ -1803,10 +2829,6 @@ window.addEventListener(
       "PWA install prompt is ready."
     );
 
-
-    /*
-      Button visible रखें.
-    */
 
     createInstallButton();
 
@@ -1820,11 +2842,6 @@ window.addEventListener(
 
 async function installApp() {
 
-  /*
-     अगर Chrome ने अभी native install prompt
-     provide नहीं किया है.
-  */
-
   if (!deferredInstallPrompt) {
 
     showToast(
@@ -1837,10 +2854,6 @@ async function installApp() {
 
 
   try {
-
-    /*
-      Native browser install dialog.
-    */
 
     deferredInstallPrompt.prompt();
 
@@ -1856,7 +2869,8 @@ async function installApp() {
 
 
     if (
-      choice.outcome === "accepted"
+      choice.outcome ===
+      "accepted"
     ) {
 
       showToast(
@@ -1873,13 +2887,7 @@ async function installApp() {
       error
     );
 
-
   } finally {
-
-    /*
-      Prompt एक बार use होने के बाद
-      फिर use नहीं किया जा सकता.
-    */
 
     deferredInstallPrompt =
       null;
@@ -1906,11 +2914,6 @@ window.addEventListener(
       null;
 
 
-    /*
-      Installed होने के बाद
-      Install button hide.
-    */
-
     if (installButton) {
 
       installButton.style.display =
@@ -1933,10 +2936,6 @@ window.addEventListener(
 
 function checkIfAppIsInstalled() {
 
-  /*
-    Android / Chrome
-  */
-
   if (
     window.matchMedia(
       "(display-mode: standalone)"
@@ -1947,10 +2946,6 @@ function checkIfAppIsInstalled() {
 
   }
 
-
-  /*
-    iPhone / iPad Safari
-  */
 
   if (
     window.navigator.standalone === true
@@ -1966,12 +2961,9 @@ function checkIfAppIsInstalled() {
 }
 
 
-/*
-   अगर app पहले से installed है,
-   Install button मत दिखाओ.
-*/
-
-if (checkIfAppIsInstalled()) {
+if (
+  checkIfAppIsInstalled()
+) {
 
   if (installButton) {
 
