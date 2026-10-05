@@ -3,320 +3,2200 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login — माँ मनोकामना</title>
-  <meta name="theme-color" content="#7f1111">
+
+  <title>Temple Admin — माँ मनोकामना</title>
+
   <style>
-    *{box-sizing:border-box}
-    body{margin:0;font-family:Arial,sans-serif;background:#fffaf2;color:#35100d}
-    .wrap{max-width:900px;margin:auto;padding:24px}
-    .card{background:#fff;border:1px solid #ead8bd;border-radius:20px;padding:24px;box-shadow:0 10px 30px #7f11111a;margin-bottom:20px}
-    h1,h2{margin-top:0}
-    input,select,textarea{width:100%;padding:12px;border:1px solid #d8c4a6;border-radius:10px;margin:7px 0 14px;font:inherit}
-    textarea{min-height:100px;resize:vertical}
-    button{border:0;border-radius:10px;padding:12px 18px;background:#7f1111;color:#fff;font-weight:700;cursor:pointer}
-    button.secondary{background:#ead7b6;color:#4b1712}
-    button.danger{background:#a40000}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .hidden{display:none!important}
-    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-    .status{padding:10px;border-radius:10px;background:#fff3d8;margin-bottom:15px}
-    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
-    .item{border:1px solid #ead8bd;border-radius:14px;padding:15px;margin-top:10px;background:#fffaf2}
-    @media(max-width:650px){.grid{grid-template-columns:1fr}.wrap{padding:14px}.card{padding:18px}}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, Arial, sans-serif;
+      background: #f5f7fb;
+      color: #172033;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    /* ================= LOGIN ================= */
+
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top, #fff3df, transparent 45%),
+        #f5f7fb;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border-radius: 24px;
+      padding: 35px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.10);
+    }
+
+    .temple-icon {
+      width: 70px;
+      height: 70px;
+      margin: auto;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff0d5;
+      font-size: 36px;
+    }
+
+    .login-card h1 {
+      text-align: center;
+      margin-top: 18px;
+      font-size: 25px;
+    }
+
+    .login-card p {
+      text-align: center;
+      color: #718096;
+      margin: 8px 0 25px;
+    }
+
+    /* ================= COMMON ================= */
+
+    .hidden {
+      display: none !important;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 7px;
+      font-size: 14px;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid #dce1ea;
+      border-radius: 12px;
+      padding: 13px 14px;
+      outline: none;
+      background: #fff;
+    }
+
+    .field textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .field input:focus,
+    .field textarea:focus,
+    .field select:focus {
+      border-color: #f28c28;
+      box-shadow: 0 0 0 3px rgba(242,140,40,.10);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 18px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: .2s;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #f28c28;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #172033;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn-small {
+      padding: 9px 13px;
+      font-size: 13px;
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .success {
+      color: #15803d;
+    }
+
+    .error {
+      color: #dc2626;
+    }
+
+    /* ================= ADMIN ================= */
+
+    .admin-page {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #172033;
+      color: white;
+      padding: 16px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff0d5;
+      font-size: 22px;
+    }
+
+    .brand h2 {
+      font-size: 18px;
+    }
+
+    .brand small {
+      color: #aeb8c9;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .logout-btn {
+      background: #2b3549;
+      color: white;
+      border: 1px solid #465168;
+      padding: 10px 15px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .container {
+      max-width: 1250px;
+      margin: auto;
+      padding: 25px;
+    }
+
+    .welcome {
+      margin-bottom: 22px;
+    }
+
+    .welcome h1 {
+      font-size: 27px;
+      margin-bottom: 5px;
+    }
+
+    .welcome p {
+      color: #718096;
+    }
+
+    /* ================= CARDS ================= */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 8px 30px rgba(24,32,51,.06);
+      border: 1px solid #edf0f5;
+    }
+
+    .card.full {
+      grid-column: 1 / -1;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 10px;
+    }
+
+    .card-header h2 {
+      font-size: 19px;
+    }
+
+    .card-header p {
+      color: #7b8495;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    /* ================= UPLOAD ================= */
+
+    .upload-box {
+      border: 2px dashed #d9dee8;
+      border-radius: 16px;
+      padding: 25px;
+      text-align: center;
+      cursor: pointer;
+      background: #fafbfc;
+    }
+
+    .upload-box:hover {
+      border-color: #f28c28;
+      background: #fffaf3;
+    }
+
+    .upload-icon {
+      font-size: 38px;
+      margin-bottom: 8px;
+    }
+
+    .upload-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .upload-box span {
+      color: #7b8495;
+      font-size: 13px;
+    }
+
+    .preview {
+      max-width: 220px;
+      max-height: 180px;
+      margin: 15px auto 0;
+      display: block;
+      border-radius: 12px;
+      object-fit: contain;
+      border: 1px solid #e4e7ec;
+    }
+
+    .upload-progress {
+      margin-top: 12px;
+      display: none;
+      color: #f28c28;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    /* ================= GALLERY ================= */
+
+    .gallery-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .gallery-item {
+      border: 1px solid #e7eaf0;
+      border-radius: 15px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: 170px;
+      display: block;
+      object-fit: cover;
+    }
+
+    .gallery-info {
+      padding: 12px;
+    }
+
+    .gallery-info strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .gallery-info small {
+      color: #7b8495;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    /* ================= DONATIONS ================= */
+
+    .donation-item {
+      border: 1px solid #e6e9ef;
+      border-radius: 14px;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .donation-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .amount {
+      font-size: 18px;
+      font-weight: 900;
+      color: #15803d;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #c2410c;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .donation-meta {
+      color: #6b7280;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* ================= SCHEDULE ================= */
+
+    .schedule-item {
+      border-left: 4px solid #f28c28;
+      background: #fffaf3;
+      border-radius: 10px;
+      padding: 13px;
+      margin-bottom: 10px;
+    }
+
+    .schedule-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .schedule-item small {
+      color: #6b7280;
+    }
+
+    /* ================= MOBILE ================= */
+
+    @media (max-width: 800px) {
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card.full {
+        grid-column: auto;
+      }
+
+      .gallery-list {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .container {
+        padding: 15px;
+      }
+
+      .topbar {
+        padding: 13px 15px;
+      }
+
+      .brand h2 {
+        font-size: 15px;
+      }
+
+      .brand small {
+        font-size: 11px;
+      }
+    }
+
+    @media (max-width: 500px) {
+
+      .login-card {
+        padding: 25px 20px;
+      }
+
+      .gallery-list {
+        grid-template-columns: 1fr;
+      }
+
+      .gallery-item img {
+        height: 210px;
+      }
+
+      .welcome h1 {
+        font-size: 22px;
+      }
+    }
   </style>
 </head>
+
 <body>
-<div class="wrap">
 
-  <div id="loginCard" class="card">
-    <h1>🔐 Admin Login</h1>
-    <p>यहाँ केवल authorized committee admin login कर सकता है।</p>
+  <!-- =====================================================
+       LOGIN
+  ====================================================== -->
 
-    <label>Email</label>
-    <input id="email" type="email" autocomplete="username" placeholder="Admin email">
+  <section id="loginPage" class="login-page">
 
-    <label>Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="Password">
+    <div class="login-card">
 
-    <button id="loginBtn">Login</button>
-    <div id="loginMsg" class="status hidden"></div>
-  </div>
+      <div class="temple-icon">🛕</div>
 
-  <div id="adminPanel" class="hidden">
-    <div class="card">
-      <div class="top">
-        <div>
-          <h1>🙏 Admin Dashboard</h1>
-          <p id="adminEmail"></p>
-        </div>
-        <button id="logoutBtn" class="secondary">Logout</button>
+      <h1>माँ मनोकामना मंदिर</h1>
+
+      <p>Admin Panel</p>
+
+      <div class="field">
+        <label>Email</label>
+        <input
+          type="email"
+          id="email"
+          placeholder="Admin email"
+          autocomplete="username"
+        >
       </div>
+
+      <div class="field">
+        <label>Password</label>
+        <input
+          type="password"
+          id="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button id="loginBtn" class="btn btn-primary">
+        Login
+      </button>
+
+      <div id="loginMsg" class="message"></div>
+
     </div>
 
-    <div class="card">
-      <h2>⚙️ Temple Settings</h2>
+  </section>
+
+
+  <!-- =====================================================
+       ADMIN PANEL
+  ====================================================== -->
+
+  <section id="adminPage" class="admin-page hidden">
+
+    <!-- TOP BAR -->
+
+    <header class="topbar">
+
+      <div class="brand">
+
+        <div class="brand-icon">🛕</div>
+
+        <div>
+          <h2>माँ मनोकामना मंदिर</h2>
+          <small>Temple Admin</small>
+        </div>
+
+      </div>
+
+      <button id="logoutBtn" class="logout-btn">
+        Logout
+      </button>
+
+    </header>
+
+
+    <main class="container">
+
+      <div class="welcome">
+
+        <h1>🙏 नमस्कार Admin</h1>
+
+        <p>
+          मंदिर की जानकारी और photos यहाँ से आसानी से manage करें।
+        </p>
+
+        <small id="adminEmail"
+               style="display:block;margin-top:6px;color:#9ca3af;">
+        </small>
+
+      </div>
+
+
       <div class="grid">
-        <div>
-          <label>UPI ID</label>
-          <input id="upiId" placeholder="example@upi">
+
+
+        <!-- =================================================
+             TEMPLE SETTINGS
+        ================================================== -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <div>
+              <h2>🛕 मंदिर की जानकारी</h2>
+              <p>Website पर दिखने वाली basic जानकारी</p>
+            </div>
+
+          </div>
+
+
+          <div class="field">
+            <label>UPI ID</label>
+
+            <input
+              type="text"
+              id="upiId"
+              placeholder="example@upi"
+            >
+          </div>
+
+
+          <div class="field">
+            <label>आज की आरती का समय</label>
+
+            <input
+              type="text"
+              id="aartiTime"
+              placeholder="सुबह 7:00 बजे"
+            >
+          </div>
+
+
+          <div class="field">
+            <label>Live Aarti Link</label>
+
+            <input
+              type="url"
+              id="liveUrl"
+              placeholder="YouTube Live link"
+            >
+          </div>
+
+
+          <button
+            id="saveSettingsBtn"
+            class="btn btn-secondary"
+          >
+            💾 जानकारी Save करें
+          </button>
+
+          <div id="settingsMsg" class="message"></div>
+
         </div>
-        <div>
-          <label>आज की आरती का समय</label>
-          <input id="aartiTime" placeholder="शाम 7:00 बजे">
+
+
+        <!-- =================================================
+             QR UPLOAD
+        ================================================== -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <div>
+              <h2>📱 Donation QR</h2>
+              <p>QR photo चुनकर सीधे upload करें</p>
+            </div>
+
+          </div>
+
+
+          <label class="upload-box" for="qrFile">
+
+            <div class="upload-icon">📷</div>
+
+            <strong>QR Photo चुनें</strong>
+
+            <span>
+              JPG / PNG • अधिकतम 5 MB
+            </span>
+
+            <input
+              type="file"
+              id="qrFile"
+              accept="image/*"
+              hidden
+            >
+
+            <img
+              id="qrPreview"
+              class="preview hidden"
+              alt="QR Preview"
+            >
+
+          </label>
+
+
+          <div
+            id="qrUploadProgress"
+            class="upload-progress"
+          >
+            ⏳ QR upload हो रहा है...
+          </div>
+
+
+          <button
+            id="uploadQrBtn"
+            class="btn btn-secondary"
+            style="width:100%;margin-top:15px;"
+          >
+            📤 QR Save करें
+          </button>
+
+          <div id="qrMsg" class="message"></div>
+
         </div>
+
+
+        <!-- =================================================
+             GALLERY UPLOAD
+        ================================================== -->
+
+        <div class="card full">
+
+          <div class="card-header">
+
+            <div>
+              <h2>🖼️ मंदिर Gallery</h2>
+              <p>
+                Photo चुनें और Upload करें — बस इतना ही।
+              </p>
+            </div>
+
+          </div>
+
+
+          <div class="grid">
+
+            <div>
+
+              <div class="field">
+
+                <label>Photo का नाम</label>
+
+                <input
+                  type="text"
+                  id="galleryTitle"
+                  placeholder="जैसे: मंदिर का मुख्य द्वार"
+                >
+
+              </div>
+
+
+              <div class="field">
+
+                <label>Photo Category</label>
+
+                <select id="galleryCategory">
+
+                  <option value="Temple">
+                    Temple
+                  </option>
+
+                  <option value="Aarti">
+                    Aarti
+                  </option>
+
+                  <option value="Festival">
+                    Festival
+                  </option>
+
+                  <option value="Events">
+                    Events
+                  </option>
+
+                  <option value="Other">
+                    Other
+                  </option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+
+            <div>
+
+              <label class="upload-box" for="galleryFile">
+
+                <div class="upload-icon">📸</div>
+
+                <strong>Photo चुनें</strong>
+
+                <span>
+                  JPG / PNG • अधिकतम 5 MB
+                </span>
+
+                <input
+                  type="file"
+                  id="galleryFile"
+                  accept="image/*"
+                  hidden
+                >
+
+                <img
+                  id="galleryPreview"
+                  class="preview hidden"
+                  alt="Gallery Preview"
+                >
+
+              </label>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="galleryUploadProgress"
+            class="upload-progress"
+          >
+            ⏳ Photo upload हो रही है...
+          </div>
+
+
+          <button
+            id="uploadGalleryBtn"
+            class="btn btn-secondary"
+            style="margin-top:15px;"
+          >
+            📤 Gallery में Upload करें
+          </button>
+
+
+          <div id="galleryMsg" class="message"></div>
+
+        </div>
+
+
+        <!-- =================================================
+             GALLERY LIST
+        ================================================== -->
+
+        <div class="card full">
+
+          <div class="card-header">
+
+            <div>
+              <h2>📷 Uploaded Photos</h2>
+              <p>Website पर दिखाई देने वाली photos</p>
+            </div>
+
+            <button
+              id="refreshGalleryBtn"
+              class="btn btn-secondary btn-small"
+            >
+              Refresh
+            </button>
+
+          </div>
+
+
+          <div
+            id="galleryList"
+            class="gallery-list"
+          >
+
+            <p style="color:#718096;">
+              Photos load हो रही हैं...
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             SCHEDULE
+        ================================================== -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <div>
+              <h2>📅 Schedule</h2>
+              <p>नई पूजा / कार्यक्रम जोड़ें</p>
+            </div>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Date</label>
+
+            <input
+              type="date"
+              id="scheduleDate"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Time</label>
+
+            <input
+              type="time"
+              id="scheduleTime"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Title</label>
+
+            <input
+              type="text"
+              id="scheduleTitle"
+              placeholder="जैसे: संध्या आरती"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Description</label>
+
+            <textarea
+              id="scheduleDescription"
+              placeholder="कार्यक्रम की जानकारी"
+            ></textarea>
+
+          </div>
+
+
+          <button
+            id="addScheduleBtn"
+            class="btn btn-secondary"
+          >
+            ➕ Schedule जोड़ें
+          </button>
+
+          <div id="scheduleMsg" class="message"></div>
+
+        </div>
+
+
+        <!-- =================================================
+             DONATIONS
+        ================================================== -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <div>
+              <h2>💰 Donations</h2>
+              <p>हाल की donation entries</p>
+            </div>
+
+            <button
+              id="refreshDonationsBtn"
+              class="btn btn-secondary btn-small"
+            >
+              Refresh
+            </button>
+
+          </div>
+
+
+          <div id="donationsList">
+
+            <p style="color:#718096;">
+              Donations load हो रही हैं...
+            </p>
+
+          </div>
+
+        </div>
+
+
       </div>
 
-      <label>Live Aarti / YouTube URL</label>
-      <input id="liveUrl" placeholder="https://youtube.com/...">
+    </main>
 
-      <label>Donation QR Image URL</label>
-      <input id="qrUrl" placeholder="Firebase Storage या image URL">
+  </section>
 
-      <button id="saveSettingsBtn">Save Settings</button>
-      <div id="settingsMsg" class="status hidden"></div>
-    </div>
 
-    <div class="card">
-      <h2>📅 Add Puja / Aarti Schedule</h2>
+  <!-- =====================================================
+       JAVASCRIPT
+  ====================================================== -->
 
-      <div class="grid">
-        <div>
-          <label>Date</label>
-          <input id="scheduleDate" type="date">
-        </div>
-        <div>
-          <label>Time</label>
-          <input id="scheduleTime" placeholder="शाम 7:00 बजे">
-        </div>
-      </div>
+  <script type="module">
 
-      <label>Title</label>
-      <input id="scheduleTitle" placeholder="संध्या आरती">
+    /* =====================================================
+       FIREBASE
+    ====================================================== */
 
-      <label>Description</label>
-      <textarea id="scheduleDescription" placeholder="कार्यक्रम की जानकारी"></textarea>
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
-      <button id="addScheduleBtn">Add Schedule</button>
-      <div id="scheduleMsg" class="status hidden"></div>
-    </div>
 
-    <div class="card">
-      <h2>💰 Recent Donations</h2>
-      <div id="donationsList">Loading...</div>
-    </div>
-  </div>
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
 
-</div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  addDoc,
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      addDoc,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-import firebaseConfig from "./firebase-config.js";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+    import firebaseConfig from "./firebase-config.js";
 
-const loginCard = document.getElementById("loginCard");
-const adminPanel = document.getElementById("adminPanel");
-const loginMsg = document.getElementById("loginMsg");
 
-function message(el, text, show = true) {
-  el.textContent = text;
-  el.classList.toggle("hidden", !show);
-}
+    const app = initializeApp(firebaseConfig);
 
-async function isAdmin(user) {
-  const adminSnap = await getDoc(doc(db, "admins", user.uid));
-  return adminSnap.exists() && adminSnap.data().role === "admin";
-}
+    const auth = getAuth(app);
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+    const db = getFirestore(app);
 
-  if (!email || !password) {
-    message(loginMsg, "Email और password भरें।");
-    return;
-  }
 
-  try {
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    /* =====================================================
+       CLOUDINARY
+    ====================================================== */
 
-    if (!(await isAdmin(result.user))) {
-      await signOut(auth);
-      message(loginMsg, "Access denied. यह account admin नहीं है।");
-      return;
+    const CLOUDINARY_CLOUD_NAME = "rjjxdzso";
+
+    const CLOUDINARY_UPLOAD_PRESET =
+      "maa_temple_upload";
+
+
+    /* =====================================================
+       ELEMENTS
+    ====================================================== */
+
+    const loginPage =
+      document.getElementById("loginPage");
+
+    const adminPage =
+      document.getElementById("adminPage");
+
+    const loginBtn =
+      document.getElementById("loginBtn");
+
+    const logoutBtn =
+      document.getElementById("logoutBtn");
+
+    const loginMsg =
+      document.getElementById("loginMsg");
+
+    const adminEmail =
+      document.getElementById("adminEmail");
+
+
+    /* =====================================================
+       HELPERS
+    ====================================================== */
+
+    function showMessage(element, message, type = "") {
+
+      element.textContent = message;
+
+      element.className =
+        "message " + type;
+
     }
 
-    message(loginMsg, "");
-  } catch (error) {
-    console.error(error);
-    message(loginMsg, "Login failed. Email/password check करें।");
-  }
-});
 
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  signOut(auth);
-});
+    function escapeHtml(value) {
 
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    loginCard.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
-    return;
-  }
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 
-  try {
-    if (!(await isAdmin(user))) {
-      await signOut(auth);
-      return;
     }
 
-    loginCard.classList.add("hidden");
-    adminPanel.classList.remove("hidden");
-    document.getElementById("adminEmail").textContent = user.email || "";
 
-    await loadSettings();
-    await loadDonations();
-  } catch (error) {
-    console.error(error);
-    await signOut(auth);
-  }
-});
+    function formatDate(timestamp) {
 
-async function loadSettings() {
-  const snap = await getDoc(doc(db, "temple", "settings"));
-  if (!snap.exists()) return;
+      if (!timestamp) return "—";
 
-  const data = snap.data();
+      try {
 
-  document.getElementById("upiId").value = data.upiId || "";
-  document.getElementById("aartiTime").value = data.aartiTime || "";
-  document.getElementById("liveUrl").value = data.liveUrl || "";
-  document.getElementById("qrUrl").value = data.qrUrl || "";
-}
+        const date =
+          timestamp.toDate
+            ? timestamp.toDate()
+            : new Date(timestamp);
 
-document.getElementById("saveSettingsBtn").addEventListener("click", async () => {
-  const msg = document.getElementById("settingsMsg");
+        return date.toLocaleString("hi-IN");
 
-  try {
-    await setDoc(doc(db, "temple", "settings"), {
-      upiId: document.getElementById("upiId").value.trim(),
-      aartiTime: document.getElementById("aartiTime").value.trim(),
-      liveUrl: document.getElementById("liveUrl").value.trim(),
-      qrUrl: document.getElementById("qrUrl").value.trim(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+      } catch {
 
-    message(msg, "Settings successfully save हो गईं।");
-  } catch (error) {
-    console.error(error);
-    message(msg, "Settings save नहीं हुईं।");
-  }
-});
+        return "—";
 
-document.getElementById("addScheduleBtn").addEventListener("click", async () => {
-  const msg = document.getElementById("scheduleMsg");
-  const date = document.getElementById("scheduleDate").value;
-  const time = document.getElementById("scheduleTime").value.trim();
-  const title = document.getElementById("scheduleTitle").value.trim();
-  const description = document.getElementById("scheduleDescription").value.trim();
+      }
 
-  if (!date || !title) {
-    message(msg, "Date और Title जरूरी हैं।");
-    return;
-  }
+    }
 
-  try {
-    const d = new Date(date + "T00:00:00");
 
-    await addDoc(collection(db, "schedule"), {
-      date,
-      day: String(d.getDate()).padStart(2, "0"),
-      month: d.toLocaleDateString("hi-IN", { month: "short" }),
-      time,
-      title,
-      description,
-      createdAt: serverTimestamp()
+    /* =====================================================
+       ADMIN CHECK
+    ====================================================== */
+
+    async function isAdmin(user) {
+
+      if (!user) return false;
+
+      const adminRef =
+        doc(db, "admins", user.uid);
+
+      const adminSnap =
+        await getDoc(adminRef);
+
+      if (!adminSnap.exists()) {
+        return false;
+      }
+
+      return adminSnap.data().role === "admin";
+
+    }
+
+
+    /* =====================================================
+       LOGIN
+    ====================================================== */
+
+    loginBtn.addEventListener("click", async () => {
+
+      const email =
+        document.getElementById("email")
+          .value
+          .trim();
+
+      const password =
+        document.getElementById("password")
+          .value;
+
+
+      if (!email || !password) {
+
+        showMessage(
+          loginMsg,
+          "Email और Password दोनों भरें।",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      loginBtn.disabled = true;
+
+      loginBtn.textContent = "Login हो रहा है...";
+
+
+      try {
+
+        const result =
+          await signInWithEmailAndPassword(
+            auth,
+            email,
+            password
+          );
+
+
+        const admin =
+          await isAdmin(result.user);
+
+
+        if (!admin) {
+
+          await signOut(auth);
+
+          showMessage(
+            loginMsg,
+            "आपको Admin access नहीं है।",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        showMessage(
+          loginMsg,
+          "Login successful.",
+          "success"
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+          loginMsg,
+          "Email या Password गलत है।",
+          "error"
+        );
+
+      } finally {
+
+        loginBtn.disabled = false;
+
+        loginBtn.textContent = "Login";
+
+      }
+
     });
 
-    message(msg, "Schedule add हो गया।");
-    document.getElementById("scheduleDate").value = "";
-    document.getElementById("scheduleTime").value = "";
-    document.getElementById("scheduleTitle").value = "";
-    document.getElementById("scheduleDescription").value = "";
-  } catch (error) {
-    console.error(error);
-    message(msg, "Schedule add नहीं हुआ।");
-  }
-});
 
-async function loadDonations() {
-  const box = document.getElementById("donationsList");
+    /* =====================================================
+       AUTH STATE
+    ====================================================== */
 
-  try {
-    const q = query(
-      collection(db, "donations"),
-      orderBy("createdAt", "desc"),
-      limit(30)
-    );
+    onAuthStateChanged(auth, async (user) => {
 
-    const snap = await getDocs(q);
+      if (!user) {
 
-    if (snap.empty) {
-      box.textContent = "अभी कोई donation नहीं है।";
-      return;
+        loginPage.classList.remove("hidden");
+
+        adminPage.classList.add("hidden");
+
+        return;
+
+      }
+
+
+      try {
+
+        const admin =
+          await isAdmin(user);
+
+
+        if (!admin) {
+
+          await signOut(auth);
+
+          return;
+
+        }
+
+
+        loginPage.classList.add("hidden");
+
+        adminPage.classList.remove("hidden");
+
+        adminEmail.textContent =
+          user.email || "";
+
+
+        await loadSettings();
+
+        await loadGallery();
+
+        await loadDonations();
+
+      } catch (error) {
+
+        console.error(error);
+
+        await signOut(auth);
+
+      }
+
+    });
+
+
+    /* =====================================================
+       LOGOUT
+    ====================================================== */
+
+    logoutBtn.addEventListener("click", async () => {
+
+      await signOut(auth);
+
+    });
+
+
+    /* =====================================================
+       LOAD SETTINGS
+    ====================================================== */
+
+    async function loadSettings() {
+
+      const ref =
+        doc(db, "temple", "settings");
+
+      const snap =
+        await getDoc(ref);
+
+
+      if (!snap.exists()) return;
+
+
+      const data =
+        snap.data();
+
+
+      document.getElementById("upiId").value =
+        data.upiId || "";
+
+
+      document.getElementById("aartiTime").value =
+        data.aartiTime || "";
+
+
+      document.getElementById("liveUrl").value =
+        data.liveUrl || "";
+
+
+      if (data.qrUrl) {
+
+        const preview =
+          document.getElementById("qrPreview");
+
+        preview.src =
+          data.qrUrl;
+
+        preview.classList.remove("hidden");
+
+      }
+
     }
 
-    box.innerHTML = "";
 
-    snap.forEach(item => {
-      const d = item.data();
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
-        <strong>₹${Number(d.amount || 0)}</strong><br>
-        Donor: ${escapeHtml(d.donorName || "Anonymous")}<br>
-        Purpose: ${escapeHtml(d.purpose || "")}<br>
-        UTR: ${escapeHtml(d.utr || "")}<br>
-        Status: ${escapeHtml(d.status || "pending")}
-      `;
-      box.appendChild(div);
-    });
-  } catch (error) {
-    console.error(error);
-    box.textContent = "Donations load नहीं हुईं।";
-  }
-}
+    /* =====================================================
+       SAVE SETTINGS
+    ====================================================== */
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-</script>
+    document
+      .getElementById("saveSettingsBtn")
+      .addEventListener("click", async () => {
+
+        const upiId =
+          document.getElementById("upiId")
+            .value
+            .trim();
+
+        const aartiTime =
+          document.getElementById("aartiTime")
+            .value
+            .trim();
+
+        const liveUrl =
+          document.getElementById("liveUrl")
+            .value
+            .trim();
+
+
+        const msg =
+          document.getElementById("settingsMsg");
+
+
+        try {
+
+          await setDoc(
+            doc(db, "temple", "settings"),
+            {
+              upiId,
+              aartiTime,
+              liveUrl,
+              updatedAt: serverTimestamp()
+            },
+            {
+              merge: true
+            }
+          );
+
+
+          showMessage(
+            msg,
+            "मंदिर की जानकारी Save हो गई।",
+            "success"
+          );
+
+        } catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            msg,
+            "जानकारी Save नहीं हो सकी।",
+            "error"
+          );
+
+        }
+
+      });
+
+
+    /* =====================================================
+       FILE VALIDATION
+    ====================================================== */
+
+    function validateImage(file) {
+
+      if (!file) {
+
+        throw new Error(
+          "Photo select करें।"
+        );
+
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        throw new Error(
+          "कृपया सिर्फ image file चुनें।"
+        );
+
+      }
+
+
+      const maxSize =
+        5 * 1024 * 1024;
+
+
+      if (file.size > maxSize) {
+
+        throw new Error(
+          "Photo 5 MB से छोटी होनी चाहिए।"
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       CLOUDINARY UPLOAD
+    ====================================================== */
+
+    async function uploadToCloudinary(file) {
+
+      validateImage(file);
+
+
+      const url =
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+
+
+      const formData =
+        new FormData();
+
+
+      formData.append(
+        "file",
+        file
+      );
+
+
+      formData.append(
+        "upload_preset",
+        CLOUDINARY_UPLOAD_PRESET
+      );
+
+
+      const response =
+        await fetch(url, {
+          method: "POST",
+          body: formData
+        });
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        console.error(data);
+
+        throw new Error(
+          data?.error?.message ||
+          "Photo upload failed."
+        );
+
+      }
+
+
+      return {
+
+        url: data.secure_url,
+
+        publicId: data.public_id
+
+      };
+
+    }
+
+
+    /* =====================================================
+       QR PREVIEW
+    ====================================================== */
+
+    document
+      .getElementById("qrFile")
+      .addEventListener("change", event => {
+
+        const file =
+          event.target.files[0];
+
+        if (!file) return;
+
+
+        const preview =
+          document.getElementById("qrPreview");
+
+
+        preview.src =
+          URL.createObjectURL(file);
+
+        preview.classList.remove("hidden");
+
+      });
+
+
+    /* =====================================================
+       QR UPLOAD
+    ====================================================== */
+
+    document
+      .getElementById("uploadQrBtn")
+      .addEventListener("click", async () => {
+
+        const file =
+          document.getElementById("qrFile")
+            .files[0];
+
+        const msg =
+          document.getElementById("qrMsg");
+
+        const progress =
+          document.getElementById(
+            "qrUploadProgress"
+          );
+
+        const button =
+          document.getElementById(
+            "uploadQrBtn"
+          );
+
+
+        try {
+
+          validateImage(file);
+
+
+          button.disabled = true;
+
+          progress.style.display =
+            "block";
+
+          msg.textContent = "";
+
+
+          const result =
+            await uploadToCloudinary(file);
+
+
+          await setDoc(
+            doc(db, "temple", "settings"),
+            {
+              qrUrl: result.url,
+              qrPublicId: result.publicId,
+              updatedAt: serverTimestamp()
+            },
+            {
+              merge: true
+            }
+          );
+
+
+          showMessage(
+            msg,
+            "✅ Donation QR successfully save हो गया।",
+            "success"
+          );
+
+
+          document.getElementById(
+            "qrFile"
+          ).value = "";
+
+
+        } catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            msg,
+            error.message,
+            "error"
+          );
+
+        } finally {
+
+          button.disabled = false;
+
+          progress.style.display =
+            "none";
+
+        }
+
+      });
+
+
+    /* =====================================================
+       GALLERY PREVIEW
+    ====================================================== */
+
+    document
+      .getElementById("galleryFile")
+      .addEventListener("change", event => {
+
+        const file =
+          event.target.files[0];
+
+        if (!file) return;
+
+
+        const preview =
+          document.getElementById(
+            "galleryPreview"
+          );
+
+
+        preview.src =
+          URL.createObjectURL(file);
+
+        preview.classList.remove("hidden");
+
+      });
+
+
+    /* =====================================================
+       GALLERY UPLOAD
+    ====================================================== */
+
+    document
+      .getElementById("uploadGalleryBtn")
+      .addEventListener("click", async () => {
+
+        const file =
+          document.getElementById("galleryFile")
+            .files[0];
+
+        const title =
+          document.getElementById("galleryTitle")
+            .value
+            .trim();
+
+        const category =
+          document.getElementById("galleryCategory")
+            .value;
+
+        const msg =
+          document.getElementById(
+            "galleryMsg"
+          );
+
+        const progress =
+          document.getElementById(
+            "galleryUploadProgress"
+          );
+
+        const button =
+          document.getElementById(
+            "uploadGalleryBtn"
+          );
+
+
+        try {
+
+          validateImage(file);
+
+
+          if (!title) {
+
+            throw new Error(
+              "Photo का नाम लिखें।"
+            );
+
+          }
+
+
+          button.disabled = true;
+
+          progress.style.display =
+            "block";
+
+          msg.textContent = "";
+
+
+          const result =
+            await uploadToCloudinary(file);
+
+
+          await addDoc(
+            collection(db, "gallery"),
+            {
+              title,
+              category,
+              imageUrl: result.url,
+              publicId: result.publicId,
+              createdAt: serverTimestamp()
+            }
+          );
+
+
+          showMessage(
+            msg,
+            "✅ Photo Gallery में upload हो गई।",
+            "success"
+          );
+
+
+          document.getElementById(
+            "galleryTitle"
+          ).value = "";
+
+
+          document.getElementById(
+            "galleryFile"
+          ).value = "";
+
+
+          document.getElementById(
+            "galleryPreview"
+          ).classList.add("hidden");
+
+
+          await loadGallery();
+
+
+        } catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            msg,
+            error.message,
+            "error"
+          );
+
+        } finally {
+
+          button.disabled = false;
+
+          progress.style.display =
+            "none";
+
+        }
+
+      });
+
+
+    /* =====================================================
+       LOAD GALLERY
+    ====================================================== */
+
+    async function loadGallery() {
+
+      const list =
+        document.getElementById(
+          "galleryList"
+        );
+
+
+      list.innerHTML =
+        `<p style="color:#718096;">
+          Photos load हो रही हैं...
+        </p>`;
+
+
+      try {
+
+        const galleryQuery =
+          query(
+            collection(db, "gallery"),
+            orderBy("createdAt", "desc")
+          );
+
+
+        const snapshot =
+          await getDocs(galleryQuery);
+
+
+        if (snapshot.empty) {
+
+          list.innerHTML =
+            `<p style="color:#718096;">
+              अभी कोई photo upload नहीं हुई है।
+            </p>`;
+
+          return;
+
+        }
+
+
+        list.innerHTML = "";
+
+
+        snapshot.forEach(item => {
+
+          const data =
+            item.data();
+
+
+          const card =
+            document.createElement("div");
+
+
+          card.className =
+            "gallery-item";
+
+
+          card.innerHTML = `
+
+            <img
+              src="${escapeHtml(data.imageUrl)}"
+              alt="${escapeHtml(data.title)}"
+            >
+
+            <div class="gallery-info">
+
+              <strong>
+                ${escapeHtml(data.title)}
+              </strong>
+
+              <small>
+                ${escapeHtml(data.category || "Temple")}
+              </small>
+
+              <button
+                class="btn btn-danger btn-small"
+                data-id="${item.id}"
+              >
+                Remove
+              </button>
+
+            </div>
+
+          `;
+
+
+          card
+            .querySelector("button")
+            .addEventListener(
+              "click",
+              () => removeGalleryItem(item.id)
+            );
+
+
+          list.appendChild(card);
+
+        });
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        list.innerHTML =
+          `<p style="color:#dc2626;">
+            Gallery load नहीं हो सकी।
+          </p>`;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       REMOVE GALLERY ITEM
+    ====================================================== */
+
+    async function removeGalleryItem(id) {
+
+      const confirmDelete =
+        confirm(
+          "क्या आप इस photo को website की gallery से हटाना चाहते हैं?"
+        );
+
+
+      if (!confirmDelete) return;
+
+
+      try {
+
+        /*
+          Important:
+          यह Firestore से photo हटाता है।
+          इसलिए website से photo हट जाएगी।
+
+          Cloudinary की actual file deletion के लिए
+          secure backend/serverless function चाहिए।
+        */
+
+
+        await deleteDoc(
+          doc(db, "gallery", id)
+        );
+
+
+        await loadGallery();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Photo remove नहीं हो सकी।"
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       REFRESH GALLERY
+    ====================================================== */
+
+    document
+      .getElementById("refreshGalleryBtn")
+      .addEventListener(
+        "click",
+        loadGallery
+      );
+
+
+    /* =====================================================
+       ADD SCHEDULE
+    ====================================================== */
+
+    document
+      .getElementById("addScheduleBtn")
+      .addEventListener("click", async () => {
+
+        const date =
+          document.getElementById(
+            "scheduleDate"
+          ).value;
+
+        const time =
+          document.getElementById(
+            "scheduleTime"
+          ).value;
+
+        const title =
+          document.getElementById(
+            "scheduleTitle"
+          ).value.trim();
+
+        const description =
+          document.getElementById(
+            "scheduleDescription"
+          ).value.trim();
+
+        const msg =
+          document.getElementById(
+            "scheduleMsg"
+          );
+
+
+        if (!date || !time || !title) {
+
+          showMessage(
+            msg,
+            "Date, Time और Title भरें।",
+            "error"
+          );
+
+          return;
+
+        }
+
+
+        try {
+
+          const selectedDate =
+            new Date(date + "T00:00:00");
+
+
+          await addDoc(
+            collection(db, "schedule"),
+            {
+              date,
+              day: selectedDate.toLocaleDateString(
+                "hi-IN",
+                {
+                  weekday: "long"
+                }
+              ),
+              month: selectedDate.toLocaleDateString(
+                "en-IN",
+                {
+                  month: "long"
+                }
+              ),
+              time,
+              title,
+              description,
+              createdAt: serverTimestamp()
+            }
+          );
+
+
+          showMessage(
+            msg,
+            "✅ Schedule successfully add हो गया।",
+            "success"
+          );
+
+
+          document.getElementById(
+            "scheduleDate"
+          ).value = "";
+
+          document.getElementById(
+            "scheduleTime"
+          ).value = "";
+
+          document.getElementById(
+            "scheduleTitle"
+          ).value = "";
+
+          document.getElementById(
+            "scheduleDescription"
+          ).value = "";
+
+
+        } catch (error) {
+
+          console.error(error);
+
+          showMessage(
+            msg,
+            "Schedule add नहीं हो सका।",
+            "error"
+          );
+
+        }
+
+      });
+
+
+    /* =====================================================
+       LOAD DONATIONS
+    ====================================================== */
+
+    async function loadDonations() {
+
+      const list =
+        document.getElementById(
+          "donationsList"
+        );
+
+
+      list.innerHTML =
+        `<p style="color:#718096;">
+          Donations load हो रही हैं...
+        </p>`;
+
+
+      try {
+
+        const donationQuery =
+          query(
+            collection(db, "donations"),
+            orderBy("createdAt", "desc"),
+            limit(30)
+          );
+
+
+        const snapshot =
+          await getDocs(
+            donationQuery
+          );
+
+
+        if (snapshot.empty) {
+
+          list.innerHTML =
+            `<p style="color:#718096;">
+              अभी कोई donation नहीं मिली।
+            </p>`;
+
+          return;
+
+        }
+
+
+        list.innerHTML = "";
+
+
+        snapshot.forEach(item => {
+
+          const data =
+            item.data();
+
+
+          const div =
+            document.createElement("div");
+
+
+          div.className =
+            "donation-item";
+
+
+          div.innerHTML = `
+
+            <div class="donation-top">
+
+              <span class="amount">
+                ₹${escapeHtml(data.amount)}
+              </span>
+
+              <span class="status">
+                ${escapeHtml(
+                  data.status || "pending"
+                )}
+              </span>
+
+            </div>
+
+            <div class="donation-meta">
+
+              <strong>
+                ${escapeHtml(
+                  data.donorName || "Anonymous"
+                )}
+              </strong>
+
+              <br>
+
+              Purpose:
+              ${escapeHtml(
+                data.purpose || "Donation"
+              )}
+
+              <br>
+
+              UTR:
+              ${escapeHtml(
+                data.utr || "—"
+              )}
+
+              <br>
+
+              ${formatDate(
+                data.createdAt
+              )}
+
+            </div>
+
+          `;
+
+
+          list.appendChild(div);
+
+        });
+
+
+      } catch (error) {
+
+        console.error(error);
+
+        list.innerHTML =
+          `<p style="color:#dc2626;">
+            Donations load नहीं हो सकीं।
+          </p>`;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       REFRESH DONATIONS
+    ====================================================== */
+
+    document
+      .getElementById(
+        "refreshDonationsBtn"
+      )
+      .addEventListener(
+        "click",
+        loadDonations
+      );
+
+  </script>
+
 </body>
 </html>
