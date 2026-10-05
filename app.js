@@ -1,51 +1,152 @@
-/* =========================================
+/* =========================================================
    MAA MANOKAMANA TEMPLE
    Main App JavaScript
-========================================= */
+   Firebase + Firestore Integration
+========================================================= */
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+  doc,
+  getDoc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+import firebaseConfig from "./firebase-config.js";
 
 
-/* ---------- MOBILE MENU ---------- */
+/* =========================================================
+   FIREBASE INITIALIZATION
+========================================================= */
 
-const menuBtn = document.getElementById("menuBtn");
-const navMenu = document.getElementById("navMenu");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-if (menuBtn) {
-  menuBtn.addEventListener("click", () => {
-    navMenu.classList.toggle("active");
-  });
+
+/* =========================================================
+   DOM HELPERS
+========================================================= */
+
+const $ = (id) => document.getElementById(id);
+
+const menuBtn = $("menuBtn");
+const navMenu = $("navMenu");
+
+const yearEl = $("year");
+
+const donationModal = $("donationModal");
+const donateBtn = $("donateBtn");
+const closeModal = $("closeModal");
+const donationForm = $("donationForm");
+
+const todayAartiTime = $("todayAartiTime");
+const liveAartiTime = $("liveAartiTime");
+const upiId = $("upiId");
+
+const qrBox = $("qrBox");
+const liveVideo = $("liveVideo");
+const scheduleList = $("scheduleList");
+
+const mapBtn = $("mapBtn");
+const languageBtn = $("languageBtn");
+
+
+/* =========================================================
+   TEMPLE SETTINGS
+========================================================= */
+
+let templeSettings = {
+  upiId: "",
+  aartiTime: "",
+  liveUrl: "",
+  qrUrl: ""
+};
+
+
+/* =========================================================
+   YEAR
+========================================================= */
+
+if (yearEl) {
+  yearEl.textContent = new Date().getFullYear();
 }
 
 
-/* Close menu after clicking link */
+/* =========================================================
+   MOBILE MENU
+========================================================= */
+
+if (menuBtn && navMenu) {
+
+  menuBtn.addEventListener("click", () => {
+
+    navMenu.classList.toggle("active");
+
+    const isOpen = navMenu.classList.contains("active");
+
+    menuBtn.setAttribute(
+      "aria-expanded",
+      isOpen ? "true" : "false"
+    );
+
+  });
+
+}
+
+
+/* Close mobile menu after navigation */
 
 document.querySelectorAll("#navMenu a").forEach(link => {
 
   link.addEventListener("click", () => {
-    navMenu.classList.remove("active");
+
+    if (navMenu) {
+      navMenu.classList.remove("active");
+    }
+
   });
 
 });
 
 
-/* ---------- YEAR ---------- */
+/* =========================================================
+   TOAST
+========================================================= */
 
-document.getElementById("year").textContent =
-  new Date().getFullYear();
+function showToast(message) {
+
+  const toast = $("toast");
+
+  if (!toast) {
+    alert(message);
+    return;
+  }
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  clearTimeout(window.__toastTimer);
+
+  window.__toastTimer = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3500);
+
+}
 
 
-/* ---------- DONATION MODAL ---------- */
+/* =========================================================
+   DONATION MODAL
+========================================================= */
 
-const donationModal =
-  document.getElementById("donationModal");
-
-const donateBtn =
-  document.getElementById("donateBtn");
-
-const closeModal =
-  document.getElementById("closeModal");
-
-
-if (donateBtn) {
+if (donateBtn && donationModal) {
 
   donateBtn.addEventListener("click", () => {
 
@@ -56,7 +157,7 @@ if (donateBtn) {
 }
 
 
-if (closeModal) {
+if (closeModal && donationModal) {
 
   closeModal.addEventListener("click", () => {
 
@@ -67,9 +168,11 @@ if (closeModal) {
 }
 
 
+/* Close modal when clicking outside */
+
 if (donationModal) {
 
-  donationModal.addEventListener("click", event => {
+  donationModal.addEventListener("click", (event) => {
 
     if (event.target === donationModal) {
 
@@ -82,88 +185,911 @@ if (donationModal) {
 }
 
 
-/* ---------- DONATION FORM ---------- */
+/* Close modal with Escape */
 
-const donationForm =
-  document.getElementById("donationForm");
+document.addEventListener("keydown", (event) => {
 
+  if (
+    event.key === "Escape" &&
+    donationModal &&
+    donationModal.classList.contains("active")
+  ) {
+
+    donationModal.classList.remove("active");
+
+  }
+
+});
+
+
+/* =========================================================
+   DONATION SUBMISSION
+========================================================= */
 
 if (donationForm) {
 
-  donationForm.addEventListener("submit", event => {
+  donationForm.addEventListener("submit", async (event) => {
 
     event.preventDefault();
 
-    const donorName =
-      document.getElementById("donorName").value.trim();
 
-    const amount =
-      document.getElementById("donationAmount").value;
+    const donorName =
+      $("donorName")?.value.trim() || "Anonymous";
+
+    const amountValue =
+      $("donationAmount")?.value.trim() || "";
 
     const purpose =
-      document.getElementById("donationPurpose").value;
+      $("donationPurpose")?.value || "मंदिर सेवा";
 
     const utr =
-      document.getElementById("utr").value.trim();
+      $("utr")?.value.trim() || "";
 
 
-    if (!amount || !utr) {
+    /* Validation */
 
-      showToast(
-        "Please amount और UTR भरें।"
-      );
+    if (!amountValue) {
 
+      showToast("कृपया Donation Amount भरें।");
       return;
 
     }
 
 
-    console.log({
-      donorName,
-      amount,
-      purpose,
-      utr
-    });
+    const amount = Number(amountValue);
 
 
-    showToast(
-      "Donation details submit हो गईं। Verification के बाद receipt जारी होगी।"
-    );
+    if (!Number.isFinite(amount) || amount <= 0) {
+
+      showToast("कृपया सही Donation Amount डालें।");
+      return;
+
+    }
 
 
-    donationForm.reset();
+    if (!utr) {
 
-    donationModal.classList.remove("active");
+      showToast("कृपया UTR / Transaction ID भरें।");
+      return;
+
+    }
+
+
+    if (utr.length < 4) {
+
+      showToast("कृपया सही UTR / Transaction ID डालें।");
+      return;
+
+    }
+
+
+    /* Disable submit button */
+
+    const submitBtn =
+      donationForm.querySelector('button[type="submit"]');
+
+    const oldButtonText =
+      submitBtn ? submitBtn.textContent : "";
+
+
+    if (submitBtn) {
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+    }
+
+
+    try {
+
+      /* Save donation to Firestore */
+
+      await addDoc(
+        collection(db, "donations"),
+        {
+          donorName: donorName,
+          amount: amount,
+          purpose: purpose,
+          utr: utr,
+          status: "pending",
+          createdAt: serverTimestamp()
+        }
+      );
+
+
+      showToast(
+        "Donation details successfully submit हो गईं। Verification के बाद donation approve होगी।"
+      );
+
+
+      donationForm.reset();
+
+
+      if (donationModal) {
+        donationModal.classList.remove("active");
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "Donation submission error:",
+        error
+      );
+
+
+      showToast(
+        "Donation submit नहीं हो सकी। कृपया थोड़ी देर बाद फिर प्रयास करें।"
+      );
+
+
+    } finally {
+
+      if (submitBtn) {
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = oldButtonText;
+
+      }
+
+    }
 
   });
 
 }
 
 
-/* ---------- TOAST ---------- */
+/* =========================================================
+   LOAD TEMPLE SETTINGS
+   Firestore:
+   temple/settings
+========================================================= */
 
-function showToast(message) {
+async function loadTempleSettings() {
 
-  const toast =
-    document.getElementById("toast");
+  try {
 
-  toast.textContent = message;
+    const settingsRef =
+      doc(db, "temple", "settings");
 
-  toast.classList.add("show");
+    const settingsSnap =
+      await getDoc(settingsRef);
 
-  setTimeout(() => {
 
-    toast.classList.remove("show");
+    if (settingsSnap.exists()) {
 
-  }, 3500);
+      const data = settingsSnap.data();
+
+      templeSettings = {
+        upiId: data.upiId || "",
+        aartiTime: data.aartiTime || "",
+        liveUrl: data.liveUrl || "",
+        qrUrl: data.qrUrl || ""
+      };
+
+    }
+
+
+    applyTempleSettings();
+
+
+  } catch (error) {
+
+    console.error(
+      "Settings loading error:",
+      error
+    );
+
+    applyTempleSettings();
+
+  }
 
 }
 
 
-/* ---------- GOOGLE MAPS ---------- */
+/* =========================================================
+   REALTIME TEMPLE SETTINGS
+========================================================= */
 
-const mapBtn =
-  document.getElementById("mapBtn");
+function listenToTempleSettings() {
+
+  try {
+
+    const settingsRef =
+      doc(db, "temple", "settings");
+
+
+    onSnapshot(
+      settingsRef,
+      (snapshot) => {
+
+        if (!snapshot.exists()) {
+          return;
+        }
+
+
+        const data = snapshot.data();
+
+
+        templeSettings = {
+
+          upiId: data.upiId || "",
+          aartiTime: data.aartiTime || "",
+          liveUrl: data.liveUrl || "",
+          qrUrl: data.qrUrl || ""
+
+        };
+
+
+        applyTempleSettings();
+
+      },
+
+      (error) => {
+
+        console.error(
+          "Realtime settings error:",
+          error
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Settings listener error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   APPLY TEMPLE SETTINGS
+========================================================= */
+
+function applyTempleSettings() {
+
+  const aartiTime =
+    templeSettings.aartiTime ||
+    "समय जल्द अपडेट होगा";
+
+
+  /* Aarti time */
+
+  if (todayAartiTime) {
+
+    todayAartiTime.textContent =
+      aartiTime;
+
+  }
+
+
+  if (liveAartiTime) {
+
+    liveAartiTime.textContent =
+      aartiTime;
+
+  }
+
+
+  /* UPI ID */
+
+  if (upiId) {
+
+    upiId.textContent =
+      templeSettings.upiId ||
+      "Admin Panel से अपडेट होगा";
+
+  }
+
+
+  /* QR */
+
+  renderQRCode();
+
+
+  /* Live */
+
+  renderLiveVideo();
+
+}
+
+
+/* =========================================================
+   QR CODE
+========================================================= */
+
+function renderQRCode() {
+
+  if (!qrBox) {
+    return;
+  }
+
+
+  const qrUrl =
+    templeSettings.qrUrl?.trim();
+
+
+  /* No QR configured */
+
+  if (!qrUrl) {
+
+    qrBox.innerHTML = `
+      <span>QR</span>
+      <small>QR Code यहाँ दिखेगा</small>
+    `;
+
+    return;
+
+  }
+
+
+  /* Image URL */
+
+  const img =
+    document.createElement("img");
+
+  img.src = qrUrl;
+
+  img.alt =
+    "माँ मनोकामना मंदिर Donation QR Code";
+
+  img.loading = "lazy";
+
+  img.style.width = "100%";
+  img.style.height = "100%";
+  img.style.objectFit = "contain";
+  img.style.display = "block";
+
+
+  img.onerror = () => {
+
+    qrBox.innerHTML = `
+      <span>QR</span>
+      <small>QR Code load नहीं हो सका</small>
+    `;
+
+  };
+
+
+  qrBox.innerHTML = "";
+
+  qrBox.appendChild(img);
+
+}
+
+
+/* =========================================================
+   LIVE AARTI
+========================================================= */
+
+function renderLiveVideo() {
+
+  if (!liveVideo) {
+    return;
+  }
+
+
+  const liveUrl =
+    templeSettings.liveUrl?.trim();
+
+
+  /* No live URL */
+
+  if (!liveUrl) {
+
+    liveVideo.innerHTML = `
+      <div class="play-icon">▶</div>
+      <h3>Live Aarti</h3>
+      <p>आरती शुरू होने पर यहाँ Live दिखाई देगा।</p>
+    `;
+
+    return;
+
+  }
+
+
+  const embedUrl =
+    getYouTubeEmbedUrl(liveUrl);
+
+
+  /* YouTube */
+
+  if (embedUrl) {
+
+    liveVideo.innerHTML = `
+      <iframe
+        src="${escapeHtml(embedUrl)}"
+        title="माँ मनोकामना Live Aarti"
+        width="100%"
+        height="100%"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        style="border:0; width:100%; height:100%; display:block;"
+      ></iframe>
+    `;
+
+    return;
+
+  }
+
+
+  /* Other video / live URL */
+
+  liveVideo.innerHTML = `
+    <div class="play-icon">▶</div>
+
+    <h3>Live Aarti</h3>
+
+    <p>
+      Live Aarti देखने के लिए नीचे दिए बटन पर जाएँ।
+    </p>
+
+    <a
+      href="${escapeHtml(liveUrl)}"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn btn-primary"
+      style="margin-top:12px; display:inline-block;"
+    >
+      🔴 Open Live
+    </a>
+  `;
+
+}
+
+
+/* =========================================================
+   YOUTUBE URL → EMBED URL
+========================================================= */
+
+function getYouTubeEmbedUrl(url) {
+
+  if (!url) {
+    return "";
+  }
+
+
+  try {
+
+    const parsed =
+      new URL(url);
+
+
+    /* youtube.com/watch?v= */
+
+    if (
+      parsed.hostname.includes("youtube.com") &&
+      parsed.pathname === "/watch"
+    ) {
+
+      const videoId =
+        parsed.searchParams.get("v");
+
+      if (videoId) {
+
+        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+
+      }
+
+    }
+
+
+    /* youtu.be/VIDEO_ID */
+
+    if (
+      parsed.hostname === "youtu.be" ||
+      parsed.hostname === "www.youtu.be"
+    ) {
+
+      const videoId =
+        parsed.pathname.replace("/", "");
+
+      if (videoId) {
+
+        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+
+      }
+
+    }
+
+
+    /* youtube.com/live/VIDEO_ID */
+
+    if (
+      parsed.hostname.includes("youtube.com") &&
+      parsed.pathname.startsWith("/live/")
+    ) {
+
+      const videoId =
+        parsed.pathname.split("/")[2];
+
+      if (videoId) {
+
+        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+
+      }
+
+    }
+
+
+    /* Already embed URL */
+
+    if (
+      parsed.hostname.includes("youtube.com") &&
+      parsed.pathname.startsWith("/embed/")
+    ) {
+
+      return url;
+
+    }
+
+
+  } catch (error) {
+
+    console.warn(
+      "Invalid live URL:",
+      error
+    );
+
+  }
+
+
+  return "";
+}
+
+
+/* =========================================================
+   LOAD SCHEDULE
+   Firestore:
+   schedule/{id}
+========================================================= */
+
+async function loadSchedule() {
+
+  if (!scheduleList) {
+    return;
+  }
+
+
+  try {
+
+    const scheduleQuery =
+      query(
+        collection(db, "schedule"),
+        orderBy("date", "asc"),
+        limit(30)
+      );
+
+
+    const snapshot =
+      await getDocs(scheduleQuery);
+
+
+    if (snapshot.empty) {
+
+      renderEmptySchedule();
+
+      return;
+
+    }
+
+
+    const schedules = [];
+
+
+    snapshot.forEach((scheduleDoc) => {
+
+      schedules.push({
+        id: scheduleDoc.id,
+        ...scheduleDoc.data()
+      });
+
+    });
+
+
+    renderSchedule(schedules);
+
+
+  } catch (error) {
+
+    console.error(
+      "Schedule loading error:",
+      error
+    );
+
+
+    renderEmptySchedule(
+      "कार्यक्रम अभी उपलब्ध नहीं हैं।"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   REALTIME SCHEDULE
+========================================================= */
+
+function listenToSchedule() {
+
+  if (!scheduleList) {
+    return;
+  }
+
+
+  try {
+
+    const scheduleQuery =
+      query(
+        collection(db, "schedule"),
+        orderBy("date", "asc"),
+        limit(30)
+      );
+
+
+    onSnapshot(
+      scheduleQuery,
+      (snapshot) => {
+
+        const schedules = [];
+
+
+        snapshot.forEach((scheduleDoc) => {
+
+          schedules.push({
+            id: scheduleDoc.id,
+            ...scheduleDoc.data()
+          });
+
+        });
+
+
+        if (schedules.length === 0) {
+
+          renderEmptySchedule();
+
+          return;
+
+        }
+
+
+        renderSchedule(schedules);
+
+      },
+
+      (error) => {
+
+        console.error(
+          "Realtime schedule error:",
+          error
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Schedule listener error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER SCHEDULE
+========================================================= */
+
+function renderSchedule(schedules) {
+
+  if (!scheduleList) {
+    return;
+  }
+
+
+  scheduleList.innerHTML = "";
+
+
+  schedules.forEach((item) => {
+
+    const scheduleItem =
+      document.createElement("div");
+
+    scheduleItem.className =
+      "schedule-item";
+
+
+    const dateInfo =
+      formatScheduleDate(item.date);
+
+
+    scheduleItem.innerHTML = `
+
+      <div class="schedule-date">
+
+        <strong>
+          ${escapeHtml(dateInfo.day)}
+        </strong>
+
+        <span>
+          ${escapeHtml(dateInfo.month)}
+        </span>
+
+      </div>
+
+
+      <div class="schedule-info">
+
+        <h3>
+          ${escapeHtml(
+            item.title ||
+            "कार्यक्रम"
+          )}
+        </h3>
+
+        <p>
+          ${escapeHtml(
+            item.description ||
+            ""
+          )}
+        </p>
+
+        ${
+          item.time
+            ? `
+              <small>
+                🕐 ${escapeHtml(item.time)}
+              </small>
+            `
+            : ""
+        }
+
+      </div>
+
+    `;
+
+
+    scheduleList.appendChild(
+      scheduleItem
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   EMPTY SCHEDULE
+========================================================= */
+
+function renderEmptySchedule(
+  message = "कार्यक्रम जल्द अपडेट होगा।"
+) {
+
+  if (!scheduleList) {
+    return;
+  }
+
+
+  scheduleList.innerHTML = `
+
+    <div class="schedule-item">
+
+      <div class="schedule-date">
+
+        <strong>—</strong>
+
+        <span>DATE</span>
+
+      </div>
+
+
+      <div class="schedule-info">
+
+        <h3>
+          ${escapeHtml(message)}
+        </h3>
+
+        <p>
+          Admin Panel से कार्यक्रम जोड़े जाएंगे।
+        </p>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   FORMAT SCHEDULE DATE
+========================================================= */
+
+function formatScheduleDate(dateValue) {
+
+  if (!dateValue) {
+
+    return {
+      day: "—",
+      month: "DATE"
+    };
+
+  }
+
+
+  try {
+
+    const date =
+      new Date(dateValue);
+
+
+    if (Number.isNaN(date.getTime())) {
+
+      return {
+        day: dateValue,
+        month: "DATE"
+      };
+
+    }
+
+
+    const months = [
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC"
+    ];
+
+
+    return {
+
+      day: String(
+        date.getDate()
+      ).padStart(2, "0"),
+
+      month:
+        months[date.getMonth()]
+
+    };
+
+
+  } catch {
+
+    return {
+
+      day: String(dateValue),
+      month: "DATE"
+
+    };
+
+  }
+
+}
+
+
+/* =========================================================
+   GOOGLE MAPS
+========================================================= */
 
 if (mapBtn) {
 
@@ -171,12 +1097,19 @@ if (mapBtn) {
 
     const address =
       encodeURIComponent(
-        "Chakshivganj, Maulanagar, Suryagarha, Lakhisarai, Bihar"
+        "श्री श्री 108 माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय, बिहार"
       );
 
+
+    const mapsUrl =
+      "https://www.google.com/maps/search/?api=1&query=" +
+      address;
+
+
     window.open(
-      "https://www.google.com/maps/search/?api=1&query=" + address,
-      "_blank"
+      mapsUrl,
+      "_blank",
+      "noopener,noreferrer"
     );
 
   });
@@ -184,10 +1117,9 @@ if (mapBtn) {
 }
 
 
-/* ---------- LANGUAGE ---------- */
-
-const languageBtn =
-  document.getElementById("languageBtn");
+/* =========================================================
+   LANGUAGE BUTTON
+========================================================= */
 
 let englishMode = false;
 
@@ -196,11 +1128,15 @@ if (languageBtn) {
 
   languageBtn.addEventListener("click", () => {
 
-    englishMode = !englishMode;
+    englishMode =
+      !englishMode;
+
 
     if (englishMode) {
 
-      languageBtn.textContent = "English | हिंदी";
+      languageBtn.textContent =
+        "English | हिंदी";
+
 
       showToast(
         "English interface जल्द पूरी तरह उपलब्ध होगा।"
@@ -208,7 +1144,9 @@ if (languageBtn) {
 
     } else {
 
-      languageBtn.textContent = "हिंदी | English";
+      languageBtn.textContent =
+        "हिंदी | English";
+
 
       showToast(
         "हिंदी भाषा चयनित है।"
@@ -221,7 +1159,30 @@ if (languageBtn) {
 }
 
 
-/* ---------- PWA ---------- */
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(value) {
+
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   PWA SERVICE WORKER
+========================================================= */
 
 if ("serviceWorker" in navigator) {
 
@@ -236,7 +1197,7 @@ if ("serviceWorker" in navigator) {
         );
 
       })
-      .catch(error => {
+      .catch((error) => {
 
         console.error(
           "Service Worker registration failed:",
@@ -250,54 +1211,40 @@ if ("serviceWorker" in navigator) {
 }
 
 
-/* ---------- DEMO CONFIG ---------- */
-/*
-  Phase 2 में ये values Firebase
-  Admin Panel से आएंगी.
-*/
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
 
-const templeSettings = {
+async function initializeTempleApp() {
 
-  aartiTime: "जल्द अपडेट होगा",
-
-  upiId: "Admin Panel से अपडेट होगा",
-
-  liveUrl: "",
-
-};
+  console.log(
+    "🙏 माँ मनोकामना Temple App initializing..."
+  );
 
 
-/* Display settings */
+  /* Load Firebase data */
 
-const todayAartiTime =
-  document.getElementById("todayAartiTime");
+  await loadTempleSettings();
 
-const liveAartiTime =
-  document.getElementById("liveAartiTime");
-
-const upiId =
-  document.getElementById("upiId");
+  await loadSchedule();
 
 
-if (todayAartiTime) {
+  /* Start realtime listeners */
 
-  todayAartiTime.textContent =
-    templeSettings.aartiTime;
+  listenToTempleSettings();
+
+  listenToSchedule();
+
+
+  console.log(
+    "🙏 माँ मनोकामना Temple App ready."
+  );
 
 }
 
 
-if (liveAartiTime) {
+/* =========================================================
+   START APP
+========================================================= */
 
-  liveAartiTime.textContent =
-    templeSettings.aartiTime;
-
-}
-
-
-if (upiId) {
-
-  upiId.textContent =
-    templeSettings.upiId;
-
-}
+initializeTempleApp();
