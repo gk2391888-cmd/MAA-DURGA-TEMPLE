@@ -147,6 +147,11 @@
       color: #b91c1c;
     }
 
+    .btn-warning {
+      background: #fff3cd;
+      color: #92400e;
+    }
+
     .btn-small {
       padding: 9px 13px;
       font-size: 13px;
@@ -394,31 +399,160 @@
       margin-bottom: 10px;
     }
 
-    /* ================= FOOTER ================= */
+    /* ================= SCHEDULE ================= */
 
-    .techhub-footer {
-      margin-top: 35px;
-      padding: 25px 16px;
-      background: #080b1a;
-      border-top: 1px solid rgba(255,255,255,.08);
-      color: white;
-      text-align: center;
+    .schedule-list {
+      display: grid;
+      gap: 14px;
     }
 
-    .techhub-footer-title {
-      font-size: 16px;
+    .schedule-item {
+      border: 1px solid #e5e9f0;
+      border-radius: 15px;
+      padding: 16px;
+      background: #fbfcfe;
+    }
+
+    .schedule-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 15px;
+    }
+
+    .schedule-date {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 50px;
+      background: #fff3df;
+      color: #a45109;
+      font-size: 12px;
       font-weight: 800;
+      margin-bottom: 9px;
+    }
+
+    .schedule-item h3 {
+      font-size: 17px;
+      color: #172033;
       margin-bottom: 5px;
     }
 
+    .schedule-time {
+      color: #f28c28;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .schedule-description {
+      color: #718096;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .schedule-actions {
+      display: flex;
+      gap: 7px;
+      flex-shrink: 0;
+    }
+
+    .schedule-empty {
+      text-align: center;
+      padding: 25px 10px;
+      color: #718096;
+      border: 1px dashed #dce1ea;
+      border-radius: 14px;
+      background: #fafbfc;
+    }
+
+    .edit-mode {
+      border: 2px solid #f28c28 !important;
+      background: #fffaf3 !important;
+    }
+
+    .edit-badge {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: #fff3df;
+      color: #a45109;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .schedule-form-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .schedule-form-actions .btn {
+      flex: 1;
+      min-width: 140px;
+    }
+
+    /* ================= FOOTER ================= */
+
+    .techhub-footer {
+      position: relative;
+      margin-top: 50px;
+      padding: 34px 18px 26px;
+      overflow: hidden;
+
+      background:
+        radial-gradient(
+          circle at 50% -40%,
+          rgba(247,196,107,.14),
+          transparent 55%
+        ),
+        linear-gradient(
+          180deg,
+          #15101a 0%,
+          #080b14 100%
+        );
+
+      border-top: 1px solid rgba(247,196,107,.25);
+      box-shadow: 0 -12px 35px rgba(0,0,0,.14);
+
+      text-align: center;
+      color: #fff;
+    }
+
+    .techhub-footer::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 110px;
+      height: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(
+        90deg,
+        transparent,
+        #f7c46b,
+        transparent
+      );
+    }
+
+    .techhub-footer-title {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 9px;
+    }
+
     .techhub-name {
-      color: #38bdf8;
+      color: #f7c46b;
+      font-weight: 900;
+      letter-spacing: .4px;
     }
 
     .techhub-msme {
       font-size: 13px;
       color: #cbd5e1;
-      margin-bottom: 4px;
+      margin-bottom: 5px;
     }
 
     .techhub-tagline {
@@ -488,6 +622,26 @@
 
       .techhub-footer {
         padding-bottom: 30px;
+      }
+
+      .schedule-top {
+        flex-direction: column;
+      }
+
+      .schedule-actions {
+        width: 100%;
+      }
+
+      .schedule-actions .btn {
+        flex: 1;
+      }
+
+      .schedule-form-actions {
+        flex-direction: column;
+      }
+
+      .schedule-form-actions .btn {
+        width: 100%;
       }
 
     }
@@ -813,22 +967,34 @@
         </div>
 
 
-        <!-- SCHEDULE -->
+        <!-- ADD / EDIT SCHEDULE -->
 
-        <div class="card">
+        <div
+          class="card"
+          id="scheduleFormCard"
+        >
 
           <div class="card-header">
 
             <div>
 
-              <h2>📅 Schedule</h2>
+              <h2 id="scheduleFormTitle">
+                📅 Schedule
+              </h2>
 
-              <p>
+              <p id="scheduleFormSubtitle">
                 नई पूजा / कार्यक्रम जोड़ें
               </p>
 
             </div>
 
+          </div>
+
+          <div
+            id="editScheduleBadge"
+            class="edit-badge hidden"
+          >
+            ✏️ आप Schedule Edit कर रहे हैं
           </div>
 
 
@@ -881,17 +1047,71 @@
           </div>
 
 
-          <button
-            id="addScheduleBtn"
-            class="btn btn-secondary"
-          >
-            ➕ Schedule जोड़ें
-          </button>
+          <div class="schedule-form-actions">
+
+            <button
+              id="addScheduleBtn"
+              class="btn btn-secondary"
+            >
+              ➕ Schedule जोड़ें
+            </button>
+
+            <button
+              id="cancelEditBtn"
+              class="btn btn-danger hidden"
+              type="button"
+            >
+              ✖ Edit Cancel करें
+            </button>
+
+          </div>
+
 
           <div
             id="scheduleMsg"
             class="message"
           ></div>
+
+        </div>
+
+
+        <!-- SCHEDULE LIST -->
+
+        <div class="card">
+
+          <div class="card-header">
+
+            <div>
+
+              <h2>📋 Saved Schedules</h2>
+
+              <p>
+                Website पर दिखने वाले सभी कार्यक्रम
+              </p>
+
+            </div>
+
+            <button
+              id="refreshScheduleBtn"
+              class="btn btn-secondary btn-small"
+              type="button"
+            >
+              Refresh
+            </button>
+
+          </div>
+
+
+          <div
+            id="scheduleList"
+            class="schedule-list"
+          >
+
+            <div class="schedule-empty">
+              📅 Schedule load हो रहे हैं...
+            </div>
+
+          </div>
 
         </div>
 
@@ -956,6 +1176,7 @@
       orderBy,
       getDocs,
       deleteDoc,
+      updateDoc,
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
@@ -1005,6 +1226,13 @@
 
     const adminEmail =
       document.getElementById("adminEmail");
+
+
+    /* =====================================================
+       SCHEDULE EDIT STATE
+    ===================================================== */
+
+    let editingScheduleId = null;
 
 
     /* =====================================================
@@ -1392,6 +1620,8 @@
           await loadSettings();
 
           await loadGallery();
+
+          await loadSchedules();
 
         }
 
@@ -2115,7 +2345,7 @@
 
 
     /* =====================================================
-       ADD SCHEDULE
+       ADD / UPDATE SCHEDULE
     ===================================================== */
 
     document
@@ -2183,6 +2413,16 @@
           }
 
 
+          const button =
+            document.getElementById(
+              "addScheduleBtn"
+            );
+
+
+          button.disabled =
+            true;
+
+
           try {
 
             const selectedDate =
@@ -2192,71 +2432,91 @@
               );
 
 
-            await addDoc(
-              collection(
-                db,
-                "schedule"
-              ),
-              {
-                date,
+            const scheduleData = {
 
-                day:
-                  selectedDate.toLocaleDateString(
-                    "hi-IN",
-                    {
-                      weekday:
-                        "long"
-                    }
-                  ),
+              date,
 
-                month:
-                  selectedDate.toLocaleDateString(
-                    "en-IN",
-                    {
-                      month:
-                        "long"
-                    }
-                  ),
+              day:
+                selectedDate.toLocaleDateString(
+                  "hi-IN",
+                  {
+                    weekday:
+                      "long"
+                  }
+                ),
 
-                time,
-                title,
-                description,
+              month:
+                selectedDate.toLocaleDateString(
+                  "en-IN",
+                  {
+                    month:
+                      "long"
+                  }
+                ),
 
-                createdAt:
-                  serverTimestamp()
-              }
-            );
+              time,
+              title,
+              description,
+
+              updatedAt:
+                serverTimestamp()
+
+            };
 
 
-            showMessage(
-              msg,
-              "✅ Schedule successfully add हो गया।",
-              "success"
-            );
+            /* ================= UPDATE ================= */
+
+            if (editingScheduleId) {
+
+              await updateDoc(
+                doc(
+                  db,
+                  "schedule",
+                  editingScheduleId
+                ),
+                scheduleData
+              );
 
 
-            document.getElementById(
-              "scheduleDate"
-            ).value =
-              "";
+              showMessage(
+                msg,
+                "✅ Schedule successfully update हो गया।",
+                "success"
+              );
+
+            }
 
 
-            document.getElementById(
-              "scheduleTime"
-            ).value =
-              "";
+            /* ================= ADD ================= */
+
+            else {
+
+              await addDoc(
+                collection(
+                  db,
+                  "schedule"
+                ),
+                {
+                  ...scheduleData,
+
+                  createdAt:
+                    serverTimestamp()
+                }
+              );
 
 
-            document.getElementById(
-              "scheduleTitle"
-            ).value =
-              "";
+              showMessage(
+                msg,
+                "✅ Schedule successfully add हो गया।",
+                "success"
+              );
+
+            }
 
 
-            document.getElementById(
-              "scheduleDescription"
-            ).value =
-              "";
+            clearScheduleForm();
+
+            await loadSchedules();
 
           }
 
@@ -2267,14 +2527,621 @@
 
             showMessage(
               msg,
-              "Schedule add नहीं हो सका: " +
+              "Schedule save नहीं हो सका: " +
                 error.message,
               "error"
             );
 
           }
 
+          finally {
+
+            button.disabled =
+              false;
+
+          }
+
         }
+      );
+
+
+    /* =====================================================
+       LOAD SCHEDULES
+    ===================================================== */
+
+    async function loadSchedules() {
+
+      const list =
+        document.getElementById(
+          "scheduleList"
+        );
+
+
+      list.innerHTML =
+        `
+        <div class="schedule-empty">
+          📅 Schedule load हो रहे हैं...
+        </div>
+        `;
+
+
+      try {
+
+        const scheduleQuery =
+          query(
+            collection(
+              db,
+              "schedule"
+            ),
+            orderBy(
+              "date",
+              "asc"
+            )
+          );
+
+
+        const snapshot =
+          await getDocs(
+            scheduleQuery
+          );
+
+
+        if (snapshot.empty) {
+
+          list.innerHTML =
+            `
+            <div class="schedule-empty">
+              📅 अभी कोई Schedule नहीं है।
+            </div>
+            `;
+
+          return;
+
+        }
+
+
+        list.innerHTML =
+          "";
+
+
+        snapshot.forEach(
+          item => {
+
+            const data =
+              item.data();
+
+
+            const card =
+              document.createElement(
+                "div"
+              );
+
+
+            card.className =
+              "schedule-item";
+
+
+            const readableDate =
+              formatScheduleDate(
+                data.date
+              );
+
+
+            card.innerHTML = `
+
+              <div class="schedule-top">
+
+                <div style="min-width:0;">
+
+                  <div class="schedule-date">
+                    📅 ${escapeHtml(
+                      readableDate
+                    )}
+                  </div>
+
+                  <h3>
+                    ${escapeHtml(
+                      data.title
+                    )}
+                  </h3>
+
+                  <div class="schedule-time">
+                    🕐 ${escapeHtml(
+                      formatTime(
+                        data.time
+                      )
+                    )}
+                  </div>
+
+                  <div class="schedule-description">
+                    ${escapeHtml(
+                      data.description ||
+                      "कोई description नहीं दी गई।"
+                    )}
+                  </div>
+
+                </div>
+
+                <div class="schedule-actions">
+
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-small edit-btn"
+                  >
+                    ✏️ Edit
+                  </button>
+
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-small delete-btn"
+                  >
+                    🗑️ Delete
+                  </button>
+
+                </div>
+
+              </div>
+
+            `;
+
+
+            card
+              .querySelector(
+                ".edit-btn"
+              )
+              .addEventListener(
+                "click",
+                () =>
+                  startEditSchedule(
+                    item.id,
+                    data
+                  )
+              );
+
+
+            card
+              .querySelector(
+                ".delete-btn"
+              )
+              .addEventListener(
+                "click",
+                () =>
+                  deleteSchedule(
+                    item.id,
+                    data.title
+                  )
+              );
+
+
+            list.appendChild(
+              card
+            );
+
+          }
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "SCHEDULE LOAD ERROR:",
+          error
+        );
+
+
+        list.innerHTML =
+          `
+          <div class="schedule-empty" style="color:#dc2626;">
+            Schedule load नहीं हो सका।
+          </div>
+          `;
+
+      }
+
+    }
+
+
+    /* =====================================================
+       FORMAT DATE
+    ===================================================== */
+
+    function formatScheduleDate(
+      dateString
+    ) {
+
+      if (!dateString) {
+        return "Date नहीं है";
+      }
+
+
+      const date =
+        new Date(
+          dateString +
+          "T00:00:00"
+        );
+
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+
+        return dateString;
+
+      }
+
+
+      return date.toLocaleDateString(
+        "hi-IN",
+        {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      );
+
+    }
+
+
+    /* =====================================================
+       FORMAT TIME
+    ===================================================== */
+
+    function formatTime(
+      timeString
+    ) {
+
+      if (!timeString) {
+        return "Time नहीं है";
+      }
+
+
+      const parts =
+        timeString.split(":");
+
+
+      if (parts.length < 2) {
+        return timeString;
+      }
+
+
+      let hour =
+        parseInt(
+          parts[0],
+          10
+        );
+
+
+      const minute =
+        parts[1];
+
+
+      if (
+        Number.isNaN(hour)
+      ) {
+
+        return timeString;
+
+      }
+
+
+      const period =
+        hour >= 12
+          ? "PM"
+          : "AM";
+
+
+      hour =
+        hour % 12 || 12;
+
+
+      return (
+        hour +
+        ":" +
+        minute +
+        " " +
+        period
+      );
+
+    }
+
+
+    /* =====================================================
+       START EDIT SCHEDULE
+    ===================================================== */
+
+    function startEditSchedule(
+      id,
+      data
+    ) {
+
+      editingScheduleId =
+        id;
+
+
+      document.getElementById(
+        "scheduleDate"
+      ).value =
+        data.date || "";
+
+
+      document.getElementById(
+        "scheduleTime"
+      ).value =
+        data.time || "";
+
+
+      document.getElementById(
+        "scheduleTitle"
+      ).value =
+        data.title || "";
+
+
+      document.getElementById(
+        "scheduleDescription"
+      ).value =
+        data.description || "";
+
+
+      const formCard =
+        document.getElementById(
+          "scheduleFormCard"
+        );
+
+
+      formCard.classList.add(
+        "edit-mode"
+      );
+
+
+      document.getElementById(
+        "scheduleFormTitle"
+      ).textContent =
+        "✏️ Schedule Edit करें";
+
+
+      document.getElementById(
+        "scheduleFormSubtitle"
+      ).textContent =
+        "गलत जानकारी को सुधारकर Update करें";
+
+
+      document.getElementById(
+        "editScheduleBadge"
+      ).classList.remove(
+        "hidden"
+      );
+
+
+      document.getElementById(
+        "addScheduleBtn"
+      ).textContent =
+        "💾 Schedule Update करें";
+
+
+      document.getElementById(
+        "cancelEditBtn"
+      ).classList.remove(
+        "hidden"
+      );
+
+
+      document
+        .getElementById(
+          "scheduleFormCard"
+        )
+        .scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+
+    }
+
+
+    /* =====================================================
+       CANCEL EDIT
+    ===================================================== */
+
+    document
+      .getElementById(
+        "cancelEditBtn"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          clearScheduleForm();
+
+          showMessage(
+            document.getElementById(
+              "scheduleMsg"
+            ),
+            "Edit cancel कर दिया गया।",
+            ""
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       CLEAR SCHEDULE FORM
+    ===================================================== */
+
+    function clearScheduleForm() {
+
+      editingScheduleId =
+        null;
+
+
+      document.getElementById(
+        "scheduleDate"
+      ).value =
+        "";
+
+
+      document.getElementById(
+        "scheduleTime"
+      ).value =
+        "";
+
+
+      document.getElementById(
+        "scheduleTitle"
+      ).value =
+        "";
+
+
+      document.getElementById(
+        "scheduleDescription"
+      ).value =
+        "";
+
+
+      document.getElementById(
+        "scheduleFormCard"
+      ).classList.remove(
+        "edit-mode"
+      );
+
+
+      document.getElementById(
+        "scheduleFormTitle"
+      ).textContent =
+        "📅 Schedule";
+
+
+      document.getElementById(
+        "scheduleFormSubtitle"
+      ).textContent =
+        "नई पूजा / कार्यक्रम जोड़ें";
+
+
+      document.getElementById(
+        "editScheduleBadge"
+      ).classList.add(
+        "hidden"
+      );
+
+
+      document.getElementById(
+        "addScheduleBtn"
+      ).textContent =
+        "➕ Schedule जोड़ें";
+
+
+      document.getElementById(
+        "cancelEditBtn"
+      ).classList.add(
+        "hidden"
+      );
+
+
+      document.getElementById(
+        "scheduleMsg"
+      ).textContent =
+        "";
+
+      document.getElementById(
+        "scheduleMsg"
+      ).className =
+        "message";
+
+    }
+
+
+    /* =====================================================
+       DELETE SCHEDULE
+    ===================================================== */
+
+    async function deleteSchedule(
+      id,
+      title
+    ) {
+
+      const confirmDelete =
+        confirm(
+          "क्या आप इस Schedule को delete करना चाहते हैं?\n\n" +
+          "कार्यक्रम: " +
+          title +
+          "\n\n" +
+          "Delete करने के बाद इसे वापस नहीं लाया जा सकेगा।"
+        );
+
+
+      if (!confirmDelete) {
+        return;
+      }
+
+
+      try {
+
+        await deleteDoc(
+          doc(
+            db,
+            "schedule",
+            id
+          )
+        );
+
+
+        if (
+          editingScheduleId === id
+        ) {
+
+          clearScheduleForm();
+
+        }
+
+
+        await loadSchedules();
+
+
+        showMessage(
+          document.getElementById(
+            "scheduleMsg"
+          ),
+          "🗑️ Schedule successfully delete हो गया।",
+          "success"
+        );
+
+      }
+
+      catch (error) {
+
+        console.error(
+          "DELETE SCHEDULE ERROR:",
+          error
+        );
+
+
+        showMessage(
+          document.getElementById(
+            "scheduleMsg"
+          ),
+          "Schedule delete नहीं हो सका: " +
+            error.message,
+          "error"
+        );
+
+      }
+
+    }
+
+
+    /* =====================================================
+       REFRESH SCHEDULE
+    ===================================================== */
+
+    document
+      .getElementById(
+        "refreshScheduleBtn"
+      )
+      .addEventListener(
+        "click",
+        loadSchedules
       );
 
   </script>
