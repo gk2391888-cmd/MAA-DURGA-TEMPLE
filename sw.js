@@ -1,4 +1,4 @@
-const CACHE_NAME = "maa-manokamana-v2";
+const CACHE_NAME = "maa-manokamana-v3";
 
 const FILES_TO_CACHE = [
   "./",
@@ -18,7 +18,7 @@ self.addEventListener("install", event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(FILES_TO_CACHE))
       .catch(error => {
-        console.error("Service Worker cache error:", error);
+        console.error("❌ SW cache install error:", error);
       })
   );
 
@@ -50,17 +50,18 @@ self.addEventListener("fetch", event => {
     fetch(event.request)
       .then(response => {
 
-        // Valid response ko cache karo
         if (
           response &&
           response.status === 200 &&
-          response.type !== "opaque"
+          (response.type === "basic" || response.type === "cors")
         ) {
           const responseClone = response.clone();
 
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseClone);
+            })
+            .catch(() => {});
         }
 
         return response;
