@@ -55,6 +55,9 @@ const qrBox = $("qrBox");
 const liveVideo = $("liveVideo");
 const scheduleList = $("scheduleList");
 
+/* Gallery */
+const galleryGrid = $("galleryGrid");
+
 const mapBtn = $("mapBtn");
 const languageBtn = $("languageBtn");
 
@@ -90,7 +93,8 @@ if (menuBtn && navMenu) {
 
     navMenu.classList.toggle("active");
 
-    const isOpen = navMenu.classList.contains("active");
+    const isOpen =
+      navMenu.classList.contains("active");
 
     menuBtn.setAttribute(
       "aria-expanded",
@@ -102,7 +106,9 @@ if (menuBtn && navMenu) {
 }
 
 
-/* Close mobile menu after navigation */
+/* =========================================================
+   CLOSE MOBILE MENU AFTER NAVIGATION
+========================================================= */
 
 document.querySelectorAll("#navMenu a").forEach(link => {
 
@@ -266,7 +272,9 @@ if (donationForm) {
     /* Disable submit button */
 
     const submitBtn =
-      donationForm.querySelector('button[type="submit"]');
+      donationForm.querySelector(
+        'button[type="submit"]'
+      );
 
     const oldButtonText =
       submitBtn ? submitBtn.textContent : "";
@@ -358,13 +366,24 @@ async function loadTempleSettings() {
 
     if (settingsSnap.exists()) {
 
-      const data = settingsSnap.data();
+      const data =
+        settingsSnap.data();
+
 
       templeSettings = {
-        upiId: data.upiId || "",
-        aartiTime: data.aartiTime || "",
-        liveUrl: data.liveUrl || "",
-        qrUrl: data.qrUrl || ""
+
+        upiId:
+          data.upiId || "",
+
+        aartiTime:
+          data.aartiTime || "",
+
+        liveUrl:
+          data.liveUrl || "",
+
+        qrUrl:
+          data.qrUrl || ""
+
       };
 
     }
@@ -401,6 +420,7 @@ function listenToTempleSettings() {
 
     onSnapshot(
       settingsRef,
+
       (snapshot) => {
 
         if (!snapshot.exists()) {
@@ -408,15 +428,23 @@ function listenToTempleSettings() {
         }
 
 
-        const data = snapshot.data();
+        const data =
+          snapshot.data();
 
 
         templeSettings = {
 
-          upiId: data.upiId || "",
-          aartiTime: data.aartiTime || "",
-          liveUrl: data.liveUrl || "",
-          qrUrl: data.qrUrl || ""
+          upiId:
+            data.upiId || "",
+
+          aartiTime:
+            data.aartiTime || "",
+
+          liveUrl:
+            data.liveUrl || "",
+
+          qrUrl:
+            data.qrUrl || ""
 
         };
 
@@ -532,6 +560,7 @@ function renderQRCode() {
 
   const img =
     document.createElement("img");
+
 
   img.src = qrUrl;
 
@@ -671,6 +700,7 @@ function getYouTubeEmbedUrl(url) {
       const videoId =
         parsed.searchParams.get("v");
 
+
       if (videoId) {
 
         return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
@@ -690,6 +720,7 @@ function getYouTubeEmbedUrl(url) {
       const videoId =
         parsed.pathname.replace("/", "");
 
+
       if (videoId) {
 
         return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
@@ -708,6 +739,7 @@ function getYouTubeEmbedUrl(url) {
 
       const videoId =
         parsed.pathname.split("/")[2];
+
 
       if (videoId) {
 
@@ -786,8 +818,12 @@ async function loadSchedule() {
     snapshot.forEach((scheduleDoc) => {
 
       schedules.push({
-        id: scheduleDoc.id,
+
+        id:
+          scheduleDoc.id,
+
         ...scheduleDoc.data()
+
       });
 
     });
@@ -836,6 +872,7 @@ function listenToSchedule() {
 
     onSnapshot(
       scheduleQuery,
+
       (snapshot) => {
 
         const schedules = [];
@@ -844,8 +881,12 @@ function listenToSchedule() {
         snapshot.forEach((scheduleDoc) => {
 
           schedules.push({
-            id: scheduleDoc.id,
+
+            id:
+              scheduleDoc.id,
+
             ...scheduleDoc.data()
+
           });
 
         });
@@ -904,6 +945,7 @@ function renderSchedule(schedules) {
 
     const scheduleItem =
       document.createElement("div");
+
 
     scheduleItem.className =
       "schedule-item";
@@ -1022,8 +1064,10 @@ function formatScheduleDate(dateValue) {
   if (!dateValue) {
 
     return {
+
       day: "—",
       month: "DATE"
+
     };
 
   }
@@ -1038,14 +1082,17 @@ function formatScheduleDate(dateValue) {
     if (Number.isNaN(date.getTime())) {
 
       return {
+
         day: dateValue,
         month: "DATE"
+
       };
 
     }
 
 
     const months = [
+
       "JAN",
       "FEB",
       "MAR",
@@ -1058,14 +1105,16 @@ function formatScheduleDate(dateValue) {
       "OCT",
       "NOV",
       "DEC"
+
     ];
 
 
     return {
 
-      day: String(
-        date.getDate()
-      ).padStart(2, "0"),
+      day:
+        String(
+          date.getDate()
+        ).padStart(2, "0"),
 
       month:
         months[date.getMonth()]
@@ -1077,12 +1126,296 @@ function formatScheduleDate(dateValue) {
 
     return {
 
-      day: String(dateValue),
-      month: "DATE"
+      day:
+        String(dateValue),
+
+      month:
+        "DATE"
 
     };
 
   }
+
+}
+
+
+/* =========================================================
+   GALLERY
+   Firestore:
+   gallery/{id}
+
+   Admin Panel saves:
+   - title
+   - category
+   - imageUrl
+   - publicId
+   - createdAt
+========================================================= */
+
+async function loadGallery() {
+
+  if (!galleryGrid) {
+    return;
+  }
+
+
+  try {
+
+    const galleryQuery =
+      query(
+        collection(db, "gallery"),
+        orderBy("createdAt", "desc"),
+        limit(30)
+      );
+
+
+    const snapshot =
+      await getDocs(galleryQuery);
+
+
+    const items = [];
+
+
+    snapshot.forEach((galleryDoc) => {
+
+      items.push({
+
+        id:
+          galleryDoc.id,
+
+        ...galleryDoc.data()
+
+      });
+
+    });
+
+
+    renderGallery(items);
+
+
+  } catch (error) {
+
+    console.error(
+      "Gallery loading error:",
+      error
+    );
+
+
+    renderEmptyGallery(
+      "Photos अभी load नहीं हो पाईं।"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   REALTIME GALLERY
+========================================================= */
+
+function listenToGallery() {
+
+  if (!galleryGrid) {
+    return;
+  }
+
+
+  try {
+
+    const galleryQuery =
+      query(
+        collection(db, "gallery"),
+        orderBy("createdAt", "desc"),
+        limit(30)
+      );
+
+
+    onSnapshot(
+      galleryQuery,
+
+      (snapshot) => {
+
+        const items = [];
+
+
+        snapshot.forEach((galleryDoc) => {
+
+          items.push({
+
+            id:
+              galleryDoc.id,
+
+            ...galleryDoc.data()
+
+          });
+
+        });
+
+
+        renderGallery(items);
+
+      },
+
+      (error) => {
+
+        console.error(
+          "Realtime gallery error:",
+          error
+        );
+
+      }
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Gallery listener error:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RENDER GALLERY
+========================================================= */
+
+function renderGallery(items) {
+
+  if (!galleryGrid) {
+    return;
+  }
+
+
+  /* No gallery photos */
+
+  if (!items || items.length === 0) {
+
+    renderEmptyGallery();
+
+    return;
+
+  }
+
+
+  galleryGrid.innerHTML = "";
+
+
+  items.forEach((item) => {
+
+    const galleryItem =
+      document.createElement("article");
+
+
+    galleryItem.className =
+      "gallery-item";
+
+
+    /* Image */
+
+    const image =
+      document.createElement("img");
+
+
+    image.src =
+      item.imageUrl || "";
+
+
+    image.alt =
+      item.title ||
+      "माँ मनोकामना मंदिर";
+
+
+    image.loading =
+      "lazy";
+
+
+    image.decoding =
+      "async";
+
+
+    image.onerror = () => {
+
+      image.style.display =
+        "none";
+
+    };
+
+
+    /* Caption */
+
+    const caption =
+      document.createElement("div");
+
+
+    caption.className =
+      "gallery-caption";
+
+
+    const title =
+      document.createElement("h3");
+
+
+    title.textContent =
+      item.title ||
+      "मंदिर दर्शन";
+
+
+    const category =
+      document.createElement("span");
+
+
+    category.textContent =
+      item.category ||
+      "मंदिर";
+
+
+    caption.appendChild(title);
+    caption.appendChild(category);
+
+
+    galleryItem.appendChild(image);
+    galleryItem.appendChild(caption);
+
+
+    galleryGrid.appendChild(
+      galleryItem
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   EMPTY GALLERY
+========================================================= */
+
+function renderEmptyGallery(
+  message = "अभी कोई फोटो उपलब्ध नहीं है।"
+) {
+
+  if (!galleryGrid) {
+    return;
+  }
+
+
+  galleryGrid.innerHTML = `
+
+    <div class="gallery-placeholder">
+
+      <span>📸</span>
+
+      <p>
+        ${escapeHtml(message)}
+      </p>
+
+    </div>
+
+  `;
 
 }
 
@@ -1165,17 +1498,42 @@ if (languageBtn) {
 
 function escapeHtml(value) {
 
-  if (value === null || value === undefined) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+
     return "";
+
   }
 
 
   return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
@@ -1189,7 +1547,9 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
 
     navigator.serviceWorker
+
       .register("./sw.js")
+
       .then(() => {
 
         console.log(
@@ -1197,6 +1557,7 @@ if ("serviceWorker" in navigator) {
         );
 
       })
+
       .catch((error) => {
 
         console.error(
@@ -1228,12 +1589,16 @@ async function initializeTempleApp() {
 
   await loadSchedule();
 
+  await loadGallery();
+
 
   /* Start realtime listeners */
 
   listenToTempleSettings();
 
   listenToSchedule();
+
+  listenToGallery();
 
 
   console.log(
