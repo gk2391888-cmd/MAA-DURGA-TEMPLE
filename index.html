@@ -1,14 +1,8 @@
-```html
 <!DOCTYPE html>
 <html lang="hi">
 <head>
   <meta charset="UTF-8">
-
-  <!-- MOBILE ZOOM FIX -->
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>श्री श्री १०८ माँ मनोकामना छोटी दुर्गा पूजा समिति</title>
 
@@ -32,29 +26,8 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- GALLERY VIEWER STYLE -->
+  <!-- Gallery Viewer Style -->
   <style>
-    /* Prevent unwanted mobile page zoom */
-    html {
-      touch-action: manipulation;
-      -webkit-text-size-adjust: 100%;
-      text-size-adjust: 100%;
-    }
-
-    body {
-      touch-action: manipulation;
-      overscroll-behavior-x: none;
-    }
-
-    button,
-    a,
-    input,
-    select,
-    textarea {
-      touch-action: manipulation;
-    }
-
-    /* Gallery fullscreen viewer */
     .image-viewer {
       position: fixed;
       inset: 0;
@@ -83,9 +56,7 @@
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
       animation: viewerZoom 0.25s ease;
       user-select: none;
-      -webkit-user-select: none;
       -webkit-user-drag: none;
-      touch-action: manipulation;
     }
 
     .image-viewer-close {
@@ -107,7 +78,6 @@
       justify-content: center;
       transition: 0.2s ease;
       backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
     }
 
     .image-viewer-close:hover {
@@ -130,14 +100,11 @@
 
     body.image-viewer-open {
       overflow: hidden;
-      touch-action: none;
     }
 
+    /* Dynamic gallery images clickable */
     .gallery-grid img {
       cursor: zoom-in;
-      user-select: none;
-      -webkit-user-select: none;
-      -webkit-user-drag: none;
     }
 
     .gallery-grid .gallery-card,
@@ -151,7 +118,6 @@
       from {
         opacity: 0;
       }
-
       to {
         opacity: 1;
       }
@@ -162,7 +128,6 @@
         transform: scale(0.92);
         opacity: 0;
       }
-
       to {
         transform: scale(1);
         opacity: 1;
@@ -217,7 +182,6 @@
       <button
         class="menu-btn"
         id="menuBtn"
-        type="button"
         aria-label="Menu"
       >
         ☰
@@ -234,7 +198,6 @@
         <button
           class="language-btn"
           id="languageBtn"
-          type="button"
         >
           हिंदी | English
         </button>
@@ -247,7 +210,10 @@
   <!-- HERO -->
   <main>
 
-    <section class="hero" id="home">
+    <section
+      class="hero"
+      id="home"
+    >
 
       <div class="hero-content">
 
@@ -347,7 +313,10 @@
 
 
     <!-- LIVE AARTI -->
-    <section class="section" id="live">
+    <section
+      class="section"
+      id="live"
+    >
 
       <div class="section-heading">
 
@@ -518,7 +487,6 @@
         <button
           class="btn btn-primary full-width"
           id="donateBtn"
-          type="button"
         >
           ❤️ Donate Now
         </button>
@@ -618,6 +586,10 @@
       </div>
 
 
+      <!-- IMPORTANT:
+           app.js इसी gallery-grid में photos add करेगा.
+           नीचे का click viewer dynamically सभी images पर काम करेगा.
+      -->
       <div
         class="gallery-grid"
         id="galleryGrid"
@@ -743,7 +715,6 @@
           <button
             class="outline-btn"
             id="mapBtn"
-            type="button"
           >
             📍 View Location
           </button>
@@ -805,7 +776,6 @@
         opacity:0.85;
       "
     >
-
       <div>
         A Product by
         <strong style="color:#f59e0b;">
@@ -823,7 +793,6 @@
       <div>
         Building Useful Products from Bihar for Bharat
       </div>
-
     </div>
 
   </footer>
@@ -857,6 +826,7 @@
 
 
       <form id="donationForm">
+
 
         <label>
           आपका नाम
@@ -933,7 +903,10 @@
   </div>
 
 
+  <!-- ============================= -->
   <!-- GALLERY FULL SCREEN VIEWER -->
+  <!-- ============================= -->
+
   <div
     id="imageViewer"
     class="image-viewer"
@@ -990,7 +963,7 @@
       const viewerTitle = document.getElementById("viewerTitle");
       const closeBtn = document.getElementById("closeImageViewer");
 
-      if (!viewer || !viewerImage || !closeBtn) {
+      if (!viewer || !viewerImage) {
         return;
       }
 
@@ -1020,17 +993,17 @@
         document.body.classList.remove("image-viewer-open");
 
         setTimeout(function () {
-
           viewerImage.src = "";
-
           viewerTitle.textContent = "";
-
         }, 200);
-
       }
 
 
-      /* Dynamic gallery images */
+      /*
+       * Event Delegation:
+       * app.js baad me gallery images dynamically add kare,
+       * tab bhi click automatically work karega.
+       */
       document.addEventListener("click", function (event) {
 
         const image = event.target.closest(
@@ -1050,15 +1023,16 @@
           return;
         }
 
-
         const card =
           image.closest(
             ".gallery-card, .gallery-item, .gallery-photo, .gallery-image"
           );
 
+        let title = "";
 
-        let title = image.alt || "";
-
+        if (image.alt) {
+          title = image.alt;
+        }
 
         if (card) {
 
@@ -1067,32 +1041,25 @@
               ".gallery-title, .gallery-name, h3, h4, p"
             );
 
-          if (
-            titleElement &&
-            titleElement.textContent.trim()
-          ) {
-
-            title =
-              titleElement.textContent.trim();
-
+          if (titleElement && titleElement.textContent.trim()) {
+            title = titleElement.textContent.trim();
           }
-
         }
-
 
         openViewer(src, title);
 
       });
 
 
-      /* Close button */
       closeBtn.addEventListener(
         "click",
         closeViewer
       );
 
 
-      /* Click outside image */
+      /*
+       * Viewer ke image ke bahar click karne par close
+       */
       viewer.addEventListener(
         "click",
         function (event) {
@@ -1105,7 +1072,9 @@
       );
 
 
-      /* ESC */
+      /*
+       * ESC button se close
+       */
       document.addEventListener(
         "keydown",
         function (event) {
@@ -1114,16 +1083,16 @@
             event.key === "Escape" &&
             viewer.classList.contains("show")
           ) {
-
             closeViewer();
-
           }
 
         }
       );
 
 
-      /* Image error */
+      /*
+       * Image loading error
+       */
       viewerImage.addEventListener(
         "error",
         function () {
@@ -1139,4 +1108,3 @@
 
 </body>
 </html>
-```
