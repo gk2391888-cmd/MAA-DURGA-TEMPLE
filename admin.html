@@ -26,6 +26,10 @@
       font: inherit;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
     /* ================= LOGIN ================= */
 
     .login-page {
@@ -74,10 +78,6 @@
 
     /* ================= COMMON ================= */
 
-    .hidden {
-      display: none !important;
-    }
-
     .field {
       margin-bottom: 16px;
     }
@@ -125,6 +125,12 @@
       transform: translateY(-1px);
     }
 
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .btn-primary {
       width: 100%;
       background: #f28c28;
@@ -151,6 +157,7 @@
       font-size: 14px;
       font-weight: 700;
       text-align: center;
+      line-height: 1.5;
     }
 
     .success {
@@ -283,6 +290,7 @@
       text-align: center;
       cursor: pointer;
       background: #fafbfc;
+      display: block;
     }
 
     .upload-box:hover {
@@ -399,25 +407,6 @@
       line-height: 1.7;
     }
 
-    /* ================= SCHEDULE ================= */
-
-    .schedule-item {
-      border-left: 4px solid #f28c28;
-      background: #fffaf3;
-      border-radius: 10px;
-      padding: 13px;
-      margin-bottom: 10px;
-    }
-
-    .schedule-item strong {
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .schedule-item small {
-      color: #6b7280;
-    }
-
     /* ================= MOBILE ================= */
 
     @media (max-width: 800px) {
@@ -474,9 +463,7 @@
 
 <body>
 
-  <!-- =====================================================
-       LOGIN
-  ====================================================== -->
+  <!-- ================= LOGIN ================= -->
 
   <section id="loginPage" class="login-page">
 
@@ -490,6 +477,7 @@
 
       <div class="field">
         <label>Email</label>
+
         <input
           type="email"
           id="email"
@@ -500,6 +488,7 @@
 
       <div class="field">
         <label>Password</label>
+
         <input
           type="password"
           id="password"
@@ -519,13 +508,9 @@
   </section>
 
 
-  <!-- =====================================================
-       ADMIN PANEL
-  ====================================================== -->
+  <!-- ================= ADMIN PANEL ================= -->
 
   <section id="adminPage" class="admin-page hidden">
-
-    <!-- TOP BAR -->
 
     <header class="topbar">
 
@@ -557,19 +542,17 @@
           मंदिर की जानकारी और photos यहाँ से आसानी से manage करें।
         </p>
 
-        <small id="adminEmail"
-               style="display:block;margin-top:6px;color:#9ca3af;">
-        </small>
+        <small
+          id="adminEmail"
+          style="display:block;margin-top:6px;color:#9ca3af;"
+        ></small>
 
       </div>
 
 
       <div class="grid">
 
-
-        <!-- =================================================
-             TEMPLE SETTINGS
-        ================================================== -->
+        <!-- TEMPLE SETTINGS -->
 
         <div class="card">
 
@@ -582,7 +565,6 @@
 
           </div>
 
-
           <div class="field">
             <label>UPI ID</label>
 
@@ -592,7 +574,6 @@
               placeholder="example@upi"
             >
           </div>
-
 
           <div class="field">
             <label>आज की आरती का समय</label>
@@ -604,7 +585,6 @@
             >
           </div>
 
-
           <div class="field">
             <label>Live Aarti Link</label>
 
@@ -614,7 +594,6 @@
               placeholder="YouTube Live link"
             >
           </div>
-
 
           <button
             id="saveSettingsBtn"
@@ -628,9 +607,7 @@
         </div>
 
 
-        <!-- =================================================
-             QR UPLOAD
-        ================================================== -->
+        <!-- QR UPLOAD -->
 
         <div class="card">
 
@@ -642,7 +619,6 @@
             </div>
 
           </div>
-
 
           <label class="upload-box" for="qrFile">
 
@@ -669,14 +645,12 @@
 
           </label>
 
-
           <div
             id="qrUploadProgress"
             class="upload-progress"
           >
             ⏳ QR upload हो रहा है...
           </div>
-
 
           <button
             id="uploadQrBtn"
@@ -691,9 +665,7 @@
         </div>
 
 
-        <!-- =================================================
-             GALLERY UPLOAD
-        ================================================== -->
+        <!-- GALLERY UPLOAD -->
 
         <div class="card full">
 
@@ -701,6 +673,7 @@
 
             <div>
               <h2>🖼️ मंदिर Gallery</h2>
+
               <p>
                 Photo चुनें और Upload करें — बस इतना ही।
               </p>
@@ -813,17 +786,20 @@
         </div>
 
 
-        <!-- =================================================
-             GALLERY LIST
-        ================================================== -->
+        <!-- GALLERY LIST -->
 
         <div class="card full">
 
           <div class="card-header">
 
             <div>
+
               <h2>📷 Uploaded Photos</h2>
-              <p>Website पर दिखाई देने वाली photos</p>
+
+              <p>
+                Website पर दिखाई देने वाली photos
+              </p>
+
             </div>
 
             <button
@@ -850,17 +826,20 @@
         </div>
 
 
-        <!-- =================================================
-             SCHEDULE
-        ================================================== -->
+        <!-- SCHEDULE -->
 
         <div class="card">
 
           <div class="card-header">
 
             <div>
+
               <h2>📅 Schedule</h2>
-              <p>नई पूजा / कार्यक्रम जोड़ें</p>
+
+              <p>
+                नई पूजा / कार्यक्रम जोड़ें
+              </p>
+
             </div>
 
           </div>
@@ -927,17 +906,20 @@
         </div>
 
 
-        <!-- =================================================
-             DONATIONS
-        ================================================== -->
+        <!-- DONATIONS -->
 
         <div class="card">
 
           <div class="card-header">
 
             <div>
+
               <h2>💰 Donations</h2>
-              <p>हाल की donation entries</p>
+
+              <p>
+                हाल की donation entries
+              </p>
+
             </div>
 
             <button
@@ -960,7 +942,6 @@
 
         </div>
 
-
       </div>
 
     </main>
@@ -968,15 +949,13 @@
   </section>
 
 
-  <!-- =====================================================
-       JAVASCRIPT
-  ====================================================== -->
+  <!-- ================= JAVASCRIPT ================= -->
 
   <script type="module">
 
     /* =====================================================
        FIREBASE
-    ====================================================== */
+    ===================================================== */
 
     import {
       initializeApp
@@ -1010,18 +989,22 @@
     import firebaseConfig from "./firebase-config.js";
 
 
-    const app = initializeApp(firebaseConfig);
+    const app =
+      initializeApp(firebaseConfig);
 
-    const auth = getAuth(app);
+    const auth =
+      getAuth(app);
 
-    const db = getFirestore(app);
+    const db =
+      getFirestore(app);
 
 
     /* =====================================================
        CLOUDINARY
-    ====================================================== */
+    ===================================================== */
 
-    const CLOUDINARY_CLOUD_NAME = "rjjxdzso";
+    const CLOUDINARY_CLOUD_NAME =
+      "rjjxdzso";
 
     const CLOUDINARY_UPLOAD_PRESET =
       "maa_temple_upload";
@@ -1029,7 +1012,7 @@
 
     /* =====================================================
        ELEMENTS
-    ====================================================== */
+    ===================================================== */
 
     const loginPage =
       document.getElementById("loginPage");
@@ -1052,11 +1035,16 @@
 
     /* =====================================================
        HELPERS
-    ====================================================== */
+    ===================================================== */
 
-    function showMessage(element, message, type = "") {
+    function showMessage(
+      element,
+      message,
+      type = ""
+    ) {
 
-      element.textContent = message;
+      element.textContent =
+        message;
 
       element.className =
         "message " + type;
@@ -1078,7 +1066,9 @@
 
     function formatDate(timestamp) {
 
-      if (!timestamp) return "—";
+      if (!timestamp) {
+        return "—";
+      }
 
       try {
 
@@ -1087,7 +1077,9 @@
             ? timestamp.toDate()
             : new Date(timestamp);
 
-        return date.toLocaleString("hi-IN");
+        return date.toLocaleString(
+          "hi-IN"
+        );
 
       } catch {
 
@@ -1100,82 +1092,79 @@
 
     /* =====================================================
        ADMIN CHECK
-    ====================================================== */
+    ===================================================== */
 
     async function isAdmin(user) {
 
-      if (!user) return false;
+      if (!user) {
+        return false;
+      }
+
 
       const adminRef =
-        doc(db, "admins", user.uid);
+        doc(
+          db,
+          "admins",
+          user.uid
+        );
+
 
       const adminSnap =
         await getDoc(adminRef);
 
+
       if (!adminSnap.exists()) {
+
+        console.error(
+          "ADMIN DOCUMENT NOT FOUND",
+          "admins/" + user.uid
+        );
+
         return false;
+
       }
 
-      return adminSnap.data().role === "admin";
+
+      const data =
+        adminSnap.data();
+
+
+      console.log(
+        "ADMIN DATA:",
+        data
+      );
+
+
+      return data.role === "admin";
 
     }
 
 
     /* =====================================================
        LOGIN
-    ====================================================== */
+    ===================================================== */
 
-    loginBtn.addEventListener("click", async () => {
+    loginBtn.addEventListener(
+      "click",
+      async () => {
 
-      const email =
-        document.getElementById("email")
-          .value
-          .trim();
+        const email =
+          document
+            .getElementById("email")
+            .value
+            .trim();
 
-      const password =
-        document.getElementById("password")
-          .value;
-
-
-      if (!email || !password) {
-
-        showMessage(
-          loginMsg,
-          "Email और Password दोनों भरें।",
-          "error"
-        );
-
-        return;
-
-      }
+        const password =
+          document
+            .getElementById("password")
+            .value;
 
 
-      loginBtn.disabled = true;
-
-      loginBtn.textContent = "Login हो रहा है...";
-
-
-      try {
-
-        const result =
-          await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-          );
-
-
-        const admin =
-          await isAdmin(result.user);
-
-
-        if (!admin) {
-
-          await signOut(auth);
+        if (!email || !password) {
 
           showMessage(
             loginMsg,
-            "आपको Admin access नहीं है।",
+            "Email और Password दोनों भरें।",
             "error"
           );
 
@@ -1184,143 +1173,394 @@
         }
 
 
-        showMessage(
-          loginMsg,
-          "Login successful.",
-          "success"
-        );
+        loginBtn.disabled = true;
+
+        loginBtn.textContent =
+          "Login हो रहा है...";
+
+        loginMsg.textContent = "";
 
 
-      } catch (error) {
+        try {
 
-        console.error(error);
+          console.log(
+            "LOGIN START:",
+            email
+          );
 
-        showMessage(
-          loginMsg,
-          "Email या Password गलत है।",
-          "error"
-        );
 
-      } finally {
+          const result =
+            await signInWithEmailAndPassword(
+              auth,
+              email,
+              password
+            );
 
-        loginBtn.disabled = false;
 
-        loginBtn.textContent = "Login";
+          const user =
+            result.user;
+
+
+          console.log(
+            "AUTH SUCCESS"
+          );
+
+          console.log(
+            "UID:",
+            user.uid
+          );
+
+          console.log(
+            "EMAIL:",
+            user.email
+          );
+
+
+          /*
+            Check admins/{UID}
+          */
+
+          const adminRef =
+            doc(
+              db,
+              "admins",
+              user.uid
+            );
+
+
+          const adminSnap =
+            await getDoc(
+              adminRef
+            );
+
+
+          console.log(
+            "ADMIN DOCUMENT:",
+            adminSnap.exists()
+          );
+
+
+          if (!adminSnap.exists()) {
+
+            await signOut(auth);
+
+
+            showMessage(
+              loginMsg,
+              "Login सफल हुआ, लेकिन इस account को Admin access नहीं मिला। admins document का Document ID इसी UID के बराबर होना चाहिए।",
+              "error"
+            );
+
+
+            console.error(
+              "CREATE THIS DOCUMENT:",
+              "admins/" + user.uid
+            );
+
+
+            return;
+
+          }
+
+
+          const adminData =
+            adminSnap.data();
+
+
+          console.log(
+            "ADMIN ROLE:",
+            adminData.role
+          );
+
+
+          if (
+            adminData.role !==
+            "admin"
+          ) {
+
+            await signOut(auth);
+
+
+            showMessage(
+              loginMsg,
+              "Admin access नहीं है। Firestore में role की value exactly admin रखें।",
+              "error"
+            );
+
+
+            return;
+
+          }
+
+
+          showMessage(
+            loginMsg,
+            "Login successful.",
+            "success"
+          );
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "FIREBASE ERROR:",
+            error
+          );
+
+
+          let message =
+            "Login failed.";
+
+
+          switch (
+            error.code
+          ) {
+
+            case "auth/invalid-credential":
+
+              message =
+                "Firebase: Email या Password गलत है।";
+
+              break;
+
+
+            case "auth/user-not-found":
+
+              message =
+                "Firebase: यह Email Authentication में मौजूद नहीं है।";
+
+              break;
+
+
+            case "auth/wrong-password":
+
+              message =
+                "Firebase: Password गलत है।";
+
+              break;
+
+
+            case "auth/invalid-email":
+
+              message =
+                "Firebase: Email format गलत है।";
+
+              break;
+
+
+            case "auth/operation-not-allowed":
+
+              message =
+                "Firebase: Email/Password sign-in enabled नहीं है।";
+
+              break;
+
+
+            case "auth/network-request-failed":
+
+              message =
+                "Firebase से connection नहीं हो पाया। Internet check करें।";
+
+              break;
+
+
+            case "permission-denied":
+
+              message =
+                "Firestore permission denied. Firestore Rules check करें।";
+
+              break;
+
+
+            default:
+
+              message =
+                "Firebase Error: " +
+                (error.code || "unknown") +
+                " — " +
+                (error.message || "");
+
+          }
+
+
+          showMessage(
+            loginMsg,
+            message,
+            "error"
+          );
+
+        }
+
+        finally {
+
+          loginBtn.disabled =
+            false;
+
+          loginBtn.textContent =
+            "Login";
+
+        }
 
       }
-
-    });
+    );
 
 
     /* =====================================================
        AUTH STATE
-    ====================================================== */
+    ===================================================== */
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(
+      auth,
+      async user => {
 
-      if (!user) {
+        if (!user) {
 
-        loginPage.classList.remove("hidden");
+          loginPage
+            .classList
+            .remove("hidden");
 
-        adminPage.classList.add("hidden");
-
-        return;
-
-      }
-
-
-      try {
-
-        const admin =
-          await isAdmin(user);
-
-
-        if (!admin) {
-
-          await signOut(auth);
+          adminPage
+            .classList
+            .add("hidden");
 
           return;
 
         }
 
 
-        loginPage.classList.add("hidden");
+        try {
 
-        adminPage.classList.remove("hidden");
-
-        adminEmail.textContent =
-          user.email || "";
+          const admin =
+            await isAdmin(user);
 
 
-        await loadSettings();
+          if (!admin) {
 
-        await loadGallery();
+            await signOut(auth);
 
-        await loadDonations();
+            return;
 
-      } catch (error) {
+          }
 
-        console.error(error);
 
-        await signOut(auth);
+          loginPage
+            .classList
+            .add("hidden");
+
+          adminPage
+            .classList
+            .remove("hidden");
+
+
+          adminEmail.textContent =
+            user.email || "";
+
+
+          await loadSettings();
+
+          await loadGallery();
+
+          await loadDonations();
+
+        }
+
+        catch (error) {
+
+          console.error(
+            "AUTH STATE ERROR:",
+            error
+          );
+
+
+          await signOut(auth);
+
+          showMessage(
+            loginMsg,
+            "Admin panel load नहीं हो सका।",
+            "error"
+          );
+
+        }
 
       }
-
-    });
+    );
 
 
     /* =====================================================
        LOGOUT
-    ====================================================== */
+    ===================================================== */
 
-    logoutBtn.addEventListener("click", async () => {
+    logoutBtn.addEventListener(
+      "click",
+      async () => {
 
-      await signOut(auth);
+        await signOut(auth);
 
-    });
+      }
+    );
 
 
     /* =====================================================
        LOAD SETTINGS
-    ====================================================== */
+    ===================================================== */
 
     async function loadSettings() {
 
       const ref =
-        doc(db, "temple", "settings");
+        doc(
+          db,
+          "temple",
+          "settings"
+        );
+
 
       const snap =
         await getDoc(ref);
 
 
-      if (!snap.exists()) return;
+      if (!snap.exists()) {
+        return;
+      }
 
 
       const data =
         snap.data();
 
 
-      document.getElementById("upiId").value =
+      document.getElementById(
+        "upiId"
+      ).value =
         data.upiId || "";
 
 
-      document.getElementById("aartiTime").value =
+      document.getElementById(
+        "aartiTime"
+      ).value =
         data.aartiTime || "";
 
 
-      document.getElementById("liveUrl").value =
+      document.getElementById(
+        "liveUrl"
+      ).value =
         data.liveUrl || "";
 
 
       if (data.qrUrl) {
 
         const preview =
-          document.getElementById("qrPreview");
+          document.getElementById(
+            "qrPreview"
+          );
+
 
         preview.src =
           data.qrUrl;
 
-        preview.classList.remove("hidden");
+
+        preview.classList.remove(
+          "hidden"
+        );
 
       }
 
@@ -1329,72 +1569,93 @@
 
     /* =====================================================
        SAVE SETTINGS
-    ====================================================== */
+    ===================================================== */
 
     document
-      .getElementById("saveSettingsBtn")
-      .addEventListener("click", async () => {
+      .getElementById(
+        "saveSettingsBtn"
+      )
+      .addEventListener(
+        "click",
+        async () => {
 
-        const upiId =
-          document.getElementById("upiId")
-            .value
-            .trim();
-
-        const aartiTime =
-          document.getElementById("aartiTime")
-            .value
-            .trim();
-
-        const liveUrl =
-          document.getElementById("liveUrl")
-            .value
-            .trim();
+          const upiId =
+            document
+              .getElementById("upiId")
+              .value
+              .trim();
 
 
-        const msg =
-          document.getElementById("settingsMsg");
+          const aartiTime =
+            document
+              .getElementById("aartiTime")
+              .value
+              .trim();
 
 
-        try {
-
-          await setDoc(
-            doc(db, "temple", "settings"),
-            {
-              upiId,
-              aartiTime,
-              liveUrl,
-              updatedAt: serverTimestamp()
-            },
-            {
-              merge: true
-            }
-          );
+          const liveUrl =
+            document
+              .getElementById("liveUrl")
+              .value
+              .trim();
 
 
-          showMessage(
-            msg,
-            "मंदिर की जानकारी Save हो गई।",
-            "success"
-          );
+          const msg =
+            document.getElementById(
+              "settingsMsg"
+            );
 
-        } catch (error) {
 
-          console.error(error);
+          try {
 
-          showMessage(
-            msg,
-            "जानकारी Save नहीं हो सकी।",
-            "error"
-          );
+            await setDoc(
+              doc(
+                db,
+                "temple",
+                "settings"
+              ),
+              {
+                upiId,
+                aartiTime,
+                liveUrl,
+                updatedAt:
+                  serverTimestamp()
+              },
+              {
+                merge: true
+              }
+            );
+
+
+            showMessage(
+              msg,
+              "मंदिर की जानकारी Save हो गई।",
+              "success"
+            );
+
+          }
+
+          catch (error) {
+
+            console.error(error);
+
+
+            showMessage(
+              msg,
+              "जानकारी Save नहीं हो सकी: " +
+                error.message,
+              "error"
+            );
+
+          }
 
         }
-
-      });
+      );
 
 
     /* =====================================================
-       FILE VALIDATION
-    ====================================================== */
+       IMAGE VALIDATION
+    ===================================================== */
 
     function validateImage(file) {
 
@@ -1407,7 +1668,11 @@
       }
 
 
-      if (!file.type.startsWith("image/")) {
+      if (
+        !file.type.startsWith(
+          "image/"
+        )
+      ) {
 
         throw new Error(
           "कृपया सिर्फ image file चुनें।"
@@ -1433,9 +1698,11 @@
 
     /* =====================================================
        CLOUDINARY UPLOAD
-    ====================================================== */
+    ===================================================== */
 
-    async function uploadToCloudinary(file) {
+    async function uploadToCloudinary(
+      file
+    ) {
 
       validateImage(file);
 
@@ -1461,10 +1728,13 @@
 
 
       const response =
-        await fetch(url, {
-          method: "POST",
-          body: formData
-        });
+        await fetch(
+          url,
+          {
+            method: "POST",
+            body: formData
+          }
+        );
 
 
       const data =
@@ -1473,7 +1743,11 @@
 
       if (!response.ok) {
 
-        console.error(data);
+        console.error(
+          "CLOUDINARY ERROR:",
+          data
+        );
+
 
         throw new Error(
           data?.error?.message ||
@@ -1485,9 +1759,11 @@
 
       return {
 
-        url: data.secure_url,
+        url:
+          data.secure_url,
 
-        publicId: data.public_id
+        publicId:
+          data.public_id
 
       };
 
@@ -1496,273 +1772,414 @@
 
     /* =====================================================
        QR PREVIEW
-    ====================================================== */
+    ===================================================== */
 
     document
       .getElementById("qrFile")
-      .addEventListener("change", event => {
+      .addEventListener(
+        "change",
+        event => {
 
-        const file =
-          event.target.files[0];
+          const file =
+            event.target.files[0];
 
-        if (!file) return;
 
+          if (!file) {
+            return;
+          }
 
-        const preview =
-          document.getElementById("qrPreview");
 
+          try {
 
-        preview.src =
-          URL.createObjectURL(file);
+            validateImage(file);
 
-        preview.classList.remove("hidden");
+          }
 
-      });
+          catch (error) {
 
-
-    /* =====================================================
-       QR UPLOAD
-    ====================================================== */
-
-    document
-      .getElementById("uploadQrBtn")
-      .addEventListener("click", async () => {
-
-        const file =
-          document.getElementById("qrFile")
-            .files[0];
-
-        const msg =
-          document.getElementById("qrMsg");
-
-        const progress =
-          document.getElementById(
-            "qrUploadProgress"
-          );
-
-        const button =
-          document.getElementById(
-            "uploadQrBtn"
-          );
-
-
-        try {
-
-          validateImage(file);
-
-
-          button.disabled = true;
-
-          progress.style.display =
-            "block";
-
-          msg.textContent = "";
-
-
-          const result =
-            await uploadToCloudinary(file);
-
-
-          await setDoc(
-            doc(db, "temple", "settings"),
-            {
-              qrUrl: result.url,
-              qrPublicId: result.publicId,
-              updatedAt: serverTimestamp()
-            },
-            {
-              merge: true
-            }
-          );
-
-
-          showMessage(
-            msg,
-            "✅ Donation QR successfully save हो गया।",
-            "success"
-          );
-
-
-          document.getElementById(
-            "qrFile"
-          ).value = "";
-
-
-        } catch (error) {
-
-          console.error(error);
-
-          showMessage(
-            msg,
-            error.message,
-            "error"
-          );
-
-        } finally {
-
-          button.disabled = false;
-
-          progress.style.display =
-            "none";
-
-        }
-
-      });
-
-
-    /* =====================================================
-       GALLERY PREVIEW
-    ====================================================== */
-
-    document
-      .getElementById("galleryFile")
-      .addEventListener("change", event => {
-
-        const file =
-          event.target.files[0];
-
-        if (!file) return;
-
-
-        const preview =
-          document.getElementById(
-            "galleryPreview"
-          );
-
-
-        preview.src =
-          URL.createObjectURL(file);
-
-        preview.classList.remove("hidden");
-
-      });
-
-
-    /* =====================================================
-       GALLERY UPLOAD
-    ====================================================== */
-
-    document
-      .getElementById("uploadGalleryBtn")
-      .addEventListener("click", async () => {
-
-        const file =
-          document.getElementById("galleryFile")
-            .files[0];
-
-        const title =
-          document.getElementById("galleryTitle")
-            .value
-            .trim();
-
-        const category =
-          document.getElementById("galleryCategory")
-            .value;
-
-        const msg =
-          document.getElementById(
-            "galleryMsg"
-          );
-
-        const progress =
-          document.getElementById(
-            "galleryUploadProgress"
-          );
-
-        const button =
-          document.getElementById(
-            "uploadGalleryBtn"
-          );
-
-
-        try {
-
-          validateImage(file);
-
-
-          if (!title) {
-
-            throw new Error(
-              "Photo का नाम लिखें।"
+            alert(
+              error.message
             );
+
+            event.target.value =
+              "";
+
+            return;
 
           }
 
 
-          button.disabled = true;
-
-          progress.style.display =
-            "block";
-
-          msg.textContent = "";
+          const preview =
+            document.getElementById(
+              "qrPreview"
+            );
 
 
-          const result =
-            await uploadToCloudinary(file);
+          preview.src =
+            URL.createObjectURL(
+              file
+            );
 
 
-          await addDoc(
-            collection(db, "gallery"),
-            {
-              title,
-              category,
-              imageUrl: result.url,
-              publicId: result.publicId,
-              createdAt: serverTimestamp()
-            }
+          preview.classList.remove(
+            "hidden"
           );
-
-
-          showMessage(
-            msg,
-            "✅ Photo Gallery में upload हो गई।",
-            "success"
-          );
-
-
-          document.getElementById(
-            "galleryTitle"
-          ).value = "";
-
-
-          document.getElementById(
-            "galleryFile"
-          ).value = "";
-
-
-          document.getElementById(
-            "galleryPreview"
-          ).classList.add("hidden");
-
-
-          await loadGallery();
-
-
-        } catch (error) {
-
-          console.error(error);
-
-          showMessage(
-            msg,
-            error.message,
-            "error"
-          );
-
-        } finally {
-
-          button.disabled = false;
-
-          progress.style.display =
-            "none";
 
         }
+      );
 
-      });
+
+    /* =====================================================
+       QR UPLOAD
+    ===================================================== */
+
+    document
+      .getElementById(
+        "uploadQrBtn"
+      )
+      .addEventListener(
+        "click",
+        async () => {
+
+          const file =
+            document
+              .getElementById("qrFile")
+              .files[0];
+
+
+          const msg =
+            document.getElementById(
+              "qrMsg"
+            );
+
+
+          const progress =
+            document.getElementById(
+              "qrUploadProgress"
+            );
+
+
+          const button =
+            document.getElementById(
+              "uploadQrBtn"
+            );
+
+
+          try {
+
+            validateImage(file);
+
+
+            button.disabled =
+              true;
+
+
+            progress.style.display =
+              "block";
+
+
+            msg.textContent =
+              "";
+
+
+            const result =
+              await uploadToCloudinary(
+                file
+              );
+
+
+            await setDoc(
+              doc(
+                db,
+                "temple",
+                "settings"
+              ),
+              {
+                qrUrl:
+                  result.url,
+
+                qrPublicId:
+                  result.publicId,
+
+                updatedAt:
+                  serverTimestamp()
+              },
+              {
+                merge: true
+              }
+            );
+
+
+            showMessage(
+              msg,
+              "✅ Donation QR successfully save हो गया।",
+              "success"
+            );
+
+
+            document.getElementById(
+              "qrFile"
+            ).value =
+              "";
+
+
+          }
+
+          catch (error) {
+
+            console.error(error);
+
+
+            showMessage(
+              msg,
+              error.message,
+              "error"
+            );
+
+          }
+
+          finally {
+
+            button.disabled =
+              false;
+
+
+            progress.style.display =
+              "none";
+
+          }
+
+        }
+      );
+
+
+    /* =====================================================
+       GALLERY PREVIEW
+    ===================================================== */
+
+    document
+      .getElementById(
+        "galleryFile"
+      )
+      .addEventListener(
+        "change",
+        event => {
+
+          const file =
+            event.target.files[0];
+
+
+          if (!file) {
+            return;
+          }
+
+
+          try {
+
+            validateImage(file);
+
+          }
+
+          catch (error) {
+
+            alert(
+              error.message
+            );
+
+            event.target.value =
+              "";
+
+            return;
+
+          }
+
+
+          const preview =
+            document.getElementById(
+              "galleryPreview"
+            );
+
+
+          preview.src =
+            URL.createObjectURL(
+              file
+            );
+
+
+          preview.classList.remove(
+            "hidden"
+          );
+
+        }
+      );
+
+
+    /* =====================================================
+       GALLERY UPLOAD
+    ===================================================== */
+
+    document
+      .getElementById(
+        "uploadGalleryBtn"
+      )
+      .addEventListener(
+        "click",
+        async () => {
+
+          const file =
+            document
+              .getElementById(
+                "galleryFile"
+              )
+              .files[0];
+
+
+          const title =
+            document
+              .getElementById(
+                "galleryTitle"
+              )
+              .value
+              .trim();
+
+
+          const category =
+            document
+              .getElementById(
+                "galleryCategory"
+              )
+              .value;
+
+
+          const msg =
+            document.getElementById(
+              "galleryMsg"
+            );
+
+
+          const progress =
+            document.getElementById(
+              "galleryUploadProgress"
+            );
+
+
+          const button =
+            document.getElementById(
+              "uploadGalleryBtn"
+            );
+
+
+          try {
+
+            validateImage(file);
+
+
+            if (!title) {
+
+              throw new Error(
+                "Photo का नाम लिखें।"
+              );
+
+            }
+
+
+            button.disabled =
+              true;
+
+
+            progress.style.display =
+              "block";
+
+
+            msg.textContent =
+              "";
+
+
+            const result =
+              await uploadToCloudinary(
+                file
+              );
+
+
+            await addDoc(
+              collection(
+                db,
+                "gallery"
+              ),
+              {
+                title,
+                category,
+                imageUrl:
+                  result.url,
+                publicId:
+                  result.publicId,
+                createdAt:
+                  serverTimestamp()
+              }
+            );
+
+
+            showMessage(
+              msg,
+              "✅ Photo Gallery में upload हो गई।",
+              "success"
+            );
+
+
+            document.getElementById(
+              "galleryTitle"
+            ).value =
+              "";
+
+
+            document.getElementById(
+              "galleryFile"
+            ).value =
+              "";
+
+
+            document.getElementById(
+              "galleryPreview"
+            ).classList.add(
+              "hidden"
+            );
+
+
+            await loadGallery();
+
+          }
+
+          catch (error) {
+
+            console.error(error);
+
+
+            showMessage(
+              msg,
+              error.message,
+              "error"
+            );
+
+          }
+
+          finally {
+
+            button.disabled =
+              false;
+
+
+            progress.style.display =
+              "none";
+
+          }
+
+        }
+      );
 
 
     /* =====================================================
        LOAD GALLERY
-    ====================================================== */
+    ===================================================== */
 
     async function loadGallery() {
 
@@ -1782,13 +2199,21 @@
 
         const galleryQuery =
           query(
-            collection(db, "gallery"),
-            orderBy("createdAt", "desc")
+            collection(
+              db,
+              "gallery"
+            ),
+            orderBy(
+              "createdAt",
+              "desc"
+            )
           );
 
 
         const snapshot =
-          await getDocs(galleryQuery);
+          await getDocs(
+            galleryQuery
+          );
 
 
         if (snapshot.empty) {
@@ -1803,68 +2228,90 @@
         }
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+          "";
 
 
-        snapshot.forEach(item => {
+        snapshot.forEach(
+          item => {
 
-          const data =
-            item.data();
-
-
-          const card =
-            document.createElement("div");
+            const data =
+              item.data();
 
 
-          card.className =
-            "gallery-item";
+            const card =
+              document.createElement(
+                "div"
+              );
 
 
-          card.innerHTML = `
+            card.className =
+              "gallery-item";
 
-            <img
-              src="${escapeHtml(data.imageUrl)}"
-              alt="${escapeHtml(data.title)}"
-            >
 
-            <div class="gallery-info">
+            card.innerHTML = `
 
-              <strong>
-                ${escapeHtml(data.title)}
-              </strong>
-
-              <small>
-                ${escapeHtml(data.category || "Temple")}
-              </small>
-
-              <button
-                class="btn btn-danger btn-small"
-                data-id="${item.id}"
+              <img
+                src="${escapeHtml(
+                  data.imageUrl
+                )}"
+                alt="${escapeHtml(
+                  data.title
+                )}"
               >
-                Remove
-              </button>
 
-            </div>
+              <div class="gallery-info">
 
-          `;
+                <strong>
+                  ${escapeHtml(
+                    data.title
+                  )}
+                </strong>
+
+                <small>
+                  ${escapeHtml(
+                    data.category ||
+                    "Temple"
+                  )}
+                </small>
+
+                <button
+                  class="btn btn-danger btn-small"
+                >
+                  Remove
+                </button>
+
+              </div>
+
+            `;
 
 
-          card
-            .querySelector("button")
-            .addEventListener(
-              "click",
-              () => removeGalleryItem(item.id)
+            card
+              .querySelector(
+                "button"
+              )
+              .addEventListener(
+                "click",
+                () =>
+                  removeGalleryItem(
+                    item.id
+                  )
+              );
+
+
+            list.appendChild(
+              card
             );
 
+          }
+        );
 
-          list.appendChild(card);
+      }
 
-        });
-
-
-      } catch (error) {
+      catch (error) {
 
         console.error(error);
+
 
         list.innerHTML =
           `<p style="color:#dc2626;">
@@ -1877,10 +2324,12 @@
 
 
     /* =====================================================
-       REMOVE GALLERY ITEM
-    ====================================================== */
+       REMOVE GALLERY
+    ===================================================== */
 
-    async function removeGalleryItem(id) {
+    async function removeGalleryItem(
+      id
+    ) {
 
       const confirmDelete =
         confirm(
@@ -1888,32 +2337,30 @@
         );
 
 
-      if (!confirmDelete) return;
+      if (!confirmDelete) {
+        return;
+      }
 
 
       try {
 
-        /*
-          Important:
-          यह Firestore से photo हटाता है।
-          इसलिए website से photo हट जाएगी।
-
-          Cloudinary की actual file deletion के लिए
-          secure backend/serverless function चाहिए।
-        */
-
-
         await deleteDoc(
-          doc(db, "gallery", id)
+          doc(
+            db,
+            "gallery",
+            id
+          )
         );
 
 
         await loadGallery();
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(error);
+
 
         alert(
           "Photo remove नहीं हो सकी।"
@@ -1926,10 +2373,12 @@
 
     /* =====================================================
        REFRESH GALLERY
-    ====================================================== */
+    ===================================================== */
 
     document
-      .getElementById("refreshGalleryBtn")
+      .getElementById(
+        "refreshGalleryBtn"
+      )
       .addEventListener(
         "click",
         loadGallery
@@ -1938,123 +2387,171 @@
 
     /* =====================================================
        ADD SCHEDULE
-    ====================================================== */
+    ===================================================== */
 
     document
-      .getElementById("addScheduleBtn")
-      .addEventListener("click", async () => {
+      .getElementById(
+        "addScheduleBtn"
+      )
+      .addEventListener(
+        "click",
+        async () => {
 
-        const date =
-          document.getElementById(
-            "scheduleDate"
-          ).value;
-
-        const time =
-          document.getElementById(
-            "scheduleTime"
-          ).value;
-
-        const title =
-          document.getElementById(
-            "scheduleTitle"
-          ).value.trim();
-
-        const description =
-          document.getElementById(
-            "scheduleDescription"
-          ).value.trim();
-
-        const msg =
-          document.getElementById(
-            "scheduleMsg"
-          );
+          const date =
+            document
+              .getElementById(
+                "scheduleDate"
+              )
+              .value;
 
 
-        if (!date || !time || !title) {
+          const time =
+            document
+              .getElementById(
+                "scheduleTime"
+              )
+              .value;
 
-          showMessage(
-            msg,
-            "Date, Time और Title भरें।",
-            "error"
-          );
 
-          return;
+          const title =
+            document
+              .getElementById(
+                "scheduleTitle"
+              )
+              .value
+              .trim();
+
+
+          const description =
+            document
+              .getElementById(
+                "scheduleDescription"
+              )
+              .value
+              .trim();
+
+
+          const msg =
+            document.getElementById(
+              "scheduleMsg"
+            );
+
+
+          if (
+            !date ||
+            !time ||
+            !title
+          ) {
+
+            showMessage(
+              msg,
+              "Date, Time और Title भरें।",
+              "error"
+            );
+
+            return;
+
+          }
+
+
+          try {
+
+            const selectedDate =
+              new Date(
+                date +
+                "T00:00:00"
+              );
+
+
+            await addDoc(
+              collection(
+                db,
+                "schedule"
+              ),
+              {
+                date,
+
+                day:
+                  selectedDate.toLocaleDateString(
+                    "hi-IN",
+                    {
+                      weekday:
+                        "long"
+                    }
+                  ),
+
+                month:
+                  selectedDate.toLocaleDateString(
+                    "en-IN",
+                    {
+                      month:
+                        "long"
+                    }
+                  ),
+
+                time,
+                title,
+                description,
+
+                createdAt:
+                  serverTimestamp()
+              }
+            );
+
+
+            showMessage(
+              msg,
+              "✅ Schedule successfully add हो गया।",
+              "success"
+            );
+
+
+            document.getElementById(
+              "scheduleDate"
+            ).value =
+              "";
+
+
+            document.getElementById(
+              "scheduleTime"
+            ).value =
+              "";
+
+
+            document.getElementById(
+              "scheduleTitle"
+            ).value =
+              "";
+
+
+            document.getElementById(
+              "scheduleDescription"
+            ).value =
+              "";
+
+          }
+
+          catch (error) {
+
+            console.error(error);
+
+
+            showMessage(
+              msg,
+              "Schedule add नहीं हो सका: " +
+                error.message,
+              "error"
+            );
+
+          }
 
         }
-
-
-        try {
-
-          const selectedDate =
-            new Date(date + "T00:00:00");
-
-
-          await addDoc(
-            collection(db, "schedule"),
-            {
-              date,
-              day: selectedDate.toLocaleDateString(
-                "hi-IN",
-                {
-                  weekday: "long"
-                }
-              ),
-              month: selectedDate.toLocaleDateString(
-                "en-IN",
-                {
-                  month: "long"
-                }
-              ),
-              time,
-              title,
-              description,
-              createdAt: serverTimestamp()
-            }
-          );
-
-
-          showMessage(
-            msg,
-            "✅ Schedule successfully add हो गया।",
-            "success"
-          );
-
-
-          document.getElementById(
-            "scheduleDate"
-          ).value = "";
-
-          document.getElementById(
-            "scheduleTime"
-          ).value = "";
-
-          document.getElementById(
-            "scheduleTitle"
-          ).value = "";
-
-          document.getElementById(
-            "scheduleDescription"
-          ).value = "";
-
-
-        } catch (error) {
-
-          console.error(error);
-
-          showMessage(
-            msg,
-            "Schedule add नहीं हो सका।",
-            "error"
-          );
-
-        }
-
-      });
+      );
 
 
     /* =====================================================
        LOAD DONATIONS
-    ====================================================== */
+    ===================================================== */
 
     async function loadDonations() {
 
@@ -2074,8 +2571,14 @@
 
         const donationQuery =
           query(
-            collection(db, "donations"),
-            orderBy("createdAt", "desc"),
+            collection(
+              db,
+              "donations"
+            ),
+            orderBy(
+              "createdAt",
+              "desc"
+            ),
             limit(30)
           );
 
@@ -2098,80 +2601,95 @@
         }
 
 
-        list.innerHTML = "";
+        list.innerHTML =
+          "";
 
 
-        snapshot.forEach(item => {
+        snapshot.forEach(
+          item => {
 
-          const data =
-            item.data();
-
-
-          const div =
-            document.createElement("div");
+            const data =
+              item.data();
 
 
-          div.className =
-            "donation-item";
+            const div =
+              document.createElement(
+                "div"
+              );
 
 
-          div.innerHTML = `
+            div.className =
+              "donation-item";
 
-            <div class="donation-top">
 
-              <span class="amount">
-                ₹${escapeHtml(data.amount)}
-              </span>
+            div.innerHTML = `
 
-              <span class="status">
+              <div class="donation-top">
+
+                <span class="amount">
+                  ₹${escapeHtml(
+                    data.amount
+                  )}
+                </span>
+
+                <span class="status">
+                  ${escapeHtml(
+                    data.status ||
+                    "pending"
+                  )}
+                </span>
+
+              </div>
+
+              <div class="donation-meta">
+
+                <strong>
+                  ${escapeHtml(
+                    data.donorName ||
+                    "Anonymous"
+                  )}
+                </strong>
+
+                <br>
+
+                Purpose:
                 ${escapeHtml(
-                  data.status || "pending"
+                  data.purpose ||
+                  "Donation"
                 )}
-              </span>
 
-            </div>
+                <br>
 
-            <div class="donation-meta">
-
-              <strong>
+                UTR:
                 ${escapeHtml(
-                  data.donorName || "Anonymous"
+                  data.utr ||
+                  "—"
                 )}
-              </strong>
 
-              <br>
+                <br>
 
-              Purpose:
-              ${escapeHtml(
-                data.purpose || "Donation"
-              )}
+                ${formatDate(
+                  data.createdAt
+                )}
 
-              <br>
+              </div>
 
-              UTR:
-              ${escapeHtml(
-                data.utr || "—"
-              )}
-
-              <br>
-
-              ${formatDate(
-                data.createdAt
-              )}
-
-            </div>
-
-          `;
+            `;
 
 
-          list.appendChild(div);
+            list.appendChild(
+              div
+            );
 
-        });
+          }
+        );
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(error);
+
 
         list.innerHTML =
           `<p style="color:#dc2626;">
@@ -2185,7 +2703,7 @@
 
     /* =====================================================
        REFRESH DONATIONS
-    ====================================================== */
+    ===================================================== */
 
     document
       .getElementById(
