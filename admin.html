@@ -394,43 +394,36 @@
       margin-bottom: 10px;
     }
 
-    /* ================= DONATIONS ================= */
+    /* ================= FOOTER ================= */
 
-    .donation-item {
-      border: 1px solid #e6e9ef;
-      border-radius: 14px;
-      padding: 15px;
-      margin-bottom: 10px;
-      background: #fff;
+    .techhub-footer {
+      margin-top: 35px;
+      padding: 25px 16px;
+      background: #080b1a;
+      border-top: 1px solid rgba(255,255,255,.08);
+      color: white;
+      text-align: center;
     }
 
-    .donation-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .amount {
-      font-size: 18px;
-      font-weight: 900;
-      color: #15803d;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: #fff7ed;
-      color: #c2410c;
-      font-size: 12px;
+    .techhub-footer-title {
+      font-size: 16px;
       font-weight: 800;
+      margin-bottom: 5px;
     }
 
-    .donation-meta {
-      color: #6b7280;
+    .techhub-name {
+      color: #38bdf8;
+    }
+
+    .techhub-msme {
       font-size: 13px;
-      line-height: 1.7;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+
+    .techhub-tagline {
+      font-size: 12px;
+      color: #94a3b8;
     }
 
     /* ================= MOBILE ================= */
@@ -464,6 +457,7 @@
       .brand small {
         font-size: 11px;
       }
+
     }
 
     @media (max-width: 500px) {
@@ -491,6 +485,11 @@
       .card-header h2 {
         font-size: 17px;
       }
+
+      .techhub-footer {
+        padding-bottom: 30px;
+      }
+
     }
   </style>
 </head>
@@ -600,16 +599,7 @@
           </div>
 
           <div class="field">
-            <label>UPI ID</label>
 
-            <input
-              type="text"
-              id="upiId"
-              placeholder="example@upi"
-            >
-          </div>
-
-          <div class="field">
             <label>आज की आरती का समय</label>
 
             <input
@@ -617,9 +607,11 @@
               id="aartiTime"
               placeholder="सुबह 7:00 बजे"
             >
+
           </div>
 
           <div class="field">
+
             <label>📞 Contact Number</label>
 
             <div class="contact-field-wrap">
@@ -643,6 +635,7 @@
           </div>
 
           <div class="field">
+
             <label>Live Aarti Link</label>
 
             <input
@@ -650,6 +643,7 @@
               id="liveUrl"
               placeholder="YouTube Live link"
             >
+
           </div>
 
           <button
@@ -664,67 +658,9 @@
         </div>
 
 
-        <!-- QR UPLOAD -->
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <div>
-              <h2>📱 Donation QR</h2>
-              <p>QR photo चुनकर सीधे upload करें</p>
-            </div>
-
-          </div>
-
-          <label class="upload-box" for="qrFile">
-
-            <div class="upload-icon">📷</div>
-
-            <strong>QR Photo चुनें</strong>
-
-            <span>
-              JPG / PNG • अधिकतम 5 MB
-            </span>
-
-            <input
-              type="file"
-              id="qrFile"
-              accept="image/*"
-              hidden
-            >
-
-            <img
-              id="qrPreview"
-              class="preview hidden"
-              alt="QR Preview"
-            >
-
-          </label>
-
-          <div
-            id="qrUploadProgress"
-            class="upload-progress"
-          >
-            ⏳ QR upload हो रहा है...
-          </div>
-
-          <button
-            id="uploadQrBtn"
-            class="btn btn-secondary"
-            style="width:100%;margin-top:15px;"
-          >
-            📤 QR Save करें
-          </button>
-
-          <div id="qrMsg" class="message"></div>
-
-        </div>
-
-
         <!-- GALLERY UPLOAD -->
 
-        <div class="card full">
+        <div class="card">
 
           <div class="card-header">
 
@@ -732,93 +668,84 @@
               <h2>🖼️ मंदिर Gallery</h2>
 
               <p>
-                Photo चुनें और Upload करें — बस इतना ही।
+                Photo चुनें और सीधे upload करें।
               </p>
             </div>
 
           </div>
 
+          <div class="field">
 
-          <div class="grid">
+            <label>Photo का नाम</label>
 
-            <div>
-
-              <div class="field">
-
-                <label>Photo का नाम</label>
-
-                <input
-                  type="text"
-                  id="galleryTitle"
-                  placeholder="जैसे: मंदिर का मुख्य द्वार"
-                >
-
-              </div>
-
-
-              <div class="field">
-
-                <label>Photo Category</label>
-
-                <select id="galleryCategory">
-
-                  <option value="Temple">
-                    Temple
-                  </option>
-
-                  <option value="Aarti">
-                    Aarti
-                  </option>
-
-                  <option value="Festival">
-                    Festival
-                  </option>
-
-                  <option value="Events">
-                    Events
-                  </option>
-
-                  <option value="Other">
-                    Other
-                  </option>
-
-                </select>
-
-              </div>
-
-            </div>
-
-
-            <div>
-
-              <label class="upload-box" for="galleryFile">
-
-                <div class="upload-icon">📸</div>
-
-                <strong>Photo चुनें</strong>
-
-                <span>
-                  JPG / PNG • अधिकतम 5 MB
-                </span>
-
-                <input
-                  type="file"
-                  id="galleryFile"
-                  accept="image/*"
-                  hidden
-                >
-
-                <img
-                  id="galleryPreview"
-                  class="preview hidden"
-                  alt="Gallery Preview"
-                >
-
-              </label>
-
-            </div>
+            <input
+              type="text"
+              id="galleryTitle"
+              placeholder="जैसे: मंदिर का मुख्य द्वार"
+            >
 
           </div>
+
+
+          <div class="field">
+
+            <label>Photo Category</label>
+
+            <select id="galleryCategory">
+
+              <option value="Temple">
+                Temple
+              </option>
+
+              <option value="Aarti">
+                Aarti
+              </option>
+
+              <option value="Festival">
+                Festival
+              </option>
+
+              <option value="Events">
+                Events
+              </option>
+
+              <option value="Other">
+                Other
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <label class="upload-box" for="galleryFile">
+
+            <div class="upload-icon">
+              📸
+            </div>
+
+            <strong>
+              Photo चुनें
+            </strong>
+
+            <span>
+              JPG / PNG • अधिकतम 5 MB
+            </span>
+
+            <input
+              type="file"
+              id="galleryFile"
+              accept="image/*"
+              hidden
+            >
+
+            <img
+              id="galleryPreview"
+              class="preview hidden"
+              alt="Gallery Preview"
+            >
+
+          </label>
 
 
           <div
@@ -832,13 +759,16 @@
           <button
             id="uploadGalleryBtn"
             class="btn btn-secondary"
-            style="margin-top:15px;"
+            style="width:100%;margin-top:15px;"
           >
             📤 Gallery में Upload करें
           </button>
 
 
-          <div id="galleryMsg" class="message"></div>
+          <div
+            id="galleryMsg"
+            class="message"
+          ></div>
 
         </div>
 
@@ -958,50 +888,38 @@
             ➕ Schedule जोड़ें
           </button>
 
-          <div id="scheduleMsg" class="message"></div>
-
-        </div>
-
-
-        <!-- DONATIONS -->
-
-        <div class="card">
-
-          <div class="card-header">
-
-            <div>
-
-              <h2>💰 Donations</h2>
-
-              <p>
-                हाल की donation entries
-              </p>
-
-            </div>
-
-            <button
-              id="refreshDonationsBtn"
-              class="btn btn-secondary btn-small"
-            >
-              Refresh
-            </button>
-
-          </div>
-
-
-          <div id="donationsList">
-
-            <p style="color:#718096;">
-              Donations load हो रही हैं...
-            </p>
-
-          </div>
+          <div
+            id="scheduleMsg"
+            class="message"
+          ></div>
 
         </div>
 
       </div>
 
     </main>
+
+
+    <!-- ================= THE TECH HUB FOOTER ================= -->
+
+    <footer class="techhub-footer">
+
+      <div class="techhub-footer-title">
+        A Product by
+        <span class="techhub-name">
+          THE TECH HUB
+        </span>
+      </div>
+
+      <div class="techhub-msme">
+        MSME Registered: BR-19-0017611
+      </div>
+
+      <div class="techhub-tagline">
+        Building Useful Products from Bihar for Bharat
+      </div>
+
+    </footer>
 
   </section>
 
@@ -1036,7 +954,6 @@
       collection,
       query,
       orderBy,
-      limit,
       getDocs,
       deleteDoc,
       serverTimestamp
@@ -1117,32 +1034,6 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
-
-    }
-
-
-    function formatDate(timestamp) {
-
-      if (!timestamp) {
-        return "—";
-      }
-
-      try {
-
-        const date =
-          timestamp.toDate
-            ? timestamp.toDate()
-            : new Date(timestamp);
-
-        return date.toLocaleString(
-          "hi-IN"
-        );
-
-      } catch {
-
-        return "—";
-
-      }
 
     }
 
@@ -1287,12 +1178,6 @@
             );
 
 
-          console.log(
-            "ADMIN DOCUMENT:",
-            adminSnap.exists()
-          );
-
-
           if (!adminSnap.exists()) {
 
             await signOut(auth);
@@ -1318,12 +1203,6 @@
 
           const adminData =
             adminSnap.data();
-
-
-          console.log(
-            "ADMIN ROLE:",
-            adminData.role
-          );
 
 
           if (
@@ -1514,8 +1393,6 @@
 
           await loadGallery();
 
-          await loadDonations();
-
         }
 
         catch (error) {
@@ -1527,6 +1404,7 @@
 
 
           await signOut(auth);
+
 
           showMessage(
             loginMsg,
@@ -1582,12 +1460,6 @@
 
 
       document.getElementById(
-        "upiId"
-      ).value =
-        data.upiId || "";
-
-
-      document.getElementById(
         "aartiTime"
       ).value =
         data.aartiTime || "";
@@ -1604,25 +1476,6 @@
       ).value =
         data.liveUrl || "";
 
-
-      if (data.qrUrl) {
-
-        const preview =
-          document.getElementById(
-            "qrPreview"
-          );
-
-
-        preview.src =
-          data.qrUrl;
-
-
-        preview.classList.remove(
-          "hidden"
-        );
-
-      }
-
     }
 
 
@@ -1637,13 +1490,6 @@
       .addEventListener(
         "click",
         async () => {
-
-          const upiId =
-            document
-              .getElementById("upiId")
-              .value
-              .trim();
-
 
           const aartiTime =
             document
@@ -1681,7 +1527,6 @@
                 "settings"
               ),
               {
-                upiId,
                 aartiTime,
                 contactNumber,
                 liveUrl,
@@ -1835,188 +1680,6 @@
       };
 
     }
-
-
-    /* =====================================================
-       QR PREVIEW
-    ===================================================== */
-
-    document
-      .getElementById("qrFile")
-      .addEventListener(
-        "change",
-        event => {
-
-          const file =
-            event.target.files[0];
-
-
-          if (!file) {
-            return;
-          }
-
-
-          try {
-
-            validateImage(file);
-
-          }
-
-          catch (error) {
-
-            alert(
-              error.message
-            );
-
-            event.target.value =
-              "";
-
-            return;
-
-          }
-
-
-          const preview =
-            document.getElementById(
-              "qrPreview"
-            );
-
-
-          preview.src =
-            URL.createObjectURL(
-              file
-            );
-
-
-          preview.classList.remove(
-            "hidden"
-          );
-
-        }
-      );
-
-
-    /* =====================================================
-       QR UPLOAD
-    ===================================================== */
-
-    document
-      .getElementById(
-        "uploadQrBtn"
-      )
-      .addEventListener(
-        "click",
-        async () => {
-
-          const file =
-            document
-              .getElementById("qrFile")
-              .files[0];
-
-
-          const msg =
-            document.getElementById(
-              "qrMsg"
-            );
-
-
-          const progress =
-            document.getElementById(
-              "qrUploadProgress"
-            );
-
-
-          const button =
-            document.getElementById(
-              "uploadQrBtn"
-            );
-
-
-          try {
-
-            validateImage(file);
-
-
-            button.disabled =
-              true;
-
-
-            progress.style.display =
-              "block";
-
-
-            msg.textContent =
-              "";
-
-
-            const result =
-              await uploadToCloudinary(
-                file
-              );
-
-
-            await setDoc(
-              doc(
-                db,
-                "temple",
-                "settings"
-              ),
-              {
-                qrUrl:
-                  result.url,
-
-                qrPublicId:
-                  result.publicId,
-
-                updatedAt:
-                  serverTimestamp()
-              },
-              {
-                merge: true
-              }
-            );
-
-
-            showMessage(
-              msg,
-              "✅ Donation QR successfully save हो गया।",
-              "success"
-            );
-
-
-            document.getElementById(
-              "qrFile"
-            ).value =
-              "";
-
-          }
-
-          catch (error) {
-
-            console.error(error);
-
-
-            showMessage(
-              msg,
-              error.message,
-              "error"
-            );
-
-          }
-
-          finally {
-
-            button.disabled =
-              false;
-
-
-            progress.style.display =
-              "none";
-
-          }
-
-        }
-      );
 
 
     /* =====================================================
@@ -2612,172 +2275,6 @@
           }
 
         }
-      );
-
-
-    /* =====================================================
-       LOAD DONATIONS
-    ===================================================== */
-
-    async function loadDonations() {
-
-      const list =
-        document.getElementById(
-          "donationsList"
-        );
-
-
-      list.innerHTML =
-        `<p style="color:#718096;">
-          Donations load हो रही हैं...
-        </p>`;
-
-
-      try {
-
-        const donationQuery =
-          query(
-            collection(
-              db,
-              "donations"
-            ),
-            orderBy(
-              "createdAt",
-              "desc"
-            ),
-            limit(30)
-          );
-
-
-        const snapshot =
-          await getDocs(
-            donationQuery
-          );
-
-
-        if (snapshot.empty) {
-
-          list.innerHTML =
-            `<p style="color:#718096;">
-              अभी कोई donation नहीं मिली।
-            </p>`;
-
-          return;
-
-        }
-
-
-        list.innerHTML =
-          "";
-
-
-        snapshot.forEach(
-          item => {
-
-            const data =
-              item.data();
-
-
-            const div =
-              document.createElement(
-                "div"
-              );
-
-
-            div.className =
-              "donation-item";
-
-
-            div.innerHTML = `
-
-              <div class="donation-top">
-
-                <span class="amount">
-                  ₹${escapeHtml(
-                    data.amount
-                  )}
-                </span>
-
-                <span class="status">
-                  ${escapeHtml(
-                    data.status ||
-                    "pending"
-                  )}
-                </span>
-
-              </div>
-
-              <div class="donation-meta">
-
-                <strong>
-                  ${escapeHtml(
-                    data.donorName ||
-                    "Anonymous"
-                  )}
-                </strong>
-
-                <br>
-
-                Purpose:
-                ${escapeHtml(
-                  data.purpose ||
-                  "Donation"
-                )}
-
-                <br>
-
-                UTR:
-                ${escapeHtml(
-                  data.utr ||
-                  "—"
-                )}
-
-                <br>
-
-                ${formatDate(
-                  data.createdAt
-                )}
-
-              </div>
-
-            `;
-
-
-            list.appendChild(
-              div
-            );
-
-          }
-        );
-
-      }
-
-      catch (error) {
-
-        console.error(error);
-
-
-        list.innerHTML =
-          `<p style="color:#dc2626;">
-            Donations load नहीं हो सकीं।
-          </p>`;
-
-      }
-
-    }
-
-
-    /* =====================================================
-       REFRESH DONATIONS
-    ===================================================== */
-
-    document
-      .getElementById(
-        "refreshDonationsBtn"
-      )
-      .addEventListener(
-        "click",
-        loadDonations
       );
 
   </script>
