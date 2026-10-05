@@ -1,6 +1,7 @@
 /* =========================================================
    MAA MANOKAMANA TEMPLE
    PUBLIC WEBSITE APP.JS
+   FINAL FIXED VERSION
    ========================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
@@ -13,12 +14,17 @@ import {
   getDoc,
   doc,
   onSnapshot,
-  serverTimestamp,
-  query,
-  orderBy
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-import { firebaseConfig } from "./firebase-config.js";
+/*
+  IMPORTANT:
+  firebase-config.js uses:
+  export default firebaseConfig;
+
+  इसलिए यहां DEFAULT IMPORT होगा.
+*/
+import firebaseConfig from "./firebase-config.js";
 
 
 /* =========================================================
@@ -29,6 +35,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 console.log("🔥 Firebase initialized");
+console.log("🔥 Firebase project:", firebaseConfig?.projectId);
 
 
 /* =========================================================
@@ -72,6 +79,9 @@ function cleanUrl(url) {
 
   let value = String(url).trim();
 
+  /*
+    Cloudinary HTTP → HTTPS
+  */
   if (value.startsWith("http://res.cloudinary.com/")) {
     value = value.replace(
       "http://res.cloudinary.com/",
@@ -101,7 +111,9 @@ function showToast(message, type = "info") {
   let toast = document.getElementById("appToast");
 
   if (!toast) {
+
     toast = document.createElement("div");
+
     toast.id = "appToast";
 
     toast.style.cssText = `
@@ -138,13 +150,18 @@ function showToast(message, type = "info") {
   toast.textContent = message;
 
   toast.style.opacity = "1";
-  toast.style.transform = "translateX(-50%) translateY(0)";
+  toast.style.transform =
+    "translateX(-50%) translateY(0)";
 
   clearTimeout(toast._timer);
 
   toast._timer = setTimeout(() => {
+
     toast.style.opacity = "0";
-    toast.style.transform = "translateX(-50%) translateY(10px)";
+
+    toast.style.transform =
+      "translateX(-50%) translateY(10px)";
+
   }, 3200);
 }
 
@@ -184,14 +201,22 @@ function initMobileMenu() {
       "aria-expanded",
       expanded ? "false" : "true"
     );
+
   });
 
   nav.querySelectorAll("a").forEach(link => {
 
     link.addEventListener("click", () => {
+
       nav.classList.remove("active");
+
       menuBtn.classList.remove("active");
-      menuBtn.setAttribute("aria-expanded", "false");
+
+      menuBtn.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
     });
 
   });
@@ -206,37 +231,48 @@ async function loadTempleSettings() {
 
   try {
 
-    console.log("📖 Loading temple/settings...");
+    console.log(
+      "📖 Reading Firestore: temple/settings"
+    );
 
-    const settingsRef = doc(db, "temple", "settings");
+    const settingsRef =
+      doc(db, "temple", "settings");
 
-    const snapshot = await getDoc(settingsRef);
+    const snapshot =
+      await getDoc(settingsRef);
 
     if (!snapshot.exists()) {
 
-      console.warn("⚠️ temple/settings document not found");
+      console.warn(
+        "⚠️ Firestore document temple/settings not found"
+      );
 
       return;
     }
 
+    const data = snapshot.data();
+
+    console.log(
+      "✅ temple/settings data:",
+      data
+    );
+
     templeSettings = {
       ...templeSettings,
-      ...snapshot.data()
+      ...data
     };
-
-    console.log("✅ Temple settings loaded");
 
     applyTempleSettings();
 
   } catch (error) {
 
     console.error(
-      "❌ Failed to load temple settings:",
+      "❌ temple/settings read failed:",
       error
     );
 
     showToast(
-      "Temple settings load नहीं हो पाई",
+      "Temple settings load नहीं हो पाई।",
       "error"
     );
   }
@@ -249,9 +285,11 @@ async function loadTempleSettings() {
 
 function listenTempleSettings() {
 
-  const settingsRef = doc(db, "temple", "settings");
+  const settingsRef =
+    doc(db, "temple", "settings");
 
   onSnapshot(
+
     settingsRef,
 
     snapshot => {
@@ -259,31 +297,36 @@ function listenTempleSettings() {
       if (!snapshot.exists()) {
 
         console.warn(
-          "⚠️ temple/settings does not exist"
+          "⚠️ temple/settings document does not exist"
         );
 
         return;
       }
 
-      templeSettings = {
-        ...templeSettings,
-        ...snapshot.data()
-      };
+      const data =
+        snapshot.data();
 
       console.log(
-        "🔄 Temple settings updated:",
-        templeSettings
+        "🔄 temple/settings updated:",
+        data
       );
 
+      templeSettings = {
+        ...templeSettings,
+        ...data
+      };
+
       applyTempleSettings();
+
     },
 
     error => {
 
       console.error(
-        "❌ Temple settings realtime error:",
+        "❌ temple/settings realtime error:",
         error
       );
+
     }
   );
 }
@@ -295,30 +338,39 @@ function listenTempleSettings() {
 
 function applyTempleSettings() {
 
-  const aartiTime = safeText(
-    templeSettings.aartiTime,
-    "समय जल्द अपडेट होगा"
+  console.log(
+    "🎨 Applying temple settings..."
   );
 
-  const liveUrl = cleanUrl(
-    templeSettings.liveUrl
-  );
+  const aartiTime =
+    safeText(
+      templeSettings.aartiTime,
+      "समय जल्द अपडेट होगा"
+    );
 
-  const qrUrl = cleanUrl(
-    templeSettings.qrUrl
-  );
+  const liveUrl =
+    cleanUrl(
+      templeSettings.liveUrl
+    );
 
-  const upiId = safeText(
-    templeSettings.upiId
-  );
+  const qrUrl =
+    cleanUrl(
+      templeSettings.qrUrl
+    );
 
-  const contactNumber = safeText(
-    templeSettings.contactNumber
-  );
+  const upiId =
+    safeText(
+      templeSettings.upiId
+    );
+
+  const contactNumber =
+    safeText(
+      templeSettings.contactNumber
+    );
 
 
   /* -----------------------------
-     AARTI TIME
+     AARTI
      ----------------------------- */
 
   const aartiSelectors = [
@@ -332,7 +384,8 @@ function applyTempleSettings() {
 
     $$(selector).forEach(element => {
 
-      element.textContent = aartiTime;
+      element.textContent =
+        aartiTime;
 
     });
 
@@ -360,7 +413,8 @@ function applyTempleSettings() {
   $$("#upiId, [data-upi-id]").forEach(element => {
 
     element.textContent =
-      upiId || "UPI ID जल्द अपडेट होगा";
+      upiId ||
+      "UPI ID जल्द अपडेट होगा";
 
   });
 
@@ -379,7 +433,8 @@ function applyTempleSettings() {
 
 function renderContactNumber(number) {
 
-  const cleanNumber = safeText(number);
+  const cleanNumber =
+    safeText(number);
 
   const selectors = [
     "#contactPhone",
@@ -402,7 +457,8 @@ function renderContactNumber(number) {
         return;
       }
 
-      element.textContent = cleanNumber;
+      element.textContent =
+        cleanNumber;
 
       if (element.tagName === "A") {
 
@@ -410,8 +466,12 @@ function renderContactNumber(number) {
           cleanNumber.replace(/[^\d+]/g, "");
 
         if (digits) {
-          element.href = `tel:${digits}`;
+
+          element.href =
+            `tel:${digits}`;
+
         }
+
       }
 
     });
@@ -430,114 +490,134 @@ function getYouTubeEmbedUrl(url) {
     return "";
   }
 
-  let value = String(url).trim();
+  let value =
+    String(url).trim();
 
   try {
 
-    /* Already embed URL */
+    const parsed =
+      new URL(value);
+
+    const hostname =
+      parsed.hostname.toLowerCase();
+
+
+    /* ---------------------------------
+       youtube.com/embed/VIDEO_ID
+       --------------------------------- */
 
     if (
-      value.includes("youtube.com/embed/")
+      hostname.includes("youtube.com") &&
+      parsed.pathname.startsWith("/embed/")
     ) {
-
-      const parsed = new URL(value);
 
       const id =
-        parsed.pathname.split("/embed/")[1];
-
-      if (id) {
-
-        return `https://www.youtube.com/embed/${id.split("/")[0]}`;
-      }
-    }
-
-
-    /* YouTube watch URL */
-
-    if (
-      value.includes("youtube.com/watch")
-    ) {
-
-      const parsed = new URL(value);
-
-      const id = parsed.searchParams.get("v");
+        parsed.pathname
+          .split("/embed/")[1]
+          ?.split("/")[0];
 
       if (id) {
 
         return `https://www.youtube.com/embed/${id}`;
+
       }
     }
 
 
-    /* YouTube shorts */
+    /* ---------------------------------
+       youtube.com/watch?v=VIDEO_ID
+       --------------------------------- */
 
     if (
-      value.includes("youtube.com/shorts/")
+      hostname.includes("youtube.com") &&
+      parsed.pathname === "/watch"
     ) {
-
-      const parsed = new URL(value);
-
-      const parts =
-        parsed.pathname.split("/shorts/");
-
-      if (parts[1]) {
-
-        const id = parts[1].split("/")[0];
-
-        return `https://www.youtube.com/embed/${id}`;
-      }
-    }
-
-
-    /* YouTube live */
-
-    if (
-      value.includes("youtube.com/live/")
-    ) {
-
-      const parsed = new URL(value);
-
-      const parts =
-        parsed.pathname.split("/live/");
-
-      if (parts[1]) {
-
-        const id = parts[1].split("/")[0];
-
-        return `https://www.youtube.com/embed/${id}`;
-      }
-    }
-
-
-    /* youtu.be */
-
-    if (
-      value.includes("youtu.be/")
-    ) {
-
-      const parsed = new URL(value);
 
       const id =
-        parsed.pathname.replace("/", "");
+        parsed.searchParams.get("v");
 
       if (id) {
 
         return `https://www.youtube.com/embed/${id}`;
+
       }
     }
 
 
-    return "";
+    /* ---------------------------------
+       youtube.com/live/VIDEO_ID
+       --------------------------------- */
+
+    if (
+      hostname.includes("youtube.com") &&
+      parsed.pathname.startsWith("/live/")
+    ) {
+
+      const id =
+        parsed.pathname
+          .split("/live/")[1]
+          ?.split("/")[0];
+
+      if (id) {
+
+        return `https://www.youtube.com/embed/${id}`;
+
+      }
+    }
+
+
+    /* ---------------------------------
+       youtube.com/shorts/VIDEO_ID
+       --------------------------------- */
+
+    if (
+      hostname.includes("youtube.com") &&
+      parsed.pathname.startsWith("/shorts/")
+    ) {
+
+      const id =
+        parsed.pathname
+          .split("/shorts/")[1]
+          ?.split("/")[0];
+
+      if (id) {
+
+        return `https://www.youtube.com/embed/${id}`;
+
+      }
+    }
+
+
+    /* ---------------------------------
+       youtu.be/VIDEO_ID
+       --------------------------------- */
+
+    if (
+      hostname === "youtu.be"
+    ) {
+
+      const id =
+        parsed.pathname
+          .replace(/^\/+/, "")
+          .split("/")[0];
+
+      if (id) {
+
+        return `https://www.youtube.com/embed/${id}`;
+
+      }
+    }
 
   } catch (error) {
 
     console.warn(
-      "Invalid YouTube URL:",
+      "⚠️ Invalid YouTube URL:",
       url
     );
 
-    return "";
   }
+
+  return "";
 }
 
 
@@ -555,13 +635,26 @@ function renderLiveVideo(url) {
   ];
 
   if (!containers.length) {
+
+    console.warn(
+      "⚠️ #liveVideo container not found"
+    );
+
     return;
   }
 
-  const cleanLiveUrl = cleanUrl(url);
+  const cleanLiveUrl =
+    cleanUrl(url);
+
+  console.log(
+    "🎥 Live URL:",
+    cleanLiveUrl
+  );
 
   const embedUrl =
-    getYouTubeEmbedUrl(cleanLiveUrl);
+    getYouTubeEmbedUrl(
+      cleanLiveUrl
+    );
 
 
   containers.forEach(container => {
@@ -588,6 +681,12 @@ function renderLiveVideo(url) {
       return;
     }
 
+
+    /*
+      If admin has entered a YouTube URL
+      that cannot be converted to an embed,
+      show a direct Live button.
+    */
 
     if (!embedUrl) {
 
@@ -676,6 +775,7 @@ function renderLiveVideo(url) {
 
       </div>
     `;
+
   });
 }
 
@@ -686,7 +786,13 @@ function renderLiveVideo(url) {
 
 function renderQR(url) {
 
-  const qrUrl = cleanUrl(url);
+  const qrUrl =
+    cleanUrl(url);
+
+  console.log(
+    "🧾 QR URL:",
+    qrUrl
+  );
 
   const containers = [
     $("#qrContainer"),
@@ -709,14 +815,17 @@ function renderQR(url) {
 
       img.removeAttribute("src");
 
-      img.style.display = "none";
+      img.style.display =
+        "none";
 
       return;
     }
 
-    img.src = qrUrl;
+    img.src =
+      qrUrl;
 
-    img.style.display = "block";
+    img.style.display =
+      "block";
 
     img.onerror = () => {
 
@@ -725,7 +834,9 @@ function renderQR(url) {
         qrUrl
       );
 
-      img.style.display = "none";
+      img.style.display =
+        "none";
+
     };
 
   });
@@ -748,23 +859,19 @@ function renderQR(url) {
       return;
     }
 
-    if (!container.querySelector("img")) {
-
-      container.innerHTML = `
-        <img
-          src="${escapeHtml(qrUrl)}"
-          alt="Donation QR Code"
-          style="
-            width:min(280px,100%);
-            height:auto;
-            display:block;
-            margin:auto;
-            border-radius:16px;
-          "
-        />
-      `;
-
-    }
+    container.innerHTML = `
+      <img
+        src="${escapeHtml(qrUrl)}"
+        alt="Donation QR Code"
+        style="
+          width:min(280px,100%);
+          height:auto;
+          display:block;
+          margin:auto;
+          border-radius:16px;
+        "
+      />
+    `;
 
   });
 }
@@ -795,25 +902,43 @@ function renderGallery(snapshot) {
 
   const items = [];
 
+
   snapshot.forEach(docSnap => {
 
-    const data = docSnap.data();
+    const data =
+      docSnap.data();
 
-    const imageUrl = cleanUrl(
-      data.imageUrl ||
+    console.log(
+      "📸 Gallery document:",
+      docSnap.id,
+      data
+    );
+
+
+    /*
+      Admin panel may contain any of these
+      image fields. We support all.
+    */
+
+    const rawImageUrl =
+      data.secure_url ||
       data.secureUrl ||
+      data.imageUrl ||
       data.url ||
       data.photoUrl ||
       data.image ||
-      ""
-    );
+      "";
+
+
+    const imageUrl =
+      cleanUrl(rawImageUrl);
+
 
     if (!imageUrl) {
 
       console.warn(
         "⚠️ Gallery item has no image URL:",
-        docSnap.id,
-        data
+        docSnap.id
       );
 
       return;
@@ -821,18 +946,28 @@ function renderGallery(snapshot) {
 
 
     items.push({
-      id: docSnap.id,
+
+      id:
+        docSnap.id,
+
       imageUrl,
-      title: safeText(
-        data.title,
-        "माँ मनोकामना मंदिर"
-      ),
-      category: safeText(
-        data.category,
-        "मंदिर"
-      ),
+
+      title:
+        safeText(
+          data.title,
+          "माँ मनोकामना मंदिर"
+        ),
+
+      category:
+        safeText(
+          data.category,
+          "मंदिर"
+        ),
+
       createdAt:
-        data.createdAt?.toMillis?.() || 0
+        data.createdAt?.toMillis?.() ||
+        0
+
     });
 
   });
@@ -840,7 +975,13 @@ function renderGallery(snapshot) {
 
   items.sort(
     (a, b) =>
-      b.createdAt - a.createdAt
+      b.createdAt -
+      a.createdAt
+  );
+
+
+  console.log(
+    `📸 Rendering ${items.length} gallery photos`
   );
 
 
@@ -863,70 +1004,113 @@ function renderGallery(snapshot) {
     }
 
 
-    grid.innerHTML = items.map(item => `
+    grid.innerHTML =
+      items.map(item => `
 
-      <article
-        class="gallery-item"
-        data-gallery-id="${escapeHtml(item.id)}"
-        style="
-          overflow:hidden;
-          border-radius:18px;
-          background:#fff;
-          box-shadow:0 8px 25px rgba(0,0,0,.08);
-        "
-      >
-
-        <div style="
-          width:100%;
-          aspect-ratio:4/3;
-          overflow:hidden;
-          background:#f5f5f5;
-        ">
-
-          <img
-            src="${escapeHtml(item.imageUrl)}"
-            alt="${escapeHtml(item.title)}"
-            loading="lazy"
-            style="
-              width:100%;
-              height:100%;
-              object-fit:cover;
-              display:block;
-              transition:transform .3s ease;
-            "
-            onerror="
-              this.style.display='none';
-              this.parentElement.innerHTML='<div style=&quot;height:100%;display:flex;align-items:center;justify-content:center;color:#888;font-size:13px;&quot;>Photo load नहीं हुई</div>';
-            "
-          />
-
-        </div>
-
-        <div style="
-          padding:14px;
-        ">
+        <article
+          class="gallery-item"
+          data-gallery-id="${escapeHtml(item.id)}"
+          style="
+            overflow:hidden;
+            border-radius:18px;
+            background:#fff;
+            box-shadow:0 8px 25px rgba(0,0,0,.08);
+          "
+        >
 
           <div style="
-            font-size:12px;
-            color:#9a5b00;
-            font-weight:800;
-            margin-bottom:5px;
+            width:100%;
+            aspect-ratio:4/3;
+            overflow:hidden;
+            background:#f5f5f5;
           ">
-            ${escapeHtml(item.category)}
+
+            <img
+              src="${escapeHtml(item.imageUrl)}"
+              alt="${escapeHtml(item.title)}"
+              loading="lazy"
+              style="
+                width:100%;
+                height:100%;
+                object-fit:cover;
+                display:block;
+                transition:transform .3s ease;
+              "
+            />
+
           </div>
 
           <div style="
-            font-weight:800;
-            color:#40100d;
+            padding:14px;
           ">
-            ${escapeHtml(item.title)}
+
+            <div style="
+              font-size:12px;
+              color:#9a5b00;
+              font-weight:800;
+              margin-bottom:5px;
+            ">
+              ${escapeHtml(item.category)}
+            </div>
+
+            <div style="
+              font-weight:800;
+              color:#40100d;
+            ">
+              ${escapeHtml(item.title)}
+            </div>
+
           </div>
 
-        </div>
+        </article>
 
-      </article>
+      `).join("");
 
-    `).join("");
+
+    /*
+      Image error handling after DOM insertion.
+    */
+
+    grid
+      .querySelectorAll("img")
+      .forEach(img => {
+
+        img.addEventListener(
+          "error",
+          () => {
+
+            console.error(
+              "❌ Gallery image failed:",
+              img.src
+            );
+
+            const parent =
+              img.parentElement;
+
+            if (parent) {
+
+              parent.innerHTML = `
+                <div style="
+                  height:100%;
+                  min-height:180px;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  color:#888;
+                  font-size:13px;
+                  text-align:center;
+                  padding:20px;
+                ">
+                  Photo load नहीं हुई
+                </div>
+              `;
+
+            }
+
+          }
+        );
+
+      });
 
   });
 }
@@ -939,11 +1123,12 @@ function renderGallery(snapshot) {
 function listenGallery() {
 
   console.log(
-    "📸 Listening to gallery..."
+    "📸 Listening to Firestore gallery..."
   );
 
   const galleryRef =
     collection(db, "gallery");
+
 
   onSnapshot(
 
@@ -952,7 +1137,7 @@ function listenGallery() {
     snapshot => {
 
       console.log(
-        `✅ Gallery loaded: ${snapshot.size} photos`
+        `✅ Gallery Firestore snapshot: ${snapshot.size} photos`
       );
 
       renderGallery(snapshot);
@@ -991,6 +1176,7 @@ function listenGallery() {
       });
 
     }
+
   );
 }
 
@@ -1003,6 +1189,10 @@ async function loadGallery() {
 
   try {
 
+    console.log(
+      "📸 Initial gallery loading..."
+    );
+
     const galleryRef =
       collection(db, "gallery");
 
@@ -1010,7 +1200,7 @@ async function loadGallery() {
       await getDocs(galleryRef);
 
     console.log(
-      `📸 Initial gallery load: ${snapshot.size}`
+      `📸 Initial gallery load: ${snapshot.size} photos`
     );
 
     renderGallery(snapshot);
@@ -1046,36 +1236,46 @@ function renderSchedule(snapshot) {
 
   const items = [];
 
+
   snapshot.forEach(docSnap => {
 
-    const data = docSnap.data();
+    const data =
+      docSnap.data();
 
     items.push({
 
-      id: docSnap.id,
+      id:
+        docSnap.id,
 
-      date: safeText(data.date),
+      date:
+        safeText(data.date),
 
-      day: safeText(data.day),
+      day:
+        safeText(data.day),
 
-      month: safeText(data.month),
+      month:
+        safeText(data.month),
 
-      time: safeText(
-        data.time,
-        "समय जल्द अपडेट होगा"
-      ),
+      time:
+        safeText(
+          data.time,
+          "समय जल्द अपडेट होगा"
+        ),
 
-      title: safeText(
-        data.title,
-        "धार्मिक कार्यक्रम"
-      ),
+      title:
+        safeText(
+          data.title,
+          "धार्मिक कार्यक्रम"
+        ),
 
-      description: safeText(
-        data.description
-      ),
+      description:
+        safeText(
+          data.description
+        ),
 
       createdAt:
-        data.createdAt?.toMillis?.() || 0
+        data.createdAt?.toMillis?.() ||
+        0
 
     });
 
@@ -1085,10 +1285,18 @@ function renderSchedule(snapshot) {
   items.sort((a, b) => {
 
     if (a.date && b.date) {
-      return a.date.localeCompare(b.date);
+
+      return a.date.localeCompare(
+        b.date
+      );
+
     }
 
-    return b.createdAt - a.createdAt;
+    return (
+      b.createdAt -
+      a.createdAt
+    );
+
   });
 
 
@@ -1220,6 +1428,7 @@ function listenSchedule() {
       );
 
     }
+
   );
 }
 
@@ -1257,9 +1466,8 @@ async function loadSchedule() {
 
 function initMapLinks() {
 
-  const mapLinks = $$(
-    "[data-map-link], #mapLink"
-  );
+  const mapLinks =
+    $$("[data-map-link], #mapLink");
 
   mapLinks.forEach(link => {
 
@@ -1271,8 +1479,12 @@ function initMapLinks() {
       link.href =
         "https://www.google.com/maps/search/?api=1&query=श्री+श्री+108+माँ+मनोकामना+छोटी+दुर्गा+पूजा+समिति+चकशिवगंज+मौलानगर+सूर्यगढ़ा";
 
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
+      link.target =
+        "_blank";
+
+      link.rel =
+        "noopener noreferrer";
+
     }
 
   });
@@ -1285,32 +1497,42 @@ function initMapLinks() {
 
 function initLanguageToggle() {
 
-  const buttons = $$(
-    "#languageToggle, [data-language-toggle]"
-  );
+  const buttons =
+    $$(
+      "#languageToggle, [data-language-toggle]"
+    );
 
   buttons.forEach(button => {
 
-    button.addEventListener("click", () => {
+    button.addEventListener(
+      "click",
+      () => {
 
-      const current =
-        document.documentElement.lang || "hi";
+        const current =
+          document.documentElement.lang ||
+          "hi";
 
-      if (current === "hi") {
 
-        document.documentElement.lang = "en";
+        if (current === "hi") {
 
-        button.textContent = "हिंदी";
+          document.documentElement.lang =
+            "en";
 
-      } else {
+          button.textContent =
+            "हिंदी";
 
-        document.documentElement.lang = "hi";
+        } else {
 
-        button.textContent = "English";
+          document.documentElement.lang =
+            "hi";
+
+          button.textContent =
+            "English";
+
+        }
 
       }
-
-    });
+    );
 
   });
 }
@@ -1325,13 +1547,15 @@ function initDonationModal() {
   const modal =
     $("#donationModal");
 
-  const openButtons = $$(
-    "#donateBtn, [data-open-donation]"
-  );
+  const openButtons =
+    $$(
+      "#donateBtn, [data-open-donation]"
+    );
 
-  const closeButtons = $$(
-    "#closeDonationModal, [data-close-donation]"
-  );
+  const closeButtons =
+    $$(
+      "#closeDonationModal, [data-close-donation]"
+    );
 
 
   if (!modal) {
@@ -1345,7 +1569,8 @@ function initDonationModal() {
       "click",
       () => {
 
-        modal.style.display = "flex";
+        modal.style.display =
+          "flex";
 
         document.body.style.overflow =
           "hidden";
@@ -1362,7 +1587,8 @@ function initDonationModal() {
       "click",
       () => {
 
-        modal.style.display = "none";
+        modal.style.display =
+          "none";
 
         document.body.style.overflow =
           "";
@@ -1379,7 +1605,8 @@ function initDonationModal() {
 
       if (event.target === modal) {
 
-        modal.style.display = "none";
+        modal.style.display =
+          "none";
 
         document.body.style.overflow =
           "";
@@ -1397,7 +1624,8 @@ function initDonationModal() {
 
 function generateReceiptNumber() {
 
-  const now = new Date();
+  const now =
+    new Date();
 
   const year =
     now.getFullYear();
@@ -1421,7 +1649,9 @@ function generateReceiptNumber() {
    RECEIPT DATE
    ========================================================= */
 
-function formatReceiptDate(date = new Date()) {
+function formatReceiptDate(
+  date = new Date()
+) {
 
   return date.toLocaleString(
     "en-IN",
@@ -1453,7 +1683,7 @@ function receiptEscape(value) {
 
 
 /* =========================================================
-   DONATION SUBMIT
+   DONATION FORM
    ========================================================= */
 
 function initDonationForm() {
@@ -1480,12 +1710,14 @@ function initDonationForm() {
           )?.value
         );
 
+
       const amount =
         Number(
           form.querySelector(
             "#donationAmount, [name='amount']"
           )?.value
         );
+
 
       const purpose =
         safeText(
@@ -1494,6 +1726,7 @@ function initDonationForm() {
           )?.value,
           "मंदिर सहयोग"
         );
+
 
       const utr =
         safeText(
@@ -1544,8 +1777,10 @@ function initDonationForm() {
           "button[type='submit']"
         );
 
+
       if (submitButton) {
-        submitButton.disabled = true;
+        submitButton.disabled =
+          true;
       }
 
 
@@ -1553,6 +1788,7 @@ function initDonationForm() {
 
         const receiptNumber =
           generateReceiptNumber();
+
 
         const donationData = {
 
@@ -1566,7 +1802,8 @@ function initDonationForm() {
 
           receiptNumber,
 
-          status: "pending",
+          status:
+            "pending",
 
           createdAt:
             serverTimestamp()
@@ -1616,7 +1853,8 @@ function initDonationForm() {
       } finally {
 
         if (submitButton) {
-          submitButton.disabled = false;
+          submitButton.disabled =
+            false;
         }
 
       }
@@ -1873,20 +2111,24 @@ function showDonationReceipt(data) {
   `;
 
 
-  document.body.appendChild(modal);
+  document.body.appendChild(
+    modal
+  );
 
 
   $("#printReceiptBtn")
     ?.addEventListener(
       "click",
-      () => printDonationReceipt(data)
+      () =>
+        printDonationReceipt(data)
     );
 
 
   $("#closeReceiptBtn")
     ?.addEventListener(
       "click",
-      () => modal.remove()
+      () =>
+        modal.remove()
     );
 }
 
@@ -1903,6 +2145,7 @@ function printDonationReceipt(data) {
       "_blank",
       "width=700,height=800"
     );
+
 
   if (!printWindow) {
 
@@ -1938,7 +2181,7 @@ function printDonationReceipt(data) {
         body {
           margin:0;
           padding:30px;
-          font-family:Arial, sans-serif;
+          font-family:Arial,sans-serif;
           background:#fff;
           color:#222;
         }
@@ -2032,27 +2275,37 @@ function printDonationReceipt(data) {
 
           <tr>
             <td>Receipt No.</td>
-            <td>${receiptEscape(data.receiptNumber)}</td>
+            <td>
+              ${receiptEscape(data.receiptNumber)}
+            </td>
           </tr>
 
           <tr>
             <td>Donor Name</td>
-            <td>${receiptEscape(data.donorName)}</td>
+            <td>
+              ${receiptEscape(data.donorName)}
+            </td>
           </tr>
 
           <tr>
             <td>Amount</td>
-            <td>₹${receiptEscape(data.amount)}</td>
+            <td>
+              ₹${receiptEscape(data.amount)}
+            </td>
           </tr>
 
           <tr>
             <td>Purpose</td>
-            <td>${receiptEscape(data.purpose)}</td>
+            <td>
+              ${receiptEscape(data.purpose)}
+            </td>
           </tr>
 
           <tr>
             <td>UTR</td>
-            <td>${receiptEscape(data.utr)}</td>
+            <td>
+              ${receiptEscape(data.utr)}
+            </td>
           </tr>
 
           <tr>
@@ -2076,6 +2329,7 @@ function printDonationReceipt(data) {
         </div>
 
       </div>
+
 
       <script>
 
@@ -2174,18 +2428,19 @@ async function installApp() {
       await deferredInstallPrompt.userChoice;
 
     console.log(
-      "PWA install result:",
+      "📱 PWA install result:",
       result.outcome
     );
 
-    deferredInstallPrompt = null;
+    deferredInstallPrompt =
+      null;
 
     return;
   }
 
 
   showToast(
-    "Browser ने अभी native install prompt उपलब्ध नहीं किया है। Chrome के menu में 'Install app' विकल्प देखें।",
+    "Browser ने अभी native install prompt उपलब्ध नहीं किया है। Chrome menu में Install app देखें।",
     "info"
   );
 }
@@ -2213,8 +2468,10 @@ window.addEventListener(
     }
 
     if (installButton) {
+
       installButton.style.display =
         "inline-flex";
+
     }
 
   }
@@ -2236,11 +2493,14 @@ window.addEventListener(
     deferredInstallPrompt =
       null;
 
+
     if (installButton) {
 
       installButton.style.display =
         "none";
+
     }
+
 
     showToast(
       "App successfully install हो गया ❤️",
@@ -2275,6 +2535,7 @@ function checkIfAppIsInstalled() {
 
       installButton.style.display =
         "none";
+
     }
 
     return true;
@@ -2351,11 +2612,12 @@ function showDebugInfo() {
 
   console.log(
     "Firebase project:",
-    firebaseConfig?.projectId || "unknown"
+    firebaseConfig?.projectId ||
+      "unknown"
   );
 
   console.log(
-    "Firestore collections:"
+    "Firestore paths:"
   );
 
   console.log(
@@ -2427,28 +2689,36 @@ document.addEventListener(
     checkIfAppIsInstalled();
 
 
-    /* Firebase settings */
+    /* ---------------------------------
+       FIREBASE SETTINGS
+       --------------------------------- */
 
     await loadTempleSettings();
 
     listenTempleSettings();
 
 
-    /* Gallery */
+    /* ---------------------------------
+       GALLERY
+       --------------------------------- */
 
     await loadGallery();
 
     listenGallery();
 
 
-    /* Schedule */
+    /* ---------------------------------
+       SCHEDULE
+       --------------------------------- */
 
     await loadSchedule();
 
     listenSchedule();
 
 
-    /* Service worker */
+    /* ---------------------------------
+       SERVICE WORKER
+       --------------------------------- */
 
     registerServiceWorker();
 
