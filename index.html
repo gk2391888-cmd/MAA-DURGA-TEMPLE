@@ -25,6 +25,65 @@
   >
 
   <link rel="stylesheet" href="./style.css">
+
+  <!-- QR fallback styling -->
+  <style>
+    .qr-area {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      margin: 20px 0;
+    }
+
+    .qr-placeholder {
+      width: 220px;
+      min-height: 220px;
+      padding: 14px;
+      background: #fff;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .qr-placeholder .qr-image {
+      width: 100%;
+      max-width: 190px;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      object-fit: contain;
+      display: block;
+      border-radius: 10px;
+    }
+
+    #qrPlaceholderContent {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 8px;
+      text-align: center;
+    }
+
+    #qrPlaceholderContent span {
+      font-size: 42px;
+      font-weight: 800;
+    }
+
+    #qrPlaceholderContent small {
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .upi-box {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 
 <body>
@@ -97,6 +156,7 @@
         <button
           class="language-btn"
           id="languageBtn"
+          type="button"
         >
           हिंदी | English
         </button>
@@ -170,11 +230,7 @@
           </a>
 
 
-          <!-- =========================
-               PWA INSTALL BUTTON
-               app.js इसे automatically
-               control करेगा
-          ========================== -->
+          <!-- PWA INSTALL BUTTON -->
 
           <button
             type="button"
@@ -371,25 +427,56 @@
         </p>
 
 
+        <!-- =========================
+             QR CODE
+        ========================== -->
+
         <div class="qr-area">
 
           <div
-            class="qr-placeholder"
+            class="qr-placeholder qr-container"
             id="qrBox"
+            data-qr-container
           >
 
-            <span>
-              QR
-            </span>
+            <!--
+              app.js Firestore से QR URL मिलने पर
+              इस image को automatically update करेगा.
+            -->
 
-            <small>
-              QR Code यहाँ दिखेगा
-            </small>
+            <img
+              id="qrImage"
+              data-qr-image
+              class="qr-image"
+              src=""
+              alt="Donation QR Code"
+              style="display:none;"
+              loading="lazy"
+              decoding="async"
+            >
+
+            <!-- Default placeholder -->
+
+            <div id="qrPlaceholderContent">
+
+              <span>
+                QR
+              </span>
+
+              <small>
+                QR Code यहाँ दिखेगा
+              </small>
+
+            </div>
 
           </div>
 
         </div>
 
+
+        <!-- =========================
+             UPI ID
+        ========================== -->
 
         <div class="upi-box">
 
@@ -597,6 +684,7 @@
 
 
           <p>
+
             <a
               id="contactPhone"
               href="#"
@@ -604,6 +692,7 @@
             >
               संपर्क नंबर जल्द अपडेट होगा।
             </a>
+
           </p>
 
         </div>
