@@ -281,6 +281,32 @@
       margin-top: 4px;
     }
 
+    /* ================= CONTACT ================= */
+
+    .contact-field-wrap {
+      position: relative;
+    }
+
+    .contact-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      pointer-events: none;
+    }
+
+    #contactNumber {
+      padding-left: 43px;
+    }
+
+    .helper-text {
+      margin-top: 6px;
+      color: #7b8495;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     /* ================= UPLOAD ================= */
 
     .upload-box {
@@ -457,6 +483,14 @@
       .welcome h1 {
         font-size: 22px;
       }
+
+      .card {
+        padding: 17px;
+      }
+
+      .card-header h2 {
+        font-size: 17px;
+      }
     }
   </style>
 </head>
@@ -583,6 +617,29 @@
               id="aartiTime"
               placeholder="सुबह 7:00 बजे"
             >
+          </div>
+
+          <div class="field">
+            <label>📞 Contact Number</label>
+
+            <div class="contact-field-wrap">
+
+              <span class="contact-icon">📞</span>
+
+              <input
+                type="tel"
+                id="contactNumber"
+                placeholder="जैसे: 9876543210"
+                inputmode="tel"
+                autocomplete="tel"
+              >
+
+            </div>
+
+            <div class="helper-text">
+              यह नंबर website के Contact section में दिखाई देगा।
+            </div>
+
           </div>
 
           <div class="field">
@@ -1216,10 +1273,6 @@
           );
 
 
-          /*
-            Check admins/{UID}
-          */
-
           const adminRef =
             doc(
               db,
@@ -1541,6 +1594,12 @@
 
 
       document.getElementById(
+        "contactNumber"
+      ).value =
+        data.contactNumber || "";
+
+
+      document.getElementById(
         "liveUrl"
       ).value =
         data.liveUrl || "";
@@ -1593,6 +1652,13 @@
               .trim();
 
 
+          const contactNumber =
+            document
+              .getElementById("contactNumber")
+              .value
+              .trim();
+
+
           const liveUrl =
             document
               .getElementById("liveUrl")
@@ -1617,6 +1683,7 @@
               {
                 upiId,
                 aartiTime,
+                contactNumber,
                 liveUrl,
                 updatedAt:
                   serverTimestamp()
@@ -1629,7 +1696,7 @@
 
             showMessage(
               msg,
-              "मंदिर की जानकारी Save हो गई।",
+              "मंदिर की जानकारी और Contact Number Save हो गया।",
               "success"
             );
 
@@ -1921,7 +1988,6 @@
               "qrFile"
             ).value =
               "";
-
 
           }
 
