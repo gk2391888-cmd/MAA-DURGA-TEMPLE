@@ -1,10 +1,10 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyATSYlbo-kywIB61Bgg3ehguwij65TpGw4",
+  apiKey: "YOUR_EXISTING_API_KEY",
   authDomain: "maa-durga-temple.firebaseapp.com",
   projectId: "maa-durga-temple",
   storageBucket: "maa-durga-temple.firebasestorage.app",
-  messagingSenderId: "225524727386",
-  appId: "1:225524727386:web:cd854b1594c0d3c054a263",
+  messagingSenderId: "YOUR_EXISTING_VALUE",
+  appId: "YOUR_EXISTING_VALUE",
   measurementId: "G-RB4L16X23V"
 };
 
