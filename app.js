@@ -3,6 +3,7 @@
    PUBLIC WEBSITE APP.JS
    UPDATED FINAL VERSION
    DATE-BY-DATE CALENDAR
+   GALLERY: 2 PHOTO PREVIEW + VIEW MORE
    DONATION SYSTEM REMOVED
 ========================================================= */
 
@@ -43,6 +44,14 @@ let templeSettings = {
 
 let deferredInstallPrompt = null;
 let installButton = null;
+
+
+/* =========================================================
+   GALLERY GLOBAL STATE
+========================================================= */
+
+let galleryExpanded = false;
+let latestGalleryItems = [];
 
 
 /* =========================================================
@@ -778,6 +787,7 @@ function renderLiveVideo(url) {
 
 /* =========================================================
    GALLERY
+   2 PHOTO PREVIEW + VIEW MORE
 ========================================================= */
 
 function renderGallery(snapshot) {
@@ -844,6 +854,9 @@ function renderGallery(snapshot) {
   });
 
 
+  /*
+   * Latest uploaded photo first
+   */
   items.sort(
     (a, b) =>
       b.createdAt -
@@ -851,7 +864,20 @@ function renderGallery(snapshot) {
   );
 
 
+  /*
+   * Save globally so View More
+   * can re-render without another
+   * Firebase request.
+   */
+  latestGalleryItems =
+    items;
+
+
   grids.forEach(grid => {
+
+    /* =====================================================
+       NO PHOTOS
+    ===================================================== */
 
     if (!items.length) {
 
@@ -865,13 +891,27 @@ function renderGallery(snapshot) {
     }
 
 
+    /* =====================================================
+       ONLY 2 PHOTOS INITIALLY
+    ===================================================== */
+
+    const visibleItems =
+      galleryExpanded
+        ? items
+        : items.slice(0, 2);
+
+
     grid.innerHTML =
-      items.map(item => `
+      visibleItems.map(item => `
 
         <article
           class="gallery-item"
           data-gallery-image="${escapeHtml(item.imageUrl)}"
           data-gallery-title="${escapeHtml(item.title)}"
+          style="
+            cursor:pointer;
+            overflow:hidden;
+          "
         >
 
           <div style="
@@ -890,6 +930,7 @@ function renderGallery(snapshot) {
                 height:100%;
                 object-fit:cover;
                 display:block;
+                transition:transform .3s ease;
               "
             >
 
@@ -923,6 +964,244 @@ function renderGallery(snapshot) {
     initGalleryItems(grid);
 
   });
+
+
+  /*
+   * Update View More button
+   */
+  updateGalleryViewMoreButton();
+
+}
+
+
+/* =========================================================
+   GALLERY VIEW MORE BUTTON
+========================================================= */
+
+function updateGalleryViewMoreButton() {
+
+  const wrap =
+    $("#galleryViewMoreWrap");
+
+  const button =
+    $("#galleryViewMoreBtn");
+
+
+  if (!wrap || !button) {
+    return;
+  }
+
+
+  /*
+   * If 2 or fewer photos,
+   * don't show button.
+   */
+  if (latestGalleryItems.length <= 2) {
+
+    wrap.style.display =
+      "none";
+
+    return;
+  }
+
+
+  wrap.style.display =
+    "block";
+
+
+  if (galleryExpanded) {
+
+    button.innerHTML =
+      "🔼 Show Less";
+
+  } else {
+
+    const remaining =
+      latestGalleryItems.length - 2;
+
+    button.innerHTML =
+      `📸 View More Gallery (${remaining} और)`;
+
+  }
+
+}
+
+
+/* =========================================================
+   GALLERY VIEW MORE CLICK
+========================================================= */
+
+function initGalleryViewMore() {
+
+  const button =
+    $("#galleryViewMoreBtn");
+
+  if (!button) {
+    return;
+  }
+
+
+  if (button.dataset.bound === "true") {
+    return;
+  }
+
+
+  button.dataset.bound =
+    "true";
+
+
+  button.addEventListener(
+    "click",
+    () => {
+
+      if (latestGalleryItems.length <= 2) {
+        return;
+      }
+
+
+      galleryExpanded =
+        !galleryExpanded;
+
+
+      renderGalleryFromItems();
+
+
+      /*
+       * When opening all photos,
+       * keep user around Gallery section.
+       */
+      const gallerySection =
+        $("#gallery");
+
+
+      if (
+        gallerySection &&
+        galleryExpanded
+      ) {
+
+        setTimeout(() => {
+
+          gallerySection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }, 100);
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================================================
+   RE-RENDER GALLERY FROM SAVED ITEMS
+========================================================= */
+
+function renderGalleryFromItems() {
+
+  const grids = [
+    ...Array.from($$("#galleryGrid")),
+    ...Array.from($$("[data-gallery]"))
+  ];
+
+  if (!grids.length) {
+    return;
+  }
+
+
+  const items =
+    latestGalleryItems;
+
+
+  const visibleItems =
+    galleryExpanded
+      ? items
+      : items.slice(0, 2);
+
+
+  grids.forEach(grid => {
+
+    if (!items.length) {
+
+      grid.innerHTML = `
+        <div class="gallery-loading">
+          अभी कोई फोटो उपलब्ध नहीं है।
+        </div>
+      `;
+
+      return;
+    }
+
+
+    grid.innerHTML =
+      visibleItems.map(item => `
+
+        <article
+          class="gallery-item"
+          data-gallery-image="${escapeHtml(item.imageUrl)}"
+          data-gallery-title="${escapeHtml(item.title)}"
+          style="
+            cursor:pointer;
+            overflow:hidden;
+          "
+        >
+
+          <div style="
+            width:100%;
+            aspect-ratio:4/3;
+            overflow:hidden;
+            background:#f5f5f5;
+          ">
+
+            <img
+              src="${escapeHtml(item.imageUrl)}"
+              alt="${escapeHtml(item.title)}"
+              loading="lazy"
+              style="
+                width:100%;
+                height:100%;
+                object-fit:cover;
+                display:block;
+                transition:transform .3s ease;
+              "
+            >
+
+          </div>
+
+          <div style="padding:14px;">
+
+            <div style="
+              font-size:12px;
+              color:#9a5b00;
+              font-weight:800;
+              margin-bottom:5px;
+            ">
+              ${escapeHtml(item.category)}
+            </div>
+
+            <div style="
+              font-weight:800;
+              color:#40100d;
+            ">
+              ${escapeHtml(item.title)}
+            </div>
+
+          </div>
+
+        </article>
+
+      `).join("");
+
+
+    initGalleryItems(grid);
+
+  });
+
+
+  updateGalleryViewMoreButton();
 
 }
 
@@ -1152,14 +1431,6 @@ function parseScheduleDate(dateString) {
   const value =
     String(dateString).trim();
 
-  /*
-    Firestore date format:
-    YYYY-MM-DD
-
-    We manually create the date
-    to avoid timezone problems.
-  */
-
   const match =
     value.match(
       /^(\d{4})-(\d{2})-(\d{2})$/
@@ -1298,17 +1569,6 @@ function getScheduleItems(snapshot) {
   });
 
 
-  /*
-    IMPORTANT:
-    Date-wise ascending order.
-    Example:
-    11
-    12
-    13
-    14
-    15
-  */
-
   items.sort((a, b) => {
 
     if (
@@ -1323,11 +1583,6 @@ function getScheduleItems(snapshot) {
       if (dateDifference !== 0) {
         return dateDifference;
       }
-
-      /*
-        Same date:
-        Sort by time if available.
-      */
 
       return String(a.time)
         .localeCompare(
@@ -1396,12 +1651,6 @@ function createDateRange(
   );
 
 
-  /*
-    Safety:
-    Don't generate an extremely large
-    calendar accidentally.
-  */
-
   let safetyCounter = 0;
 
   while (
@@ -1447,10 +1696,6 @@ function renderSchedule(snapshot) {
     getScheduleItems(snapshot);
 
 
-  /* =======================================================
-     NO DATA
-  ======================================================= */
-
   if (!items.length) {
 
     containers.forEach(container => {
@@ -1470,21 +1715,6 @@ function renderSchedule(snapshot) {
     return;
   }
 
-
-  /* =======================================================
-     DATE RANGE
-     
-     Example:
-     11 uploaded
-     15 uploaded
-
-     Output:
-     11
-     12
-     13
-     14
-     15
-  ======================================================= */
 
   const datesWithEvents =
     items
@@ -1511,23 +1741,12 @@ function renderSchedule(snapshot) {
     );
 
 
-  /*
-    Optional:
-    Calendar starts from the first
-    uploaded date and ends at the
-    last uploaded date.
-  */
-
   const dateRange =
     createDateRange(
       firstDate,
       lastDate
     );
 
-
-  /* =======================================================
-     GROUP EVENTS BY DATE
-  ======================================================= */
 
   const eventsByDate =
     new Map();
@@ -1558,10 +1777,6 @@ function renderSchedule(snapshot) {
   });
 
 
-  /* =======================================================
-     BUILD DATE-BY-DATE HTML
-  ======================================================= */
-
   const calendarHtml =
     dateRange.map(date => {
 
@@ -1591,10 +1806,6 @@ function renderSchedule(snapshot) {
           dateKey
         ) || [];
 
-
-      /* ===================================================
-         DATE WITH EVENTS
-      =================================================== */
 
       if (events.length) {
 
@@ -1713,10 +1924,6 @@ function renderSchedule(snapshot) {
       }
 
 
-      /* ===================================================
-         DATE WITHOUT EVENT
-      =================================================== */
-
       return `
         <div
           class="schedule-item schedule-date-card no-event"
@@ -1786,10 +1993,6 @@ function renderSchedule(snapshot) {
 
     }).join("");
 
-
-  /* =======================================================
-     RENDER TO ALL CALENDAR CONTAINERS
-  ======================================================= */
 
   containers.forEach(container => {
 
@@ -1900,8 +2103,6 @@ function initMapLinks() {
     );
 
 
-  /* Normal map links */
-
   const mapLinks = [
     ...Array.from($$("[data-map-link]")),
     ...Array.from($$("#mapLink"))
@@ -1924,8 +2125,6 @@ function initMapLinks() {
 
   });
 
-
-  /* Current HTML uses button #mapBtn */
 
   const mapBtn =
     $("#mapBtn");
@@ -2516,6 +2715,8 @@ document.addEventListener(
     initMapLinks();
 
     initGalleryViewer();
+
+    initGalleryViewMore();
 
 
     /* =====================================================
