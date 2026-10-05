@@ -58,6 +58,9 @@ const scheduleList = $("scheduleList");
 /* Gallery */
 const galleryGrid = $("galleryGrid");
 
+/* Contact */
+const contactPhone = $("contactPhone");
+
 const mapBtn = $("mapBtn");
 const languageBtn = $("languageBtn");
 
@@ -70,8 +73,16 @@ let templeSettings = {
   upiId: "",
   aartiTime: "",
   liveUrl: "",
-  qrUrl: ""
+  qrUrl: "",
+  contactNumber: ""
 };
+
+
+/* =========================================================
+   PWA INSTALL
+========================================================= */
+
+let deferredInstallPrompt = null;
 
 
 /* =========================================================
@@ -382,7 +393,10 @@ async function loadTempleSettings() {
           data.liveUrl || "",
 
         qrUrl:
-          data.qrUrl || ""
+          data.qrUrl || "",
+
+        contactNumber:
+          data.contactNumber || ""
 
       };
 
@@ -444,7 +458,10 @@ function listenToTempleSettings() {
             data.liveUrl || "",
 
           qrUrl:
-            data.qrUrl || ""
+            data.qrUrl || "",
+
+          contactNumber:
+            data.contactNumber || ""
 
         };
 
@@ -523,6 +540,68 @@ function applyTempleSettings() {
   /* Live */
 
   renderLiveVideo();
+
+
+  /* Contact */
+
+  renderContactNumber();
+
+}
+
+
+/* =========================================================
+   CONTACT NUMBER
+========================================================= */
+
+function renderContactNumber() {
+
+  if (!contactPhone) {
+    return;
+  }
+
+
+  const number =
+    templeSettings.contactNumber?.trim();
+
+
+  /* No number */
+
+  if (!number) {
+
+    contactPhone.textContent =
+      "संपर्क नंबर जल्द अपडेट होगा।";
+
+    contactPhone.removeAttribute("href");
+
+    contactPhone.style.pointerEvents =
+      "none";
+
+    return;
+
+  }
+
+
+  /* Show number */
+
+  contactPhone.textContent =
+    number;
+
+
+  /* Clean number for tel link */
+
+  const cleanNumber =
+    number.replace(/[^\d+]/g, "");
+
+
+  if (cleanNumber) {
+
+    contactPhone.href =
+      `tel:${cleanNumber}`;
+
+    contactPhone.style.pointerEvents =
+      "auto";
+
+  }
 
 }
 
@@ -1570,6 +1649,223 @@ if ("serviceWorker" in navigator) {
   });
 
 }
+
+
+/* =========================================================
+   PWA INSTALL PROMPT
+========================================================= */
+
+/*
+   Chrome/Android जब app को installable मानेगा,
+   तब यह event automatically आएगा.
+*/
+
+window.addEventListener(
+  "beforeinstallprompt",
+  (event) => {
+
+    event.preventDefault();
+
+    deferredInstallPrompt = event;
+
+    showInstallButton();
+
+  }
+);
+
+
+/* =========================================================
+   SHOW INSTALL BUTTON
+========================================================= */
+
+function showInstallButton() {
+
+  let installBtn =
+    $("installAppBtn");
+
+
+  /*
+    अगर index.html में button पहले से है
+    तो उसी को use करेंगे.
+  */
+
+  if (installBtn) {
+
+    installBtn.style.display =
+      "inline-flex";
+
+    installBtn.disabled =
+      false;
+
+    return;
+
+  }
+
+
+  /*
+    अगर button HTML में नहीं है,
+    तो छोटा floating install button
+    automatically create होगा.
+  */
+
+  installBtn =
+    document.createElement("button");
+
+
+  installBtn.id =
+    "installAppBtn";
+
+  installBtn.type =
+    "button";
+
+  installBtn.innerHTML =
+    "📱 App Install करें";
+
+
+  installBtn.style.cssText = `
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 9999;
+    border: 0;
+    border-radius: 999px;
+    padding: 12px 18px;
+    background: #7f1111;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(0,0,0,.25);
+  `;
+
+
+  document.body.appendChild(
+    installBtn
+  );
+
+
+  installBtn.addEventListener(
+    "click",
+    installApp
+  );
+
+}
+
+
+/* =========================================================
+   INSTALL APP
+========================================================= */
+
+async function installApp() {
+
+  if (!deferredInstallPrompt) {
+
+    showToast(
+      "इस device/browser में अभी Install option उपलब्ध नहीं है।"
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    deferredInstallPrompt.prompt();
+
+
+    const choice =
+      await deferredInstallPrompt.userChoice;
+
+
+    if (choice.outcome === "accepted") {
+
+      showToast(
+        "App install शुरू हो गया है।"
+      );
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "PWA install error:",
+      error
+    );
+
+  }
+
+
+  deferredInstallPrompt =
+    null;
+
+
+  const installBtn =
+    $("installAppBtn");
+
+
+  if (installBtn) {
+
+    installBtn.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =========================================================
+   EXISTING INSTALL BUTTON
+========================================================= */
+
+document.addEventListener(
+  "click",
+  (event) => {
+
+    if (
+      event.target &&
+      event.target.id === "installAppBtn"
+    ) {
+
+      installApp();
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   APP INSTALLED
+========================================================= */
+
+window.addEventListener(
+  "appinstalled",
+  () => {
+
+    deferredInstallPrompt =
+      null;
+
+
+    const installBtn =
+      $("installAppBtn");
+
+
+    if (installBtn) {
+
+      installBtn.style.display =
+        "none";
+
+    }
+
+
+    showToast(
+      "माँ मनोकामना App successfully install हो गया।"
+    );
+
+  }
+);
 
 
 /* =========================================================
