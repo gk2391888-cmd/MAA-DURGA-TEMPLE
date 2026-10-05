@@ -1,20 +1,19 @@
 /* =========================================================
    MAA MANOKAMANA TEMPLE
    PUBLIC WEBSITE APP.JS
-   FINAL COMPLETE VERSION
-   ========================================================= */
+   FINAL VERSION
+   DONATION SYSTEM REMOVED
+========================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
 import {
   getFirestore,
   collection,
-  addDoc,
   getDocs,
   getDoc,
   doc,
-  onSnapshot,
-  serverTimestamp
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
 import firebaseConfig from "./firebase-config.js";
@@ -22,7 +21,7 @@ import firebaseConfig from "./firebase-config.js";
 
 /* =========================================================
    FIREBASE
-   ========================================================= */
+========================================================= */
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -33,13 +32,11 @@ console.log("🔥 Firebase project:", firebaseConfig?.projectId);
 
 /* =========================================================
    GLOBAL SETTINGS
-   ========================================================= */
+========================================================= */
 
 let templeSettings = {
-  upiId: "",
   aartiTime: "",
   liveUrl: "",
-  qrUrl: "",
   contactNumber: ""
 };
 
@@ -49,7 +46,7 @@ let installButton = null;
 
 /* =========================================================
    BASIC HELPERS
-   ========================================================= */
+========================================================= */
 
 function $(selector) {
   return document.querySelector(selector);
@@ -94,7 +91,7 @@ function escapeHtml(value) {
 
 /* =========================================================
    TOAST
-   ========================================================= */
+========================================================= */
 
 function showToast(message, type = "info") {
 
@@ -110,8 +107,9 @@ function showToast(message, type = "info") {
       left:50%;
       bottom:24px;
       transform:translateX(-50%);
-      z-index:99999;
-      max-width:90%;
+      z-index:100001;
+      width:max-content;
+      max-width:calc(100% - 30px);
       padding:13px 18px;
       border-radius:14px;
       background:#7f1111;
@@ -156,7 +154,7 @@ function showToast(message, type = "info") {
 
 /* =========================================================
    MOBILE MENU
-   ========================================================= */
+========================================================= */
 
 function initMobileMenu() {
 
@@ -166,27 +164,41 @@ function initMobileMenu() {
     document.querySelector(".menu-btn") ||
     document.querySelector(".hamburger");
 
+  /*
+    Current HTML:
+    #mobileNav
+  */
+
   const nav =
+    $("#mobileNav") ||
     $("#mainNav") ||
     $("#navMenu") ||
-    document.querySelector(".nav-menu") ||
-    document.querySelector("nav");
+    document.querySelector(".nav-menu");
 
-  if (!menuBtn || !nav) return;
+  if (!menuBtn || !nav) {
+    console.warn("⚠️ Mobile menu elements not found");
+    return;
+  }
+
+  menuBtn.setAttribute("aria-expanded", "false");
 
   menuBtn.addEventListener("click", () => {
 
-    nav.classList.toggle("active");
-    menuBtn.classList.toggle("active");
+    const isActive =
+      nav.classList.toggle("active");
 
-    const expanded =
-      menuBtn.getAttribute("aria-expanded") === "true";
+    menuBtn.classList.toggle(
+      "active",
+      isActive
+    );
 
     menuBtn.setAttribute(
       "aria-expanded",
-      expanded ? "false" : "true"
+      isActive ? "true" : "false"
     );
+
   });
+
 
   nav.querySelectorAll("a").forEach(link => {
 
@@ -203,12 +215,13 @@ function initMobileMenu() {
     });
 
   });
+
 }
 
 
 /* =========================================================
    TEMPLE SETTINGS
-   ========================================================= */
+========================================================= */
 
 async function loadTempleSettings() {
 
@@ -258,7 +271,7 @@ async function loadTempleSettings() {
 
 /* =========================================================
    REALTIME SETTINGS
-   ========================================================= */
+========================================================= */
 
 function listenTempleSettings() {
 
@@ -271,9 +284,11 @@ function listenTempleSettings() {
     snapshot => {
 
       if (!snapshot.exists()) {
+
         console.warn(
           "⚠️ temple/settings does not exist"
         );
+
         return;
       }
 
@@ -307,8 +322,8 @@ function listenTempleSettings() {
 
 
 /* =========================================================
-   APPLY ALL TEMPLE SETTINGS
-   ========================================================= */
+   APPLY TEMPLE SETTINGS
+========================================================= */
 
 function applyTempleSettings() {
 
@@ -316,11 +331,6 @@ function applyTempleSettings() {
     safeText(
       templeSettings.aartiTime,
       "समय जल्द अपडेट होगा"
-    );
-
-  const upiId =
-    safeText(
-      templeSettings.upiId
     );
 
   const contactNumber =
@@ -333,38 +343,23 @@ function applyTempleSettings() {
       templeSettings.liveUrl
     );
 
-  const qrUrl =
-    cleanUrl(
-      templeSettings.qrUrl
-    );
-
 
   console.log("🎨 Applying settings:", {
     aartiTime,
-    upiId,
     contactNumber,
-    liveUrl,
-    qrUrl
+    liveUrl
   });
 
 
   /* =======================================================
      AARTI TIME
-     ======================================================= */
+  ======================================================= */
 
   const aartiElements = [
-    ...Array.from($$(
-      "#aartiTime"
-    )),
-    ...Array.from($$(
-      "#todayAartiTime"
-    )),
-    ...Array.from($$(
-      "#liveAartiTime"
-    )),
-    ...Array.from($$(
-      "[data-aarti-time]"
-    ))
+    ...Array.from($$("#aartiTime")),
+    ...Array.from($$("#todayAartiTime")),
+    ...Array.from($$("#liveAartiTime")),
+    ...Array.from($$("[data-aarti-time]"))
   ];
 
   aartiElements.forEach(element => {
@@ -373,85 +368,8 @@ function applyTempleSettings() {
 
 
   /* =======================================================
-     UPI ID
-     ======================================================= */
-
-  const upiElements = [
-    ...Array.from($$(
-      "#upiId"
-    )),
-    ...Array.from($$(
-      "[data-upi-id]"
-    )),
-    ...Array.from($$(
-      ".upi-id"
-    ))
-  ];
-
-  upiElements.forEach(element => {
-
-    element.textContent =
-      upiId ||
-      "UPI ID जल्द अपडेट होगा";
-
-  });
-
-
-  /* =======================================================
-     UPI COPY BUTTON
-     ======================================================= */
-
-  const copyButtons = [
-    ...Array.from($$(
-      "#copyUpiBtn"
-    )),
-    ...Array.from($$(
-      "[data-copy-upi]"
-    ))
-  ];
-
-  copyButtons.forEach(button => {
-
-    button.onclick = async () => {
-
-      if (!upiId) {
-
-        showToast(
-          "UPI ID अभी उपलब्ध नहीं है।",
-          "error"
-        );
-
-        return;
-      }
-
-      try {
-
-        await navigator.clipboard.writeText(
-          upiId
-        );
-
-        showToast(
-          "UPI ID copy हो गई।",
-          "success"
-        );
-
-      } catch (error) {
-
-        showToast(
-          "UPI ID copy नहीं हो पाई।",
-          "error"
-        );
-
-      }
-
-    };
-
-  });
-
-
-  /* =======================================================
      CONTACT
-     ======================================================= */
+  ======================================================= */
 
   renderContactNumber(
     contactNumber
@@ -459,27 +377,52 @@ function applyTempleSettings() {
 
 
   /* =======================================================
-     QR
-     ======================================================= */
-
-  renderQR(
-    qrUrl
-  );
-
-
-  /* =======================================================
      LIVE
-     ======================================================= */
+  ======================================================= */
 
   renderLiveVideo(
     liveUrl
   );
+
+
+  /* =======================================================
+     LIVE LINK
+  ======================================================= */
+
+  const liveLinks = [
+    ...Array.from($$("#liveLink")),
+    ...Array.from($$("[data-live-link]"))
+  ];
+
+  liveLinks.forEach(link => {
+
+    if (!liveUrl) {
+
+      link.style.display = "";
+
+      if (link.tagName === "A") {
+        link.removeAttribute("href");
+      }
+
+      return;
+    }
+
+    if (link.tagName === "A") {
+
+      link.href = liveUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+
+    }
+
+  });
+
 }
 
 
 /* =========================================================
    CONTACT NUMBER
-   ========================================================= */
+========================================================= */
 
 function renderContactNumber(number) {
 
@@ -487,6 +430,7 @@ function renderContactNumber(number) {
     safeText(number);
 
   const selectors = [
+    "#contactNumber",
     "#contactPhone",
     "[data-contact-phone]",
     ".contact-phone"
@@ -517,10 +461,8 @@ function renderContactNumber(number) {
           cleanNumber.replace(/[^\d+]/g, "");
 
         if (digits) {
-
           element.href =
             `tel:${digits}`;
-
         }
 
       }
@@ -530,22 +472,22 @@ function renderContactNumber(number) {
   });
 
 
-  /* Contact buttons */
+  /* =======================================================
+     CALL BUTTON
+  ======================================================= */
 
   const contactButtons = [
-    ...Array.from($$(
-      "#callBtn"
-    )),
-    ...Array.from($$(
-      "[data-call]"
-    ))
+    ...Array.from($$("#callBtn")),
+    ...Array.from($$("[data-call]"))
   ];
 
   contactButtons.forEach(button => {
 
     if (!cleanNumber) {
+
       button.style.display = "";
       button.removeAttribute("href");
+
       return;
     }
 
@@ -553,152 +495,35 @@ function renderContactNumber(number) {
       cleanNumber.replace(/[^\d+]/g, "");
 
     if (button.tagName === "A") {
+
       button.href =
         `tel:${digits}`;
+
     }
 
-    button.onclick = () => {
+    button.onclick = event => {
+
+      if (button.tagName !== "A") {
+        event.preventDefault();
+      }
 
       if (digits) {
+
         window.location.href =
           `tel:${digits}`;
+
       }
 
     };
 
   });
+
 }
 
 
 /* =========================================================
-   QR CODE
-   ========================================================= */
-
-function renderQR(url) {
-
-  const qrUrl =
-    cleanUrl(url);
-
-  console.log(
-    "🧾 QR:",
-    qrUrl
-  );
-
-
-  /* -------------------------------------------------------
-     Existing QR image
-     ------------------------------------------------------- */
-
-  const qrImages = [
-    ...Array.from($$(
-      "#qrImage"
-    )),
-    ...Array.from($$(
-      "[data-qr-image]"
-    )),
-    ...Array.from($$(
-      ".qr-image"
-    ))
-  ];
-
-
-  qrImages.forEach(img => {
-
-    if (!qrUrl) {
-
-      img.removeAttribute("src");
-      img.style.display = "none";
-
-      return;
-    }
-
-    img.src = qrUrl;
-    img.style.display = "block";
-
-    img.onerror = () => {
-
-      console.error(
-        "❌ QR image failed:",
-        qrUrl
-      );
-
-      img.style.display = "none";
-    };
-
-  });
-
-
-  /* -------------------------------------------------------
-     QR container
-     ------------------------------------------------------- */
-
-  const qrContainers = [
-    ...Array.from($$(
-      "#qrContainer"
-    )),
-    ...Array.from($$(
-      "[data-qr-container]"
-    )),
-    ...Array.from($$(
-      ".qr-container"
-    ))
-  ];
-
-
-  qrContainers.forEach(container => {
-
-    if (!qrUrl) {
-
-      container.innerHTML = `
-        <div style="
-          padding:20px;
-          text-align:center;
-          color:#777;
-        ">
-          QR Code जल्द अपडेट होगा।
-        </div>
-      `;
-
-      return;
-    }
-
-
-    container.innerHTML = `
-      <div style="
-        text-align:center;
-      ">
-
-        <img
-          src="${escapeHtml(qrUrl)}"
-          alt="Donation QR Code"
-          style="
-            width:min(280px,100%);
-            height:auto;
-            display:block;
-            margin:0 auto;
-            border-radius:16px;
-            background:#fff;
-          "
-        >
-
-        <div style="
-          margin-top:10px;
-          font-size:12px;
-          color:#777;
-        ">
-          Scan करके Donation करें
-        </div>
-
-      </div>
-    `;
-
-  });
-}
-
-
-/* =========================================================
-   YOUTUBE URL
-   ========================================================= */
+   YOUTUBE EMBED URL
+========================================================= */
 
 function getYouTubeEmbedUrl(url) {
 
@@ -712,6 +537,8 @@ function getYouTubeEmbedUrl(url) {
     const hostname =
       parsed.hostname.toLowerCase();
 
+
+    /* youtube.com/embed/ */
 
     if (
       hostname.includes("youtube.com") &&
@@ -729,6 +556,8 @@ function getYouTubeEmbedUrl(url) {
     }
 
 
+    /* youtube.com/watch?v= */
+
     if (
       hostname.includes("youtube.com") &&
       parsed.pathname === "/watch"
@@ -742,6 +571,8 @@ function getYouTubeEmbedUrl(url) {
       }
     }
 
+
+    /* youtube.com/live/ */
 
     if (
       hostname.includes("youtube.com") &&
@@ -759,6 +590,8 @@ function getYouTubeEmbedUrl(url) {
     }
 
 
+    /* youtube.com/shorts/ */
+
     if (
       hostname.includes("youtube.com") &&
       parsed.pathname.startsWith("/shorts/")
@@ -774,6 +607,8 @@ function getYouTubeEmbedUrl(url) {
       }
     }
 
+
+    /* youtu.be */
 
     if (
       hostname === "youtu.be"
@@ -792,7 +627,7 @@ function getYouTubeEmbedUrl(url) {
   } catch (error) {
 
     console.warn(
-      "Invalid YouTube URL:",
+      "⚠️ Invalid YouTube URL:",
       url
     );
 
@@ -804,17 +639,13 @@ function getYouTubeEmbedUrl(url) {
 
 /* =========================================================
    LIVE VIDEO
-   ========================================================= */
+========================================================= */
 
 function renderLiveVideo(url) {
 
   const containers = [
-    ...Array.from($$(
-      "#liveVideo"
-    )),
-    ...Array.from($$(
-      "[data-live-video]"
-    ))
+    ...Array.from($$("#liveVideo")),
+    ...Array.from($$("[data-live-video]"))
   ];
 
   if (!containers.length) {
@@ -835,19 +666,20 @@ function renderLiveVideo(url) {
     if (!cleanLiveUrl) {
 
       container.innerHTML = `
-        <div style="
-          min-height:220px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          text-align:center;
-          padding:30px;
-          border-radius:18px;
-          background:#fff8ed;
-          color:#7f1111;
-          font-weight:700;
-        ">
-          🔴 Live Aarti link जल्द अपडेट होगा।
+        <div class="live-placeholder">
+
+          <div class="live-icon">
+            🔴
+          </div>
+
+          <h3>
+            LIVE दर्शन
+          </h3>
+
+          <p>
+            लाइव लिंक उपलब्ध होने पर यहाँ दर्शन दिखाई देंगे।
+          </p>
+
         </div>
       `;
 
@@ -859,26 +691,34 @@ function renderLiveVideo(url) {
 
       container.innerHTML = `
         <div style="
-          padding:25px;
+          min-height:245px;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:center;
           text-align:center;
+          padding:25px;
           border-radius:18px;
           background:#fff8ed;
         ">
 
           <div style="
-            font-size:30px;
-            margin-bottom:10px;
+            font-size:32px;
+            margin-bottom:8px;
           ">
             🔴
           </div>
 
-          <strong>
+          <strong style="
+            color:#7f1111;
+            font-size:18px;
+          ">
             Live Aarti
           </strong>
 
           <p style="
             color:#666;
-            margin:10px 0;
+            margin:8px 0 15px;
           ">
             Live देखने के लिए नीचे button दबाएँ।
           </p>
@@ -887,15 +727,7 @@ function renderLiveVideo(url) {
             href="${escapeHtml(cleanLiveUrl)}"
             target="_blank"
             rel="noopener noreferrer"
-            style="
-              display:inline-block;
-              padding:11px 18px;
-              border-radius:12px;
-              background:#7f1111;
-              color:#fff;
-              text-decoration:none;
-              font-weight:700;
-            "
+            class="btn"
           >
             ▶️ Live देखें
           </a>
@@ -944,22 +776,19 @@ function renderLiveVideo(url) {
     `;
 
   });
+
 }
 
 
 /* =========================================================
    GALLERY
-   ========================================================= */
+========================================================= */
 
 function renderGallery(snapshot) {
 
   const grids = [
-    ...Array.from($$(
-      "#galleryGrid"
-    )),
-    ...Array.from($$(
-      "[data-gallery]"
-    ))
+    ...Array.from($$("#galleryGrid")),
+    ...Array.from($$("[data-gallery]"))
   ];
 
   if (!grids.length) {
@@ -1031,12 +860,7 @@ function renderGallery(snapshot) {
     if (!items.length) {
 
       grid.innerHTML = `
-        <div style="
-          grid-column:1/-1;
-          padding:35px 20px;
-          text-align:center;
-          color:#777;
-        ">
+        <div class="gallery-loading">
           अभी कोई फोटो उपलब्ध नहीं है।
         </div>
       `;
@@ -1050,12 +874,8 @@ function renderGallery(snapshot) {
 
         <article
           class="gallery-item"
-          style="
-            overflow:hidden;
-            border-radius:18px;
-            background:#fff;
-            box-shadow:0 8px 25px rgba(0,0,0,.08);
-          "
+          data-gallery-image="${escapeHtml(item.imageUrl)}"
+          data-gallery-title="${escapeHtml(item.title)}"
         >
 
           <div style="
@@ -1103,13 +923,154 @@ function renderGallery(snapshot) {
 
       `).join("");
 
+
+    initGalleryItems(grid);
+
   });
+
+}
+
+
+/* =========================================================
+   GALLERY ITEM CLICK
+========================================================= */
+
+function initGalleryItems(container) {
+
+  container
+    .querySelectorAll("[data-gallery-image]")
+    .forEach(item => {
+
+      item.addEventListener(
+        "click",
+        () => {
+
+          const imageUrl =
+            item.dataset.galleryImage;
+
+          const title =
+            item.dataset.galleryTitle ||
+            "Gallery Image";
+
+          openGalleryViewer(
+            imageUrl,
+            title
+          );
+
+        }
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   GALLERY VIEWER
+========================================================= */
+
+function openGalleryViewer(
+  imageUrl,
+  title = "Gallery Image"
+) {
+
+  const viewer =
+    $("#galleryViewer");
+
+  const image =
+    $("#galleryViewerImage");
+
+  if (!viewer || !image) {
+    return;
+  }
+
+  image.src =
+    imageUrl;
+
+  image.alt =
+    title;
+
+  viewer.style.display =
+    "flex";
+
+  document.body.style.overflow =
+    "hidden";
+
+}
+
+
+function closeGalleryViewer() {
+
+  const viewer =
+    $("#galleryViewer");
+
+  const image =
+    $("#galleryViewerImage");
+
+  if (viewer) {
+    viewer.style.display =
+      "none";
+  }
+
+  if (image) {
+    image.removeAttribute("src");
+  }
+
+  document.body.style.overflow =
+    "";
+
+}
+
+
+function initGalleryViewer() {
+
+  const viewer =
+    $("#galleryViewer");
+
+  const closeButton =
+    $("#galleryViewerClose");
+
+  if (!viewer) {
+    return;
+  }
+
+  if (closeButton) {
+
+    closeButton.addEventListener(
+      "click",
+      closeGalleryViewer
+    );
+
+  }
+
+  viewer.addEventListener(
+    "click",
+    event => {
+
+      if (event.target === viewer) {
+        closeGalleryViewer();
+      }
+
+    }
+  );
+
+  document.addEventListener(
+    "keydown",
+    event => {
+
+      if (event.key === "Escape") {
+        closeGalleryViewer();
+      }
+
+    }
+  );
+
 }
 
 
 /* =========================================================
    GALLERY REALTIME
-   ========================================================= */
+========================================================= */
 
 function listenGallery() {
 
@@ -1137,8 +1098,24 @@ function listenGallery() {
         error
       );
 
+      const grids = [
+        ...Array.from($$("#galleryGrid")),
+        ...Array.from($$("[data-gallery]"))
+      ];
+
+      grids.forEach(grid => {
+
+        grid.innerHTML = `
+          <div class="gallery-loading">
+            गैलरी लोड नहीं हो पाई।
+          </div>
+        `;
+
+      });
+
     }
   );
+
 }
 
 
@@ -1161,31 +1138,23 @@ async function loadGallery() {
     );
 
   }
+
 }
 
 
 /* =========================================================
    SCHEDULE / CALENDAR
-   ========================================================= */
+========================================================= */
 
 function renderSchedule(snapshot) {
 
   const containers = [
-    ...Array.from($$(
-      "#scheduleList"
-    )),
-    ...Array.from($$(
-      "[data-schedule]"
-    )),
-    ...Array.from($$(
-      ".schedule-list"
-    ))
+    ...Array.from($$("#scheduleList")),
+    ...Array.from($$("[data-schedule]")),
+    ...Array.from($$(".schedule-list"))
   ];
 
   if (!containers.length) {
-    console.warn(
-      "⚠️ Schedule container not found"
-    );
     return;
   }
 
@@ -1238,9 +1207,9 @@ function renderSchedule(snapshot) {
   });
 
 
-  /* -------------------------------------------------------
-     DATE SORT
-     ------------------------------------------------------- */
+  /* =======================================================
+     SORT
+  ======================================================= */
 
   items.sort((a, b) => {
 
@@ -1264,6 +1233,7 @@ function renderSchedule(snapshot) {
       return a.date.localeCompare(
         b.date
       );
+
     }
 
     return (
@@ -1279,11 +1249,7 @@ function renderSchedule(snapshot) {
     if (!items.length) {
 
       container.innerHTML = `
-        <div style="
-          padding:25px;
-          text-align:center;
-          color:#777;
-        ">
+        <div class="schedule-loading">
           अभी कोई कार्यक्रम उपलब्ध नहीं है।
         </div>
       `;
@@ -1298,26 +1264,9 @@ function renderSchedule(snapshot) {
         <div
           class="schedule-item"
           data-schedule-id="${escapeHtml(item.id)}"
-          style="
-            display:flex;
-            gap:15px;
-            padding:16px;
-            margin-bottom:12px;
-            border-radius:16px;
-            background:#fff;
-            box-shadow:0 5px 18px rgba(0,0,0,.06);
-          "
         >
 
-          <div style="
-            min-width:58px;
-            text-align:center;
-            padding:8px;
-            border-radius:12px;
-            background:#fff1d6;
-            color:#7f1111;
-            font-weight:800;
-          ">
+          <div class="schedule-date">
 
             <div>
               ${escapeHtml(item.day)}
@@ -1330,7 +1279,7 @@ function renderSchedule(snapshot) {
           </div>
 
 
-          <div style="flex:1;">
+          <div class="schedule-info">
 
             <div style="
               font-weight:800;
@@ -1370,12 +1319,13 @@ function renderSchedule(snapshot) {
       `).join("");
 
   });
+
 }
 
 
 /* =========================================================
    SCHEDULE REALTIME
-   ========================================================= */
+========================================================= */
 
 function listenSchedule() {
 
@@ -1405,6 +1355,7 @@ function listenSchedule() {
 
     }
   );
+
 }
 
 
@@ -1427,45 +1378,90 @@ async function loadSchedule() {
     );
 
   }
+
 }
 
 
 /* =========================================================
    GOOGLE MAP
-   ========================================================= */
+========================================================= */
 
 function initMapLinks() {
 
-  const mapLinks =
-    $$("[data-map-link], #mapLink");
+  const mapUrl =
+    "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(
+      "श्री श्री 108 माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय, बिहार"
+    );
+
+
+  /* Normal map links */
+
+  const mapLinks = [
+    ...Array.from($$("[data-map-link]")),
+    ...Array.from($$("#mapLink"))
+  ];
 
   mapLinks.forEach(link => {
 
-    if (link.tagName !== "A") {
-      return;
-    }
-
-    if (!link.href.includes("google")) {
+    if (link.tagName === "A") {
 
       link.href =
-        "https://www.google.com/maps/search/?api=1&query=श्री+श्री+108+माँ+मनोकामना+छोटी+दुर्गा+पूजा+समिति+चकशिवगंज+मौलानगर+सूर्यगढ़ा";
+        mapUrl;
 
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
+      link.target =
+        "_blank";
+
+      link.rel =
+        "noopener noreferrer";
+
     }
 
   });
+
+
+  /* Current HTML uses button #mapBtn */
+
+  const mapBtn =
+    $("#mapBtn");
+
+  if (mapBtn) {
+
+    mapBtn.addEventListener(
+      "click",
+      () => {
+
+        window.open(
+          mapUrl,
+          "_blank",
+          "noopener,noreferrer"
+        );
+
+      }
+    );
+
+  }
+
 }
 
 
 /* =========================================================
    LANGUAGE
-   ========================================================= */
+========================================================= */
 
 function initLanguageToggle() {
 
-  const buttons =
-    $$("#languageToggle, [data-language-toggle]");
+  const buttons = [
+    ...Array.from($$("#languageBtn")),
+    ...Array.from($$("#languageToggle")),
+    ...Array.from($$("[data-language-toggle]"))
+  ];
+
+
+  if (!buttons.length) {
+    return;
+  }
+
 
   buttons.forEach(button => {
 
@@ -1474,17 +1470,39 @@ function initLanguageToggle() {
       () => {
 
         const current =
-          document.documentElement.lang || "hi";
+          document.documentElement.lang ||
+          "hi";
+
 
         if (current === "hi") {
 
-          document.documentElement.lang = "en";
-          button.textContent = "हिंदी";
+          document.documentElement.lang =
+            "en";
+
+          buttons.forEach(btn => {
+            btn.textContent =
+              "हिंदी";
+          });
+
+          showToast(
+            "Language: English",
+            "info"
+          );
 
         } else {
 
-          document.documentElement.lang = "hi";
-          button.textContent = "English";
+          document.documentElement.lang =
+            "hi";
+
+          buttons.forEach(btn => {
+            btn.textContent =
+              "हिन्दी / English";
+          });
+
+          showToast(
+            "भाषा: हिन्दी",
+            "success"
+          );
 
         }
 
@@ -1492,689 +1510,51 @@ function initLanguageToggle() {
     );
 
   });
-}
 
-
-/* =========================================================
-   DONATION MODAL
-   ========================================================= */
-
-function initDonationModal() {
-
-  const modal =
-    $("#donationModal");
-
-  if (!modal) return;
-
-  $$(
-    "#donateBtn, [data-open-donation]"
-  ).forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        modal.style.display = "flex";
-        document.body.style.overflow = "hidden";
-
-      }
-    );
-
-  });
-
-
-  $$(
-    "#closeDonationModal, [data-close-donation]"
-  ).forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        modal.style.display = "none";
-        document.body.style.overflow = "";
-
-      }
-    );
-
-  });
-
-
-  modal.addEventListener(
-    "click",
-    event => {
-
-      if (event.target === modal) {
-
-        modal.style.display = "none";
-        document.body.style.overflow = "";
-
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   RECEIPT
-   ========================================================= */
-
-function generateReceiptNumber() {
-
-  const now = new Date();
-
-  const year =
-    now.getFullYear();
-
-  const time =
-    Date.now()
-      .toString()
-      .slice(-8);
-
-  const random =
-    Math.floor(
-      100 +
-      Math.random() * 900
-    );
-
-  return `DPG-${year}-${time}${random}`;
-}
-
-
-function formatReceiptDate(
-  date = new Date()
-) {
-
-  return date.toLocaleString(
-    "en-IN",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    }
-  );
-}
-
-
-function receiptEscape(value) {
-
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-
-/* =========================================================
-   DONATION FORM
-   ========================================================= */
-
-function initDonationForm() {
-
-  const form =
-    $("#donationForm");
-
-  if (!form) return;
-
-
-  form.addEventListener(
-    "submit",
-    async event => {
-
-      event.preventDefault();
-
-
-      const donorName =
-        safeText(
-          form.querySelector(
-            "#donorName, [name='donorName']"
-          )?.value
-        );
-
-
-      const amount =
-        Number(
-          form.querySelector(
-            "#donationAmount, [name='amount']"
-          )?.value
-        );
-
-
-      const purpose =
-        safeText(
-          form.querySelector(
-            "#donationPurpose, [name='purpose']"
-          )?.value,
-          "मंदिर सहयोग"
-        );
-
-
-      const utr =
-        safeText(
-          form.querySelector(
-            "#utrNumber, [name='utr']"
-          )?.value
-        );
-
-
-      if (!donorName) {
-
-        showToast(
-          "कृपया अपना नाम डालें।",
-          "error"
-        );
-
-        return;
-      }
-
-
-      if (!amount || amount <= 0) {
-
-        showToast(
-          "कृपया सही donation amount डालें।",
-          "error"
-        );
-
-        return;
-      }
-
-
-      if (!utr) {
-
-        showToast(
-          "कृपया UTR / Transaction Number डालें।",
-          "error"
-        );
-
-        return;
-      }
-
-
-      const submitButton =
-        form.querySelector(
-          "button[type='submit']"
-        );
-
-      if (submitButton) {
-        submitButton.disabled = true;
-      }
-
-
-      try {
-
-        const receiptNumber =
-          generateReceiptNumber();
-
-
-        const donationData = {
-
-          donorName,
-          amount,
-          purpose,
-          utr,
-          receiptNumber,
-          status: "pending",
-          createdAt: serverTimestamp()
-
-        };
-
-
-        await addDoc(
-          collection(db, "donations"),
-          donationData
-        );
-
-
-        showDonationReceipt({
-
-          ...donationData,
-
-          createdAt: new Date()
-
-        });
-
-
-        form.reset();
-
-
-      } catch (error) {
-
-        console.error(
-          "❌ Donation error:",
-          error
-        );
-
-        showToast(
-          "Donation submit नहीं हो पाई।",
-          "error"
-        );
-
-      } finally {
-
-        if (submitButton) {
-          submitButton.disabled = false;
-        }
-
-      }
-
-    }
-  );
-}
-
-
-/* =========================================================
-   DONATION RECEIPT
-   ========================================================= */
-
-function showDonationReceipt(data) {
-
-  const oldModal =
-    document.getElementById(
-      "donationReceiptModal"
-    );
-
-  if (oldModal) {
-    oldModal.remove();
-  }
-
-
-  const modal =
-    document.createElement("div");
-
-  modal.id =
-    "donationReceiptModal";
-
-
-  modal.innerHTML = `
-
-    <div style="
-      position:fixed;
-      inset:0;
-      z-index:100000;
-      background:rgba(0,0,0,.65);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-    ">
-
-      <div style="
-        width:min(520px,100%);
-        max-height:90vh;
-        overflow:auto;
-        background:white;
-        border-radius:22px;
-        padding:24px;
-      ">
-
-        <div style="
-          text-align:center;
-          color:#7f1111;
-        ">
-
-          <div style="font-size:30px;">
-            🛕
-          </div>
-
-          <h2 style="margin:5px 0;">
-            श्री श्री 108 माँ मनोकामना
-          </h2>
-
-          <div>
-            छोटी दुर्गा पूजा समिति
-          </div>
-
-          <div style="
-            font-size:12px;
-            color:#777;
-            margin-top:4px;
-          ">
-            चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय)
-          </div>
-
-        </div>
-
-
-        <hr style="
-          margin:18px 0;
-          border:0;
-          border-top:1px solid #eee;
-        ">
-
-
-        <div style="
-          text-align:center;
-          color:#166534;
-          font-weight:800;
-          margin-bottom:15px;
-        ">
-          ✓ Donation Submitted
-        </div>
-
-
-        <div style="
-          background:#fff8ed;
-          border-radius:15px;
-          padding:15px;
-        ">
-
-          <p>
-            <strong>Receipt No.:</strong>
-            ${receiptEscape(data.receiptNumber)}
-          </p>
-
-          <p>
-            <strong>नाम:</strong>
-            ${receiptEscape(data.donorName)}
-          </p>
-
-          <p>
-            <strong>Amount:</strong>
-            ₹${receiptEscape(data.amount)}
-          </p>
-
-          <p>
-            <strong>Purpose:</strong>
-            ${receiptEscape(data.purpose)}
-          </p>
-
-          <p>
-            <strong>UTR:</strong>
-            ${receiptEscape(data.utr)}
-          </p>
-
-          <p>
-            <strong>Date:</strong>
-            ${receiptEscape(
-              formatReceiptDate(
-                data.createdAt instanceof Date
-                  ? data.createdAt
-                  : new Date()
-              )
-            )}
-          </p>
-
-        </div>
-
-
-        <p style="
-          text-align:center;
-          color:#777;
-          font-size:12px;
-          line-height:1.6;
-        ">
-          धन्यवाद। यह donation acknowledgement receipt है।
-          अंतिम verification समिति द्वारा की जाएगी।
-        </p>
-
-
-        <div style="
-          display:flex;
-          gap:10px;
-        ">
-
-          <button
-            type="button"
-            id="printReceiptBtn"
-            style="
-              flex:1;
-              border:0;
-              border-radius:12px;
-              padding:12px;
-              background:#7f1111;
-              color:white;
-              font-weight:800;
-              cursor:pointer;
-            "
-          >
-            🖨️ Print / Save PDF
-          </button>
-
-          <button
-            type="button"
-            id="closeReceiptBtn"
-            style="
-              flex:1;
-              border:1px solid #ddd;
-              border-radius:12px;
-              padding:12px;
-              background:white;
-              font-weight:800;
-              cursor:pointer;
-            "
-          >
-            बंद करें
-          </button>
-
-        </div>
-
-      </div>
-
-    </div>
-
-  `;
-
-
-  document.body.appendChild(modal);
-
-
-  $("#printReceiptBtn")
-    ?.addEventListener(
-      "click",
-      () => printDonationReceipt(data)
-    );
-
-
-  $("#closeReceiptBtn")
-    ?.addEventListener(
-      "click",
-      () => modal.remove()
-    );
-}
-
-
-/* =========================================================
-   PRINT RECEIPT
-   ========================================================= */
-
-function printDonationReceipt(data) {
-
-  const printWindow =
-    window.open(
-      "",
-      "_blank",
-      "width=700,height=800"
-    );
-
-  if (!printWindow) {
-
-    showToast(
-      "Popup blocked है। Browser में popup allow करें।",
-      "error"
-    );
-
-    return;
-  }
-
-
-  printWindow.document.write(`
-
-    <!DOCTYPE html>
-
-    <html lang="hi">
-
-    <head>
-
-      <meta charset="UTF-8">
-
-      <title>Donation Receipt</title>
-
-      <style>
-
-        * {
-          box-sizing:border-box;
-        }
-
-        body {
-          margin:0;
-          padding:30px;
-          font-family:Arial,sans-serif;
-        }
-
-        .receipt {
-          max-width:650px;
-          margin:auto;
-          border:2px solid #7f1111;
-          border-radius:18px;
-          padding:25px;
-        }
-
-        h1 {
-          color:#7f1111;
-          text-align:center;
-        }
-
-        .sub {
-          text-align:center;
-          color:#666;
-        }
-
-        .success {
-          text-align:center;
-          color:#166534;
-          font-weight:800;
-          margin:20px 0;
-        }
-
-        table {
-          width:100%;
-          border-collapse:collapse;
-        }
-
-        td {
-          padding:11px 5px;
-          border-bottom:1px solid #eee;
-        }
-
-        td:first-child {
-          font-weight:700;
-          width:40%;
-        }
-
-        .note {
-          margin-top:20px;
-          color:#666;
-          font-size:12px;
-          text-align:center;
-        }
-
-        @media print {
-          body {
-            padding:0;
-          }
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <div class="receipt">
-
-        <h1>
-          श्री श्री 108 माँ मनोकामना
-        </h1>
-
-        <div class="sub">
-          छोटी दुर्गा पूजा समिति
-        </div>
-
-        <div class="sub">
-          चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय)
-        </div>
-
-        <div class="success">
-          ✓ Donation Submitted
-        </div>
-
-        <table>
-
-          <tr>
-            <td>Receipt No.</td>
-            <td>${receiptEscape(data.receiptNumber)}</td>
-          </tr>
-
-          <tr>
-            <td>Donor Name</td>
-            <td>${receiptEscape(data.donorName)}</td>
-          </tr>
-
-          <tr>
-            <td>Amount</td>
-            <td>₹${receiptEscape(data.amount)}</td>
-          </tr>
-
-          <tr>
-            <td>Purpose</td>
-            <td>${receiptEscape(data.purpose)}</td>
-          </tr>
-
-          <tr>
-            <td>UTR</td>
-            <td>${receiptEscape(data.utr)}</td>
-          </tr>
-
-          <tr>
-            <td>Date</td>
-            <td>
-              ${receiptEscape(
-                formatReceiptDate(
-                  data.createdAt instanceof Date
-                    ? data.createdAt
-                    : new Date()
-                )
-              )}
-            </td>
-          </tr>
-
-        </table>
-
-        <div class="note">
-          धन्यवाद। यह donation acknowledgement receipt है।
-        </div>
-
-      </div>
-
-      <script>
-        window.onload = function() {
-          window.print();
-        };
-      <\/script>
-
-    </body>
-
-    </html>
-
-  `);
-
-  printWindow.document.close();
 }
 
 
 /* =========================================================
    PWA INSTALL
-   ========================================================= */
+========================================================= */
+
+function isAppInstalled() {
+
+  const standalone =
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches;
+
+  const fullscreen =
+    window.matchMedia(
+      "(display-mode: fullscreen)"
+    ).matches;
+
+  const minimalUi =
+    window.matchMedia(
+      "(display-mode: minimal-ui)"
+    ).matches;
+
+  const iosStandalone =
+    window.navigator.standalone === true;
+
+
+  return (
+    standalone ||
+    fullscreen ||
+    minimalUi ||
+    iosStandalone
+  );
+
+}
+
 
 function createInstallButton() {
 
-  if (installButton) return;
+  if (installButton) {
+    return installButton;
+  }
+
 
   installButton =
     document.getElementById(
@@ -2198,23 +1578,27 @@ function createInstallButton() {
 
     installButton.style.cssText = `
       position:fixed;
+      left:18px;
       right:18px;
       bottom:18px;
       z-index:99990;
       border:0;
       border-radius:14px;
-      padding:13px 18px;
+      padding:14px 18px;
       background:#7f1111;
       color:#fff;
       font-weight:800;
       font-size:14px;
       box-shadow:0 10px 30px rgba(0,0,0,.22);
       cursor:pointer;
+      justify-content:center;
+      align-items:center;
     `;
 
     document.body.appendChild(
       installButton
     );
+
   }
 
 
@@ -2222,34 +1606,198 @@ function createInstallButton() {
     "inline-flex";
 
 
-  installButton.onclick =
-    installApp;
+  installButton.classList.remove(
+    "install-ready",
+    "install-unavailable"
+  );
+
+
+  installButton.textContent =
+    "📱 App Install करें";
+
+
+  if (
+    !installButton.dataset.installBound
+  ) {
+
+    installButton.dataset.installBound =
+      "true";
+
+    installButton.addEventListener(
+      "click",
+      handleInstallClick
+    );
+
+  }
+
+
+  if (isAppInstalled()) {
+
+    installButton.style.display =
+      "none";
+
+    return installButton;
+
+  }
+
+
+  setInstallButtonState(
+    Boolean(deferredInstallPrompt)
+  );
+
+
+  return installButton;
+
 }
 
 
-async function installApp() {
+function setInstallButtonState(ready) {
+
+  if (!installButton) {
+    return;
+  }
+
+
+  if (isAppInstalled()) {
+
+    installButton.style.display =
+      "none";
+
+    return;
+
+  }
+
+
+  installButton.style.display =
+    "inline-flex";
+
+
+  if (ready) {
+
+    installButton.disabled =
+      false;
+
+    installButton.classList.add(
+      "install-ready"
+    );
+
+    installButton.classList.remove(
+      "install-unavailable"
+    );
+
+    installButton.textContent =
+      "📱 App Install करें";
+
+    installButton.title =
+      "इस ऐप को अपने फोन में Install करें";
+
+    return;
+
+  }
+
+
+  installButton.disabled =
+    false;
+
+  installButton.classList.remove(
+    "install-ready"
+  );
+
+  installButton.classList.add(
+    "install-unavailable"
+  );
+
+  installButton.textContent =
+    "📱 App Install करें";
+
+}
+
+
+async function handleInstallClick() {
 
   if (deferredInstallPrompt) {
 
-    deferredInstallPrompt.prompt();
+    try {
 
-    const result =
-      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt.prompt();
 
-    console.log(
-      "📱 Install result:",
-      result.outcome
-    );
+      const result =
+        await deferredInstallPrompt.userChoice;
 
-    deferredInstallPrompt = null;
+      console.log(
+        "📱 Install result:",
+        result?.outcome
+      );
+
+
+      if (
+        result &&
+        result.outcome === "accepted"
+      ) {
+
+        showToast(
+          "App install किया जा रहा है ❤️",
+          "success"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "❌ Install prompt error:",
+        error
+      );
+
+      showToast(
+        "Install prompt अभी उपलब्ध नहीं है।",
+        "error"
+      );
+
+    } finally {
+
+      deferredInstallPrompt =
+        null;
+
+      setInstallButtonState(
+        false
+      );
+
+    }
 
     return;
   }
 
+
+  showInstallInstructions();
+
+}
+
+
+function showInstallInstructions() {
+
+  const isAndroid =
+    /Android/i.test(
+      navigator.userAgent
+    );
+
+
+  if (isAndroid) {
+
+    showToast(
+      "Chrome के ⋮ Menu में 'Install app' या 'Add to Home screen' चुनें।",
+      "info"
+    );
+
+    return;
+  }
+
+
   showToast(
-    "Chrome menu में Install app देखें।",
+    "Browser के Menu में 'Install app' / 'Add to Home screen' देखें।",
     "info"
   );
+
 }
 
 
@@ -2257,14 +1805,25 @@ window.addEventListener(
   "beforeinstallprompt",
   event => {
 
+    console.log(
+      "📱 beforeinstallprompt received"
+    );
+
+
     event.preventDefault();
 
     deferredInstallPrompt =
       event;
 
+
     if (!installButton) {
       createInstallButton();
     }
+
+
+    setInstallButtonState(
+      true
+    );
 
   }
 );
@@ -2274,11 +1833,22 @@ window.addEventListener(
   "appinstalled",
   () => {
 
-    deferredInstallPrompt = null;
+    console.log(
+      "✅ MAA MANOKAMANA TEMPLE installed"
+    );
+
+
+    deferredInstallPrompt =
+      null;
+
 
     if (installButton) {
-      installButton.style.display = "none";
+
+      installButton.style.display =
+        "none";
+
     }
+
 
     showToast(
       "App successfully install हो गया ❤️",
@@ -2291,36 +1861,77 @@ window.addEventListener(
 
 function checkIfAppIsInstalled() {
 
-  const standalone =
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches;
-
-  const iosStandalone =
-    window.navigator.standalone === true;
-
-  if (standalone || iosStandalone) {
-
-    if (installButton) {
-      installButton.style.display = "none";
-    }
-
-    return true;
+  if (!installButton) {
+    return false;
   }
 
+
+  if (isAppInstalled()) {
+
+    installButton.style.display =
+      "none";
+
+    return true;
+
+  }
+
+
+  installButton.style.display =
+    "inline-flex";
+
   return false;
+
+}
+
+
+/* =========================================================
+   DISPLAY MODE CHANGE
+========================================================= */
+
+try {
+
+  const displayModeMedia =
+    window.matchMedia(
+      "(display-mode: standalone)"
+    );
+
+
+  displayModeMedia.addEventListener(
+    "change",
+    () => {
+
+      checkIfAppIsInstalled();
+
+    }
+  );
+
+} catch (error) {
+
+  console.warn(
+    "⚠️ Display mode listener unavailable"
+  );
+
 }
 
 
 /* =========================================================
    SERVICE WORKER
-   ========================================================= */
+========================================================= */
 
 function registerServiceWorker() {
 
-  if (!("serviceWorker" in navigator)) {
+  if (
+    !("serviceWorker" in navigator)
+  ) {
+
+    console.warn(
+      "⚠️ Service Worker not supported"
+    );
+
     return;
+
   }
+
 
   window.addEventListener(
     "load",
@@ -2336,10 +1947,29 @@ function registerServiceWorker() {
             }
           );
 
+
         console.log(
           "✅ Service Worker:",
           registration.scope
         );
+
+
+        /*
+          New SW available होने पर update
+          check करना
+        */
+
+        registration.addEventListener(
+          "updatefound",
+          () => {
+
+            console.log(
+              "🔄 New Service Worker update found"
+            );
+
+          }
+        );
+
 
       } catch (error) {
 
@@ -2352,12 +1982,13 @@ function registerServiceWorker() {
 
     }
   );
+
 }
 
 
 /* =========================================================
    START APP
-   ========================================================= */
+========================================================= */
 
 document.addEventListener(
   "DOMContentLoaded",
@@ -2367,50 +1998,65 @@ document.addEventListener(
       "🚀 MAA MANOKAMANA TEMPLE APP STARTING"
     );
 
+
     console.log(
       "Firebase:",
       firebaseConfig?.projectId
     );
 
 
-    /* Basic */
+    /* =====================================================
+       BASIC
+    ===================================================== */
 
     initMobileMenu();
+
     initLanguageToggle();
+
     initMapLinks();
 
-
-    /* Donation */
-
-    initDonationModal();
-    initDonationForm();
+    initGalleryViewer();
 
 
-    /* PWA */
+    /* =====================================================
+       PWA
+    ===================================================== */
 
     createInstallButton();
+
     checkIfAppIsInstalled();
 
 
-    /* Temple settings */
+    /* =====================================================
+       TEMPLE SETTINGS
+    ===================================================== */
 
     await loadTempleSettings();
+
     listenTempleSettings();
 
 
-    /* Gallery */
+    /* =====================================================
+       GALLERY
+    ===================================================== */
 
     await loadGallery();
+
     listenGallery();
 
 
-    /* Schedule / Calendar */
+    /* =====================================================
+       SCHEDULE
+    ===================================================== */
 
     await loadSchedule();
+
     listenSchedule();
 
 
-    /* Service Worker */
+    /* =====================================================
+       SERVICE WORKER
+    ===================================================== */
 
     registerServiceWorker();
 
