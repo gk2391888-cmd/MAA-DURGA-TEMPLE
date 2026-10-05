@@ -420,7 +420,11 @@ img {
 ========================================================= */
 
 #installAppBtn {
-  display: none;
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
   gap: 8px;
 
   min-height: 48px;
@@ -430,22 +434,60 @@ img {
   border: 1px solid rgba(127, 17, 17, 0.12);
 
   white-space: nowrap;
+
+  position: relative;
+
+  z-index: 20;
+
+  cursor: pointer;
+
+  user-select: none;
+
+  -webkit-tap-highlight-color: transparent;
+
+  animation:
+    installButtonIn 0.45s ease both,
+    installButtonPulse 2.8s ease-in-out infinite;
 }
 
-#installAppBtn:not([style*="display: none"]) {
-  animation: installButtonIn 0.35s ease;
+#installAppBtn:hover {
+  transform: translateY(-3px) scale(1.01);
+
+  box-shadow:
+    0 15px 32px rgba(127, 17, 17, 0.25);
+}
+
+#installAppBtn:active {
+  transform: scale(0.97);
 }
 
 @keyframes installButtonIn {
+
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
 
   to {
     opacity: 1;
     transform: translateY(0);
   }
+
+}
+
+@keyframes installButtonPulse {
+
+  0%,
+  100% {
+    box-shadow:
+      0 12px 28px rgba(127, 17, 17, 0.20);
+  }
+
+  50% {
+    box-shadow:
+      0 15px 34px rgba(127, 17, 17, 0.30);
+  }
+
 }
 
 
@@ -2090,6 +2132,12 @@ footer small {
 
   #installAppBtn {
     width: 100%;
+
+    min-height: 50px;
+
+    padding: 12px 18px;
+
+    font-size: 13px;
   }
 
   .today-card-section {
