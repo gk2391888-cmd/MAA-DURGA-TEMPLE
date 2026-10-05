@@ -94,7 +94,6 @@
           संपर्क
         </a>
 
-
         <button
           class="language-btn"
           id="languageBtn"
@@ -113,7 +112,6 @@
        MAIN
   ========================== -->
   <main>
-
 
     <!-- =========================
          HERO
@@ -172,13 +170,17 @@
           </a>
 
 
-          <!-- PWA INSTALL -->
+          <!-- =========================
+               PWA INSTALL BUTTON
+               app.js इसे automatically
+               control करेगा
+          ========================== -->
 
           <button
             type="button"
             class="btn btn-primary"
             id="installAppBtn"
-            style="display:none;"
+            aria-label="App Install करें"
           >
             📱 App Install करें
           </button>
@@ -405,6 +407,7 @@
         <button
           class="btn btn-primary full-width"
           id="donateBtn"
+          type="button"
         >
           ❤️ Donate Now
         </button>
@@ -628,6 +631,7 @@
           <button
             class="outline-btn"
             id="mapBtn"
+            type="button"
           >
             📍 View Location
           </button>
@@ -716,6 +720,7 @@
       <button
         class="modal-close"
         id="closeModal"
+        type="button"
         aria-label="Close"
       >
         ×
@@ -744,6 +749,7 @@
           type="text"
           id="donorName"
           placeholder="नाम (Optional)"
+          autocomplete="name"
         >
 
 
@@ -797,6 +803,7 @@
           id="utr"
           placeholder="Transaction ID / UTR"
           required
+          autocomplete="off"
         >
 
 
@@ -821,6 +828,8 @@
   <div
     class="toast"
     id="toast"
+    role="status"
+    aria-live="polite"
   ></div>
 
 
