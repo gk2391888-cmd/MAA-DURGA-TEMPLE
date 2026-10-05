@@ -13,8 +13,8 @@
 
   <meta name="theme-color" content="#7f1111">
 
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="logo.png">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./logo.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,7 +24,7 @@
     rel="stylesheet"
   >
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
@@ -39,7 +39,7 @@
       <a href="#home" class="brand">
 
         <img
-          src="logo.png"
+          src="./logo.png"
           alt="माँ मनोकामना मंदिर Logo"
         >
 
@@ -171,6 +171,18 @@
             ❤️ Donate Now
           </a>
 
+
+          <!-- PWA INSTALL -->
+
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="installAppBtn"
+            style="display:none;"
+          >
+            📱 App Install करें
+          </button>
+
         </div>
 
       </div>
@@ -181,7 +193,7 @@
         <div class="logo-glow"></div>
 
         <img
-          src="logo.png"
+          src="./logo.png"
           alt="माँ मनोकामना"
         >
 
@@ -496,18 +508,10 @@
       </div>
 
 
-      <!--
-        IMPORTANT:
-        app.js इसी ID में Firestore से
-        Cloudinary वाली photos render करेगा.
-      -->
-
       <div
         class="gallery-grid"
         id="galleryGrid"
       >
-
-        <!-- Initial loading message -->
 
         <div class="gallery-placeholder">
 
@@ -590,7 +594,13 @@
 
 
           <p>
-            संपर्क नंबर जल्द अपडेट होगा।
+            <a
+              id="contactPhone"
+              href="#"
+              style="color:inherit; text-decoration:none;"
+            >
+              संपर्क नंबर जल्द अपडेट होगा।
+            </a>
           </p>
 
         </div>
@@ -634,13 +644,14 @@
   <!-- =========================
        FOOTER
   ========================== -->
+
   <footer>
 
     <div class="footer-logo">
 
       <img
-        src="logo.png"
-        alt="Logo"
+        src="./logo.png"
+        alt="माँ मनोकामना मंदिर Logo"
       >
 
     </div>
@@ -664,6 +675,26 @@
     <div class="footer-line"></div>
 
 
+    <div class="footer-company">
+
+      <strong>
+        A Product by THE TECH HUB
+      </strong>
+
+      <span>
+        MSME Registered: BR-19-0017611
+      </span>
+
+      <span>
+        Building Useful Products from Bihar for Bharat
+      </span>
+
+    </div>
+
+
+    <div class="footer-line"></div>
+
+
     <small>
       © <span id="year"></span> माँ मनोकामना मंदिर
     </small>
@@ -674,6 +705,7 @@
   <!-- =========================
        DONATION MODAL
   ========================== -->
+
   <div
     class="modal"
     id="donationModal"
@@ -785,6 +817,7 @@
   <!-- =========================
        TOAST
   ========================== -->
+
   <div
     class="toast"
     id="toast"
@@ -794,9 +827,10 @@
   <!-- =========================
        MAIN JAVASCRIPT
   ========================== -->
+
   <script
     type="module"
-    src="app.js"
+    src="./app.js"
   ></script>
 
 </body>
