@@ -1,5 +1,3 @@
-// firebase-config.js
-
 const firebaseConfig = {
   apiKey: "AIzaSyATSYlbo-kywIB61Bgg3ehguwij65TpGw4",
   authDomain: "maa-durga-temple.firebaseapp.com",
