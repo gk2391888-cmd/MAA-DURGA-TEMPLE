@@ -1,7 +1,8 @@
 /* =========================================================
    MAA MANOKAMANA TEMPLE
    PUBLIC WEBSITE APP.JS
-   FINAL VERSION
+   UPDATED FINAL VERSION
+   DATE-BY-DATE CALENDAR
    DONATION SYSTEM REMOVED
 ========================================================= */
 
@@ -163,11 +164,6 @@ function initMobileMenu() {
     $("#mobileMenuBtn") ||
     document.querySelector(".menu-btn") ||
     document.querySelector(".hamburger");
-
-  /*
-    Current HTML:
-    #mobileNav
-  */
 
   const nav =
     $("#mobileNav") ||
@@ -1144,36 +1140,131 @@ async function loadGallery() {
 
 /* =========================================================
    SCHEDULE / CALENDAR
+   DATE-BY-DATE CONTINUOUS CALENDAR
 ========================================================= */
 
-function renderSchedule(snapshot) {
+function parseScheduleDate(dateString) {
 
-  const containers = [
-    ...Array.from($$("#scheduleList")),
-    ...Array.from($$("[data-schedule]")),
-    ...Array.from($$(".schedule-list"))
-  ];
-
-  if (!containers.length) {
-    return;
+  if (!dateString) {
+    return null;
   }
 
+  const value =
+    String(dateString).trim();
+
+  /*
+    Firestore date format:
+    YYYY-MM-DD
+
+    We manually create the date
+    to avoid timezone problems.
+  */
+
+  const match =
+    value.match(
+      /^(\d{4})-(\d{2})-(\d{2})$/
+    );
+
+  if (!match) {
+
+    const fallback =
+      new Date(value);
+
+    return isNaN(fallback.getTime())
+      ? null
+      : fallback;
+
+  }
+
+  const year =
+    Number(match[1]);
+
+  const month =
+    Number(match[2]) - 1;
+
+  const day =
+    Number(match[3]);
+
+  return new Date(
+    year,
+    month,
+    day
+  );
+
+}
+
+
+/* =========================================================
+   FORMAT DATE
+========================================================= */
+
+function formatCalendarDate(date) {
+
+  if (!date) {
+    return {
+      number: "",
+      weekday: "",
+      month: ""
+    };
+  }
+
+  const number =
+    String(
+      date.getDate()
+    ).padStart(2, "0");
+
+  const weekday =
+    date.toLocaleDateString(
+      "hi-IN",
+      {
+        weekday: "short"
+      }
+    );
+
+  const month =
+    date.toLocaleDateString(
+      "hi-IN",
+      {
+        month: "short"
+      }
+    );
+
+  return {
+    number,
+    weekday,
+    month
+  };
+
+}
+
+
+/* =========================================================
+   SCHEDULE ITEM DATA
+========================================================= */
+
+function getScheduleItems(snapshot) {
 
   const items = [];
-
 
   snapshot.forEach(docSnap => {
 
     const data =
       docSnap.data();
 
+    const date =
+      safeText(data.date);
+
+    const parsedDate =
+      parseScheduleDate(date);
+
     items.push({
 
       id:
         docSnap.id,
 
-      date:
-        safeText(data.date),
+      date,
+
+      parsedDate,
 
       day:
         safeText(data.day),
@@ -1207,33 +1298,51 @@ function renderSchedule(snapshot) {
   });
 
 
-  /* =======================================================
-     SORT
-  ======================================================= */
+  /*
+    IMPORTANT:
+    Date-wise ascending order.
+    Example:
+    11
+    12
+    13
+    14
+    15
+  */
 
   items.sort((a, b) => {
 
-    if (a.date && b.date) {
+    if (
+      a.parsedDate &&
+      b.parsedDate
+    ) {
 
-      const da =
-        new Date(a.date);
+      const dateDifference =
+        a.parsedDate.getTime() -
+        b.parsedDate.getTime();
 
-      const dbDate =
-        new Date(b.date);
-
-      if (
-        !isNaN(da.getTime()) &&
-        !isNaN(dbDate.getTime())
-      ) {
-
-        return da - dbDate;
-
+      if (dateDifference !== 0) {
+        return dateDifference;
       }
 
-      return a.date.localeCompare(
-        b.date
-      );
+      /*
+        Same date:
+        Sort by time if available.
+      */
 
+      return String(a.time)
+        .localeCompare(
+          String(b.time),
+          "hi"
+        );
+
+    }
+
+    if (a.parsedDate) {
+      return -1;
+    }
+
+    if (b.parsedDate) {
+      return 1;
     }
 
     return (
@@ -1243,82 +1352,458 @@ function renderSchedule(snapshot) {
 
   });
 
+  return items;
 
-  containers.forEach(container => {
+}
 
-    if (!items.length) {
+
+/* =========================================================
+   CREATE DATE RANGE
+========================================================= */
+
+function createDateRange(
+  startDate,
+  endDate
+) {
+
+  const dates = [];
+
+  if (
+    !startDate ||
+    !endDate
+  ) {
+    return dates;
+  }
+
+  const current =
+    new Date(startDate);
+
+  current.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const last =
+    new Date(endDate);
+
+  last.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+
+  /*
+    Safety:
+    Don't generate an extremely large
+    calendar accidentally.
+  */
+
+  let safetyCounter = 0;
+
+  while (
+    current <= last &&
+    safetyCounter < 366
+  ) {
+
+    dates.push(
+      new Date(current)
+    );
+
+    current.setDate(
+      current.getDate() + 1
+    );
+
+    safetyCounter++;
+
+  }
+
+  return dates;
+
+}
+
+
+/* =========================================================
+   RENDER SCHEDULE
+========================================================= */
+
+function renderSchedule(snapshot) {
+
+  const containers = [
+    ...Array.from($$("#scheduleList")),
+    ...Array.from($$("[data-schedule]")),
+    ...Array.from($$(".schedule-list"))
+  ];
+
+  if (!containers.length) {
+    return;
+  }
+
+
+  const items =
+    getScheduleItems(snapshot);
+
+
+  /* =======================================================
+     NO DATA
+  ======================================================= */
+
+  if (!items.length) {
+
+    containers.forEach(container => {
 
       container.innerHTML = `
-        <div class="schedule-loading">
+        <div class="schedule-loading" style="
+          padding:24px;
+          text-align:center;
+          color:#777;
+        ">
           अभी कोई कार्यक्रम उपलब्ध नहीं है।
         </div>
       `;
 
+    });
+
+    return;
+  }
+
+
+  /* =======================================================
+     DATE RANGE
+     
+     Example:
+     11 uploaded
+     15 uploaded
+
+     Output:
+     11
+     12
+     13
+     14
+     15
+  ======================================================= */
+
+  const datesWithEvents =
+    items
+      .map(item => item.parsedDate)
+      .filter(Boolean);
+
+
+  let firstDate =
+    new Date(
+      Math.min(
+        ...datesWithEvents.map(
+          date => date.getTime()
+        )
+      )
+    );
+
+  let lastDate =
+    new Date(
+      Math.max(
+        ...datesWithEvents.map(
+          date => date.getTime()
+        )
+      )
+    );
+
+
+  /*
+    Optional:
+    Calendar starts from the first
+    uploaded date and ends at the
+    last uploaded date.
+  */
+
+  const dateRange =
+    createDateRange(
+      firstDate,
+      lastDate
+    );
+
+
+  /* =======================================================
+     GROUP EVENTS BY DATE
+  ======================================================= */
+
+  const eventsByDate =
+    new Map();
+
+
+  items.forEach(item => {
+
+    if (!item.parsedDate) {
       return;
     }
 
+    const key =
+      item.date;
 
-    container.innerHTML =
-      items.map(item => `
+    if (!eventsByDate.has(key)) {
 
-        <div
-          class="schedule-item"
-          data-schedule-id="${escapeHtml(item.id)}"
-        >
+      eventsByDate.set(
+        key,
+        []
+      );
 
-          <div class="schedule-date">
+    }
 
-            <div>
-              ${escapeHtml(item.day)}
+    eventsByDate
+      .get(key)
+      .push(item);
+
+  });
+
+
+  /* =======================================================
+     BUILD DATE-BY-DATE HTML
+  ======================================================= */
+
+  const calendarHtml =
+    dateRange.map(date => {
+
+      const year =
+        date.getFullYear();
+
+      const month =
+        String(
+          date.getMonth() + 1
+        ).padStart(2, "0");
+
+      const day =
+        String(
+          date.getDate()
+        ).padStart(2, "0");
+
+      const dateKey =
+        `${year}-${month}-${day}`;
+
+
+      const dateInfo =
+        formatCalendarDate(date);
+
+
+      const events =
+        eventsByDate.get(
+          dateKey
+        ) || [];
+
+
+      /* ===================================================
+         DATE WITH EVENTS
+      =================================================== */
+
+      if (events.length) {
+
+        return `
+          <div
+            class="schedule-item schedule-date-card has-event"
+            data-schedule-date="${escapeHtml(dateKey)}"
+            style="
+              display:flex;
+              gap:14px;
+              align-items:flex-start;
+              margin-bottom:14px;
+            "
+          >
+
+            <div
+              class="schedule-date"
+              style="
+                min-width:72px;
+                text-align:center;
+                flex-shrink:0;
+              "
+            >
+
+              <div style="
+                font-size:26px;
+                line-height:1;
+                font-weight:900;
+                color:#7f1111;
+              ">
+                ${escapeHtml(dateInfo.number)}
+              </div>
+
+              <div style="
+                margin-top:5px;
+                font-size:12px;
+                font-weight:800;
+                color:#9a5b00;
+              ">
+                ${escapeHtml(dateInfo.weekday)}
+              </div>
+
+              <small style="
+                display:block;
+                margin-top:2px;
+                color:#777;
+                font-weight:700;
+              ">
+                ${escapeHtml(dateInfo.month)}
+              </small>
+
             </div>
 
-            <small>
-              ${escapeHtml(item.month)}
+
+            <div
+              class="schedule-info"
+              style="
+                flex:1;
+                min-width:0;
+              "
+            >
+
+              ${events.map(item => `
+
+                <div
+                  class="schedule-event"
+                  style="
+                    padding:13px 14px;
+                    margin-bottom:8px;
+                    border-radius:14px;
+                    background:#fff8ed;
+                    border:1px solid rgba(127,17,17,.10);
+                  "
+                >
+
+                  <div style="
+                    font-weight:800;
+                    color:#40100d;
+                    margin-bottom:5px;
+                  ">
+                    ${escapeHtml(item.title)}
+                  </div>
+
+                  <div style="
+                    font-size:13px;
+                    color:#8a5a00;
+                    font-weight:700;
+                    margin-bottom:5px;
+                  ">
+                    🕐 ${escapeHtml(item.time)}
+                  </div>
+
+                  ${
+                    item.description
+                      ? `
+                        <div style="
+                          font-size:13px;
+                          color:#666;
+                          line-height:1.5;
+                        ">
+                          ${escapeHtml(item.description)}
+                        </div>
+                      `
+                      : ""
+                  }
+
+                </div>
+
+              `).join("")}
+
+            </div>
+
+          </div>
+        `;
+
+      }
+
+
+      /* ===================================================
+         DATE WITHOUT EVENT
+      =================================================== */
+
+      return `
+        <div
+          class="schedule-item schedule-date-card no-event"
+          data-schedule-date="${escapeHtml(dateKey)}"
+          style="
+            display:flex;
+            gap:14px;
+            align-items:center;
+            margin-bottom:10px;
+            opacity:.78;
+          "
+        >
+
+          <div
+            class="schedule-date"
+            style="
+              min-width:72px;
+              text-align:center;
+              flex-shrink:0;
+            "
+          >
+
+            <div style="
+              font-size:25px;
+              line-height:1;
+              font-weight:900;
+              color:#777;
+            ">
+              ${escapeHtml(dateInfo.number)}
+            </div>
+
+            <div style="
+              margin-top:5px;
+              font-size:12px;
+              font-weight:800;
+              color:#999;
+            ">
+              ${escapeHtml(dateInfo.weekday)}
+            </div>
+
+            <small style="
+              display:block;
+              margin-top:2px;
+              color:#aaa;
+              font-weight:700;
+            ">
+              ${escapeHtml(dateInfo.month)}
             </small>
 
           </div>
 
 
-          <div class="schedule-info">
-
-            <div style="
-              font-weight:800;
-              color:#40100d;
-              margin-bottom:5px;
-            ">
-              ${escapeHtml(item.title)}
-            </div>
-
-            <div style="
-              font-size:13px;
-              color:#8a5a00;
-              font-weight:700;
-              margin-bottom:5px;
-            ">
-              🕐 ${escapeHtml(item.time)}
-            </div>
-
-            ${
-              item.description
-                ? `
-                  <div style="
-                    font-size:13px;
-                    color:#666;
-                    line-height:1.5;
-                  ">
-                    ${escapeHtml(item.description)}
-                  </div>
-                `
-                : ""
-            }
-
+          <div style="
+            flex:1;
+            padding:12px 14px;
+            border-radius:12px;
+            background:#fafafa;
+            border:1px dashed #ddd;
+            color:#888;
+            font-size:13px;
+          ">
+            इस दिन कोई कार्यक्रम नहीं है।
           </div>
 
         </div>
+      `;
 
-      `).join("");
+    }).join("");
+
+
+  /* =======================================================
+     RENDER TO ALL CALENDAR CONTAINERS
+  ======================================================= */
+
+  containers.forEach(container => {
+
+    container.innerHTML =
+      calendarHtml;
 
   });
+
+
+  console.log(
+    "📅 Date-by-date calendar rendered:",
+    dateRange.length,
+    "dates"
+  );
 
 }
 
@@ -1352,6 +1837,26 @@ function listenSchedule() {
         "❌ Schedule error:",
         error
       );
+
+      const containers = [
+        ...Array.from($$("#scheduleList")),
+        ...Array.from($$("[data-schedule]")),
+        ...Array.from($$(".schedule-list"))
+      ];
+
+      containers.forEach(container => {
+
+        container.innerHTML = `
+          <div class="schedule-loading" style="
+            padding:24px;
+            text-align:center;
+            color:#b91c1c;
+          ">
+            कैलेंडर लोड नहीं हो पाया।
+          </div>
+        `;
+
+      });
 
     }
   );
@@ -1953,11 +2458,6 @@ function registerServiceWorker() {
           registration.scope
         );
 
-
-        /*
-          New SW available होने पर update
-          check करना
-        */
 
         registration.addEventListener(
           "updatefound",
