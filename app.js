@@ -1,9 +1,6 @@
-/* =========================================================
-   MAA MANOKAMANA TEMPLE
-   Main App JavaScript
-   Firebase + Firestore Integration
-   Donation Receipt System
-========================================================= */
+// ============================================================
+// MAA MANOKAMANA TEMPLE - APP.JS
+// ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
 
@@ -12,63 +9,29 @@ import {
   collection,
   addDoc,
   getDocs,
-  query,
-  orderBy,
-  limit,
   doc,
   getDoc,
+  setDoc,
   onSnapshot,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-import firebaseConfig from "./firebase-config.js";
+import { firebaseConfig } from "./firebase-config.js";
 
 
-/* =========================================================
-   FIREBASE INITIALIZATION
-========================================================= */
+// ============================================================
+// FIREBASE
+// ============================================================
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-
-/* =========================================================
-   DOM HELPERS
-========================================================= */
-
-const $ = (id) => document.getElementById(id);
-
-const menuBtn = $("menuBtn");
-const navMenu = $("navMenu");
-
-const yearEl = $("year");
-
-const donationModal = $("donationModal");
-const donateBtn = $("donateBtn");
-const closeModal = $("closeModal");
-const donationForm = $("donationForm");
-
-const todayAartiTime = $("todayAartiTime");
-const liveAartiTime = $("liveAartiTime");
-const upiId = $("upiId");
-
-const qrBox = $("qrBox");
-const liveVideo = $("liveVideo");
-const scheduleList = $("scheduleList");
-
-/* Gallery */
-const galleryGrid = $("galleryGrid");
-
-/* Contact */
-const contactPhone = $("contactPhone");
-
-const mapBtn = $("mapBtn");
-const languageBtn = $("languageBtn");
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getFirestore(firebaseApp);
 
 
-/* =========================================================
-   TEMPLE SETTINGS
-========================================================= */
+// ============================================================
+// GLOBAL SETTINGS
+// ============================================================
 
 let templeSettings = {
   upiId: "",
@@ -78,1078 +41,1380 @@ let templeSettings = {
   contactNumber: ""
 };
 
-
-/* =========================================================
-   PWA INSTALL
-========================================================= */
-
 let deferredInstallPrompt = null;
 let installButton = null;
 
 
-/* =========================================================
-   YEAR
-========================================================= */
+// ============================================================
+// BASIC HELPERS
+// ============================================================
 
-if (yearEl) {
-  yearEl.textContent = new Date().getFullYear();
+function $(selector) {
+  return document.querySelector(selector);
 }
 
-
-/* =========================================================
-   MOBILE MENU
-========================================================= */
-
-if (menuBtn && navMenu) {
-
-  menuBtn.addEventListener("click", () => {
-
-    navMenu.classList.toggle("active");
-
-    const isOpen =
-      navMenu.classList.contains("active");
-
-    menuBtn.setAttribute(
-      "aria-expanded",
-      isOpen ? "true" : "false"
-    );
-
-  });
-
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-
-/* =========================================================
-   CLOSE MOBILE MENU AFTER NAVIGATION
-========================================================= */
-
-document.querySelectorAll("#navMenu a").forEach(link => {
-
-  link.addEventListener("click", () => {
-
-    if (navMenu) {
-      navMenu.classList.remove("active");
-    }
-
-  });
-
-});
-
-
-/* =========================================================
-   TOAST
-========================================================= */
-
-function showToast(message) {
-
-  const toast = $("toast");
+function showToast(message, type = "success") {
+  let toast = document.getElementById("appToast");
 
   if (!toast) {
-    alert(message);
-    return;
+    toast = document.createElement("div");
+    toast.id = "appToast";
+
+    toast.style.cssText = `
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%) translateY(20px);
+      z-index:99999;
+      max-width:calc(100vw - 32px);
+      padding:13px 18px;
+      border-radius:14px;
+      background:#111827;
+      color:#fff;
+      font-size:14px;
+      font-weight:700;
+      line-height:1.4;
+      box-shadow:0 15px 40px rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition:.3s ease;
+      text-align:center;
+    `;
+
+    document.body.appendChild(toast);
   }
 
   toast.textContent = message;
-  toast.classList.add("show");
 
-  clearTimeout(window.__toastTimer);
+  if (type === "error") {
+    toast.style.background = "#991b1b";
+  } else {
+    toast.style.background = "#166534";
+  }
 
-  window.__toastTimer = setTimeout(() => {
-    toast.classList.remove("show");
-  }, 3500);
-
-}
-
-
-/* =========================================================
-   DONATION MODAL
-========================================================= */
-
-if (donateBtn && donationModal) {
-
-  donateBtn.addEventListener("click", () => {
-
-    donationModal.classList.add("active");
-
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(-50%) translateY(0)";
   });
 
+  clearTimeout(toast._timer);
+
+  toast._timer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(20px)";
+  }, 3200);
 }
 
 
-if (closeModal && donationModal) {
+// ============================================================
+// MOBILE MENU
+// ============================================================
 
-  closeModal.addEventListener("click", () => {
+function initMobileMenu() {
+  const menuBtn =
+    document.querySelector("#menuBtn") ||
+    document.querySelector(".menu-toggle") ||
+    document.querySelector("[data-menu-toggle]");
 
-    donationModal.classList.remove("active");
+  const nav =
+    document.querySelector("#mainNav") ||
+    document.querySelector(".main-nav") ||
+    document.querySelector("nav");
 
+  if (!menuBtn || !nav) return;
+
+  menuBtn.addEventListener("click", () => {
+    nav.classList.toggle("active");
+    menuBtn.classList.toggle("active");
   });
 
+  nav.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      nav.classList.remove("active");
+      menuBtn.classList.remove("active");
+    });
+  });
 }
 
 
-/* Close modal when clicking outside */
+// ============================================================
+// DONATION MODAL
+// ============================================================
 
-if (donationModal) {
+function getDonationModal() {
+  return (
+    document.getElementById("donationModal") ||
+    document.querySelector(".donation-modal")
+  );
+}
 
-  donationModal.addEventListener("click", (event) => {
+function openDonationModal() {
+  const modal = getDonationModal();
 
-    if (event.target === donationModal) {
+  if (!modal) {
+    showToast("Donation section उपलब्ध नहीं है।", "error");
+    return;
+  }
 
-      donationModal.classList.remove("active");
+  modal.style.display = "flex";
+  modal.classList.add("active");
+  document.body.style.overflow = "hidden";
 
+  updateDonationUPI();
+  renderDonationQR();
+}
+
+function closeDonationModal() {
+  const modal = getDonationModal();
+
+  if (!modal) return;
+
+  modal.classList.remove("active");
+  modal.style.display = "none";
+  document.body.style.overflow = "";
+}
+
+function initDonationModal() {
+  const openButtons = document.querySelectorAll(
+    "#donateBtn, [data-donate], .donate-btn"
+  );
+
+  openButtons.forEach(button => {
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      openDonationModal();
+    });
+  });
+
+  const closeButtons = document.querySelectorAll(
+    "#closeDonationModal, .close-donation-modal, [data-close-donation]"
+  );
+
+  closeButtons.forEach(button => {
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      closeDonationModal();
+    });
+  });
+
+  const modal = getDonationModal();
+
+  if (modal) {
+    modal.addEventListener("click", event => {
+      if (
+        event.target === modal ||
+        event.target.classList.contains("donation-modal-overlay")
+      ) {
+        closeDonationModal();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+      closeDonationModal();
+      closeDonationReceipt();
+    }
+  });
+}
+
+
+// ============================================================
+// UPI
+// ============================================================
+
+function updateDonationUPI() {
+  const upiElements = document.querySelectorAll(
+    "#donationUPI, [data-upi-id], .donation-upi"
+  );
+
+  upiElements.forEach(element => {
+    if (templeSettings.upiId) {
+      element.textContent = templeSettings.upiId;
+    }
+  });
+}
+
+
+// ============================================================
+// QR CODE
+// ============================================================
+
+function renderDonationQR() {
+  const qrContainers = document.querySelectorAll(
+    "#donationQR, [data-donation-qr], .donation-qr"
+  );
+
+  qrContainers.forEach(container => {
+    container.innerHTML = "";
+
+    if (!templeSettings.qrUrl) {
+      container.innerHTML = `
+        <div style="
+          padding:20px;
+          border-radius:14px;
+          background:#f8fafc;
+          color:#64748b;
+          font-size:13px;
+          text-align:center;
+        ">
+          QR Code जल्द अपडेट होगा।
+        </div>
+      `;
+      return;
     }
 
-  });
+    const img = document.createElement("img");
 
+    img.src = templeSettings.qrUrl;
+    img.alt = "Donation QR Code";
+    img.loading = "lazy";
+
+    img.style.cssText = `
+      width:min(260px,100%);
+      height:auto;
+      display:block;
+      margin:auto;
+      border-radius:16px;
+      background:#fff;
+      padding:10px;
+      box-shadow:0 8px 30px rgba(0,0,0,.10);
+    `;
+
+    img.onerror = () => {
+      container.innerHTML = `
+        <div style="
+          padding:20px;
+          border-radius:14px;
+          background:#fef2f2;
+          color:#991b1b;
+          font-size:13px;
+          text-align:center;
+        ">
+          QR Code load नहीं हो पाया।
+        </div>
+      `;
+    };
+
+    container.appendChild(img);
+  });
 }
 
 
-/* Close modal with Escape */
-
-document.addEventListener("keydown", (event) => {
-
-  if (
-    event.key === "Escape" &&
-    donationModal &&
-    donationModal.classList.contains("active")
-  ) {
-
-    donationModal.classList.remove("active");
-
-  }
-
-});
-
-
-/* =========================================================
-   DONATION RECEIPT
-========================================================= */
-
-/*
-   Receipt number format:
-
-   DPG-2026-XXXXXX
-
-   Example:
-   DPG-2026-482913
-*/
+// ============================================================
+// RECEIPT NUMBER
+// ============================================================
 
 function generateReceiptNumber() {
+  const now = new Date();
 
-  const year = new Date().getFullYear();
+  const year = now.getFullYear();
 
-  const randomNumber =
-    Math.floor(
-      100000 +
-      Math.random() * 900000
-    );
+  const timestampPart = String(Date.now()).slice(-7);
 
-  return `DPG-${year}-${randomNumber}`;
+  const randomPart = Math.floor(100 + Math.random() * 900);
 
+  return `DPG-${year}-${timestampPart}${randomPart}`;
 }
 
 
-/* =========================================================
-   FORMAT RECEIPT DATE
-========================================================= */
+// ============================================================
+// RECEIPT DATE
+// ============================================================
 
-function formatReceiptDate(date = new Date()) {
+function formatReceiptDate(dateValue) {
+  const date =
+    dateValue instanceof Date
+      ? dateValue
+      : new Date(dateValue || Date.now());
 
-  try {
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  });
+}
 
-    return date.toLocaleString(
-      "en-IN",
-      {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true
-      }
-    );
 
-  } catch {
+// ============================================================
+// RECEIPT STYLES
+// ============================================================
 
-    return String(date);
-
+function injectReceiptStyles() {
+  if (document.getElementById("donationReceiptStyles")) {
+    return;
   }
 
+  const style = document.createElement("style");
+
+  style.id = "donationReceiptStyles";
+
+  style.textContent = `
+    .donation-receipt-overlay {
+      position:fixed;
+      inset:0;
+      z-index:100000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:rgba(15,23,42,.72);
+      backdrop-filter:blur(8px);
+      overflow:auto;
+    }
+
+    .donation-receipt-card {
+      width:min(560px,100%);
+      max-height:calc(100vh - 36px);
+      overflow:auto;
+      background:#fff;
+      color:#1f2937;
+      border-radius:22px;
+      box-shadow:0 30px 80px rgba(0,0,0,.30);
+      animation:receiptCardIn .3s ease both;
+    }
+
+    @keyframes receiptCardIn {
+      from {
+        opacity:0;
+        transform:translateY(20px) scale(.97);
+      }
+      to {
+        opacity:1;
+        transform:translateY(0) scale(1);
+      }
+    }
+
+    .receipt-top {
+      background:linear-gradient(135deg,#7f1111,#991b1b);
+      color:#fff;
+      padding:28px 24px 24px;
+      text-align:center;
+      position:relative;
+    }
+
+    .receipt-top::after {
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:-8px;
+      height:16px;
+      background:
+        radial-gradient(circle at 10px 0, transparent 9px, #fff 10px)
+        repeat-x;
+      background-size:20px 16px;
+    }
+
+    .receipt-logo {
+      width:72px;
+      height:72px;
+      object-fit:cover;
+      border-radius:50%;
+      background:#fff;
+      padding:4px;
+      margin:0 auto 12px;
+      display:block;
+      box-shadow:0 8px 20px rgba(0,0,0,.20);
+    }
+
+    .receipt-title {
+      font-size:22px;
+      font-weight:900;
+      margin:0 0 4px;
+    }
+
+    .receipt-subtitle {
+      font-size:13px;
+      opacity:.92;
+      margin:0;
+      line-height:1.5;
+    }
+
+    .receipt-address {
+      font-size:11px;
+      opacity:.82;
+      margin-top:7px;
+    }
+
+    .receipt-status {
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      margin-top:17px;
+      padding:8px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.25);
+      font-size:12px;
+      font-weight:800;
+    }
+
+    .receipt-body {
+      padding:28px 24px 24px;
+    }
+
+    .receipt-event {
+      text-align:center;
+      margin-bottom:20px;
+    }
+
+    .receipt-event strong {
+      display:block;
+      font-size:17px;
+      color:#7f1111;
+    }
+
+    .receipt-event span {
+      display:block;
+      font-size:12px;
+      color:#64748b;
+      margin-top:4px;
+    }
+
+    .receipt-info {
+      border:1px solid #e5e7eb;
+      border-radius:16px;
+      overflow:hidden;
+    }
+
+    .receipt-row {
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      padding:12px 14px;
+      border-bottom:1px solid #eef2f7;
+      font-size:13px;
+    }
+
+    .receipt-row:last-child {
+      border-bottom:0;
+    }
+
+    .receipt-label {
+      color:#64748b;
+      font-weight:600;
+    }
+
+    .receipt-value {
+      color:#111827;
+      font-weight:800;
+      text-align:right;
+      word-break:break-word;
+    }
+
+    .receipt-amount {
+      margin:18px 0;
+      padding:18px;
+      border-radius:16px;
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      text-align:center;
+    }
+
+    .receipt-amount-label {
+      font-size:11px;
+      color:#9a3412;
+      font-weight:800;
+      text-transform:uppercase;
+      letter-spacing:.5px;
+    }
+
+    .receipt-amount-value {
+      font-size:30px;
+      line-height:1.1;
+      font-weight:950;
+      color:#9a3412;
+      margin-top:5px;
+    }
+
+    .receipt-note {
+      margin-top:18px;
+      padding:14px;
+      border-radius:14px;
+      background:#f8fafc;
+      color:#475569;
+      font-size:11px;
+      line-height:1.65;
+      text-align:center;
+    }
+
+    .receipt-footer {
+      margin-top:18px;
+      text-align:center;
+      color:#94a3b8;
+      font-size:10px;
+      line-height:1.5;
+    }
+
+    .receipt-actions {
+      display:flex;
+      gap:10px;
+      padding:0 24px 24px;
+    }
+
+    .receipt-action-btn {
+      flex:1;
+      min-height:46px;
+      border:0;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:800;
+      transition:.2s ease;
+    }
+
+    .receipt-action-btn:hover {
+      transform:translateY(-1px);
+    }
+
+    .receipt-print-btn {
+      background:#7f1111;
+      color:#fff;
+    }
+
+    .receipt-close-btn {
+      background:#f1f5f9;
+      color:#334155;
+    }
+
+    @media(max-width:520px) {
+      .donation-receipt-overlay {
+        padding:10px;
+        align-items:flex-start;
+      }
+
+      .donation-receipt-card {
+        margin-top:10px;
+        border-radius:18px;
+        max-height:calc(100vh - 20px);
+      }
+
+      .receipt-top {
+        padding:22px 16px 20px;
+      }
+
+      .receipt-body {
+        padding:24px 16px 18px;
+      }
+
+      .receipt-actions {
+        padding:0 16px 16px;
+        flex-direction:column;
+      }
+
+      .receipt-row {
+        padding:11px 12px;
+        font-size:12px;
+      }
+
+      .receipt-title {
+        font-size:19px;
+      }
+
+      .receipt-amount-value {
+        font-size:27px;
+      }
+    }
+
+    @media print {
+      .donation-receipt-overlay {
+        position:static;
+        background:#fff;
+        padding:0;
+        display:block;
+      }
+
+      .donation-receipt-card {
+        width:100%;
+        max-height:none;
+        overflow:visible;
+        box-shadow:none;
+        border-radius:0;
+      }
+
+      .receipt-actions {
+        display:none !important;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
 
-/* =========================================================
-   ESCAPE RECEIPT HTML
-========================================================= */
+// ============================================================
+// RECEIPT ESCAPE
+// ============================================================
 
 function receiptEscape(value) {
-
-  if (
-    value === null ||
-    value === undefined
-  ) {
-
-    return "";
-
-  }
-
-  return String(value)
-
-    .replace(/&/g, "&amp;")
-
-    .replace(/</g, "&lt;")
-
-    .replace(/>/g, "&gt;")
-
-    .replace(/"/g, "&quot;")
-
-    .replace(/'/g, "&#039;");
-
+  return escapeHtml(value);
 }
 
 
-/* =========================================================
-   SHOW DONATION RECEIPT
-========================================================= */
+// ============================================================
+// SHOW DONATION RECEIPT
+// ============================================================
 
 function showDonationReceipt(data) {
+  injectReceiptStyles();
 
-  const existingReceipt =
-    $("donationReceiptModal");
+  closeDonationReceipt();
 
-  if (existingReceipt) {
-    existingReceipt.remove();
-  }
+  const overlay = document.createElement("div");
 
+  overlay.className = "donation-receipt-overlay";
+  overlay.id = "donationReceiptModal";
 
-  const receiptModal =
-    document.createElement("div");
+  const logoSrc =
+    document.querySelector('link[rel="icon"]')?.href ||
+    "./logo.png";
 
-  receiptModal.id =
-    "donationReceiptModal";
+  const templeName =
+    "श्री श्री १०८ माँ मनोकामना छोटी दुर्गा पूजा समिति";
 
+  const address =
+    "चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय)";
 
-  receiptModal.innerHTML = `
+  const currentYear = new Date().getFullYear();
 
-    <div class="donation-receipt-overlay">
+  overlay.innerHTML = `
+    <div class="donation-receipt-card" role="dialog" aria-modal="true">
 
-      <div class="donation-receipt-card">
+      <div class="receipt-top">
 
-        <div class="receipt-top">
+        <img
+          class="receipt-logo"
+          src="${receiptEscape(logoSrc)}"
+          alt="Temple Logo"
+          onerror="this.style.display='none';"
+        >
 
-          <div class="receipt-temple-icon">
-            🛕
-          </div>
+        <h2 class="receipt-title">
+          ${receiptEscape(templeName)}
+        </h2>
 
-          <h2>
-            श्री श्री 108 माँ मनोकामना
-          </h2>
+        <p class="receipt-subtitle">
+          Donation Acknowledgement
+        </p>
 
-          <h3>
-            छोटी दुर्गा पूजा समिति
-          </h3>
-
-          <p>
-            चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय), बिहार
-          </p>
-
-          <div class="receipt-puja-title">
-            दुर्गा पूजा 2026
-          </div>
-
+        <div class="receipt-address">
+          ${receiptEscape(address)}
         </div>
 
-
-        <div class="receipt-status pending">
+        <div class="receipt-status">
           ✓ Donation Submitted
         </div>
 
+      </div>
 
-        <div class="receipt-number-row">
 
-          <span>
-            Receipt No.
-          </span>
+      <div class="receipt-body">
 
-          <strong>
-            ${receiptEscape(data.receiptNumber)}
-          </strong>
+        <div class="receipt-event">
+          <strong>दुर्गा पूजा ${currentYear}</strong>
+          <span>Donation Receipt / Acknowledgement</span>
+        </div>
+
+
+        <div class="receipt-amount">
+
+          <div class="receipt-amount-label">
+            Donation Amount
+          </div>
+
+          <div class="receipt-amount-value">
+            ₹${receiptEscape(
+              Number(data.amount || 0).toLocaleString("en-IN")
+            )}
+          </div>
 
         </div>
 
 
-        <div class="receipt-divider"></div>
-
-
-        <div class="receipt-details">
+        <div class="receipt-info">
 
           <div class="receipt-row">
+            <span class="receipt-label">
+              Receipt No.
+            </span>
 
-            <span>Donor Name</span>
+            <span class="receipt-value">
+              ${receiptEscape(data.receiptNumber)}
+            </span>
+          </div>
 
-            <strong>
+
+          <div class="receipt-row">
+            <span class="receipt-label">
+              Donor Name
+            </span>
+
+            <span class="receipt-value">
               ${receiptEscape(data.donorName)}
-            </strong>
-
+            </span>
           </div>
 
 
           <div class="receipt-row">
+            <span class="receipt-label">
+              Purpose
+            </span>
 
-            <span>Donation Purpose</span>
-
-            <strong>
-              ${receiptEscape(data.purpose)}
-            </strong>
-
-          </div>
-
-
-          <div class="receipt-row amount-row">
-
-            <span>Donation Amount</span>
-
-            <strong>
-              ₹${receiptEscape(
-                Number(data.amount).toLocaleString("en-IN")
-              )}
-            </strong>
-
+            <span class="receipt-value">
+              ${receiptEscape(data.purpose || "General Donation")}
+            </span>
           </div>
 
 
           <div class="receipt-row">
+            <span class="receipt-label">
+              UTR / Transaction ID
+            </span>
 
-            <span>Transaction / UTR</span>
-
-            <strong class="receipt-utr">
+            <span class="receipt-value">
               ${receiptEscape(data.utr)}
-            </strong>
-
+            </span>
           </div>
 
 
           <div class="receipt-row">
+            <span class="receipt-label">
+              Date & Time
+            </span>
 
-            <span>Date & Time</span>
-
-            <strong>
+            <span class="receipt-value">
               ${receiptEscape(data.dateTime)}
-            </strong>
+            </span>
+          </div>
 
+
+          <div class="receipt-row">
+            <span class="receipt-label">
+              Status
+            </span>
+
+            <span class="receipt-value">
+              Pending Verification
+            </span>
           </div>
 
         </div>
 
 
         <div class="receipt-note">
-
-          <strong>धन्यवाद 🙏</strong>
-
-          <p>
-            माँ दुर्गा पूजा समिति में आपके सहयोग के लिए
-            हृदय से धन्यवाद।
-          </p>
-
-          <small>
-            यह receipt donation submission का acknowledgement है।
-            Final verification committee द्वारा की जाएगी।
-          </small>
-
+          धन्यवाद! आपकी donation details सफलतापूर्वक submit हो गई हैं।
+          यह acknowledgement है। UTR / transaction की final verification
+          समिति द्वारा की जाएगी।
         </div>
 
 
-        <div class="receipt-actions">
-
-          <button
-            type="button"
-            id="printDonationReceipt"
-            class="receipt-print-btn"
-          >
-            🖨️ Print / Save PDF
-          </button>
-
-          <button
-            type="button"
-            id="closeDonationReceipt"
-            class="receipt-close-btn"
-          >
-            बंद करें
-          </button>
-
+        <div class="receipt-footer">
+          ${receiptEscape(templeName)}<br>
+          Digital Donation Receipt • ${currentYear}
         </div>
+
+      </div>
+
+
+      <div class="receipt-actions">
+
+        <button
+          type="button"
+          class="receipt-action-btn receipt-print-btn"
+          id="printDonationReceiptBtn"
+        >
+          🖨️ Print / Save PDF
+        </button>
+
+        <button
+          type="button"
+          class="receipt-action-btn receipt-close-btn"
+          id="closeDonationReceiptBtn"
+        >
+          बंद करें
+        </button>
 
       </div>
 
     </div>
-
   `;
 
+  document.body.appendChild(overlay);
 
-  document.body.appendChild(receiptModal);
-
-
-  /* Print button */
-
-  const printBtn =
-    $("printDonationReceipt");
+  document.body.style.overflow = "hidden";
 
 
-  if (printBtn) {
+  const printButton =
+    document.getElementById("printDonationReceiptBtn");
 
-    printBtn.addEventListener(
-      "click",
-      () => {
-
-        printDonationReceipt(
-          data
-        );
-
-      }
-    );
-
+  if (printButton) {
+    printButton.addEventListener("click", () => {
+      printDonationReceipt(data);
+    });
   }
 
 
-  /* Close button */
+  const closeButton =
+    document.getElementById("closeDonationReceiptBtn");
 
-  const closeReceiptBtn =
-    $("closeDonationReceipt");
-
-
-  if (closeReceiptBtn) {
-
-    closeReceiptBtn.addEventListener(
-      "click",
-      () => {
-
-        receiptModal.remove();
-
-      }
-    );
-
+  if (closeButton) {
+    closeButton.addEventListener("click", () => {
+      closeDonationReceipt();
+    });
   }
 
 
-  /* Click outside receipt */
-
-  const overlay =
-    receiptModal.querySelector(
-      ".donation-receipt-overlay"
-    );
-
-
-  if (overlay) {
-
-    overlay.addEventListener(
-      "click",
-      (event) => {
-
-        if (
-          event.target === overlay
-        ) {
-
-          receiptModal.remove();
-
-        }
-
-      }
-    );
-
-  }
-
+  overlay.addEventListener("click", event => {
+    if (event.target === overlay) {
+      closeDonationReceipt();
+    }
+  });
 }
 
 
-/* =========================================================
-   PRINT DONATION RECEIPT
-========================================================= */
+// ============================================================
+// CLOSE RECEIPT
+// ============================================================
+
+function closeDonationReceipt() {
+  const modal =
+    document.getElementById("donationReceiptModal");
+
+  if (modal) {
+    modal.remove();
+  }
+
+  document.body.style.overflow = "";
+}
+
+
+// ============================================================
+// PRINT / SAVE PDF
+// ============================================================
 
 function printDonationReceipt(data) {
-
-  const printWindow =
-    window.open(
-      "",
-      "_blank",
-      "width=800,height=900"
-    );
-
+  const printWindow = window.open(
+    "",
+    "_blank",
+    "width=800,height=900"
+  );
 
   if (!printWindow) {
-
     showToast(
-      "Print window open नहीं हो सकी। Browser popup allow करें।"
+      "Print window blocked है। Browser में pop-up allow करें।",
+      "error"
     );
-
     return;
-
   }
 
+  const logoSrc =
+    document.querySelector('link[rel="icon"]')?.href ||
+    "./logo.png";
 
-  const amount =
-    Number(data.amount)
-      .toLocaleString("en-IN");
+  const currentYear = new Date().getFullYear();
 
+  const templeName =
+    "श्री श्री १०८ माँ मनोकामना छोटी दुर्गा पूजा समिति";
+
+  const address =
+    "चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय)";
+
+
+  printWindow.document.open();
 
   printWindow.document.write(`
-
-    <!DOCTYPE html>
-
-    <html lang="hi">
-
-    <head>
-
-      <meta charset="UTF-8">
-
-      <title>
-        Donation Receipt - ${receiptEscape(data.receiptNumber)}
-      </title>
-
-      <style>
-
-        * {
-          box-sizing: border-box;
-        }
-
-        body {
-          margin: 0;
-          padding: 30px;
-          background: #f5f5f5;
-          font-family:
-            Arial,
-            "Noto Sans Devanagari",
-            sans-serif;
-          color: #24120f;
-        }
-
-        .receipt {
-          width: 100%;
-          max-width: 720px;
-          margin: 0 auto;
-          background: #ffffff;
-          border: 2px solid #7f1111;
-          border-radius: 18px;
-          overflow: hidden;
-        }
-
-        .header {
-          text-align: center;
-          padding: 28px 25px 20px;
-          border-bottom: 1px solid #ead6d0;
-        }
-
-        .icon {
-          font-size: 42px;
-          margin-bottom: 8px;
-        }
-
-        h1 {
-          margin: 0;
-          font-size: 25px;
-          color: #7f1111;
-        }
-
-        h2 {
-          margin: 6px 0;
-          font-size: 18px;
-        }
-
-        .address {
-          margin: 8px 0 0;
-          font-size: 13px;
-          color: #666;
-          line-height: 1.6;
-        }
-
-        .puja {
-          display: inline-block;
-          margin-top: 15px;
-          padding: 8px 16px;
-          border-radius: 30px;
-          background: #fff3e5;
-          color: #7f1111;
-          font-weight: 800;
-        }
-
-        .status {
-          margin: 22px 25px 10px;
-          padding: 10px;
-          text-align: center;
-          border-radius: 8px;
-          background: #fff8df;
-          color: #765600;
-          font-weight: 800;
-        }
-
-        .receipt-no {
-          display: flex;
-          justify-content: space-between;
-          gap: 20px;
-          padding: 12px 25px;
-          font-size: 14px;
-        }
-
-        .divider {
-          height: 1px;
-          background: #ead6d0;
-          margin: 5px 25px;
-        }
-
-        .details {
-          padding: 12px 25px;
-        }
-
-        .row {
-          display: flex;
-          justify-content: space-between;
-          gap: 20px;
-          padding: 13px 0;
-          border-bottom: 1px dashed #ddd;
-        }
-
-        .row:last-child {
-          border-bottom: 0;
-        }
-
-        .row span {
-          color: #666;
-        }
-
-        .row strong {
-          text-align: right;
-          word-break: break-word;
-        }
-
-        .amount {
-          font-size: 22px;
-          color: #7f1111;
-        }
-
-        .note {
-          margin: 10px 25px 25px;
-          padding: 18px;
-          background: #fffaf4;
-          border-radius: 12px;
-          text-align: center;
-          line-height: 1.6;
-        }
-
-        .note strong {
-          display: block;
-          color: #7f1111;
-          font-size: 18px;
-          margin-bottom: 5px;
-        }
-
-        .note p {
-          margin: 5px 0;
-        }
-
-        .note small {
-          display: block;
-          margin-top: 10px;
-          color: #777;
-        }
-
-        @media print {
-
-          body {
-            background: #ffffff;
-            padding: 0;
-          }
-
-          .receipt {
-            max-width: none;
-            border: 2px solid #7f1111;
-          }
-
-        }
-
-      </style>
-
-    </head>
-
-    <body>
-
-      <div class="receipt">
-
-        <div class="header">
-
-          <div class="icon">
-            🛕
-          </div>
-
-          <h1>
-            श्री श्री 108 माँ मनोकामना
-          </h1>
-
-          <h2>
-            छोटी दुर्गा पूजा समिति
-          </h2>
-
-          <div class="address">
-            चकशिवगंज, मौलानगर, सूर्यगढ़ा (लखीसराय), बिहार
-          </div>
-
-          <div class="puja">
-            दुर्गा पूजा 2026
-          </div>
-
-        </div>
-
-
-        <div class="status">
-          ✓ Donation Submitted — Verification Pending
-        </div>
-
-
-        <div class="receipt-no">
-
-          <span>
-            Receipt No.
-          </span>
-
-          <strong>
-            ${receiptEscape(data.receiptNumber)}
-          </strong>
-
-        </div>
-
-
-        <div class="divider"></div>
-
-
-        <div class="details">
-
-          <div class="row">
-
-            <span>
-              Donor Name
-            </span>
-
-            <strong>
-              ${receiptEscape(data.donorName)}
-            </strong>
-
-          </div>
-
-
-          <div class="row">
-
-            <span>
-              Donation Purpose
-            </span>
-
-            <strong>
-              ${receiptEscape(data.purpose)}
-            </strong>
-
-          </div>
-
-
-          <div class="row">
-
-            <span>
-              Donation Amount
-            </span>
-
-            <strong class="amount">
-              ₹${receiptEscape(amount)}
-            </strong>
-
-          </div>
-
-
-          <div class="row">
-
-            <span>
-              Transaction / UTR
-            </span>
-
-            <strong>
-              ${receiptEscape(data.utr)}
-            </strong>
-
-          </div>
-
-
-          <div class="row">
-
-            <span>
-              Date & Time
-            </span>
-
-            <strong>
-              ${receiptEscape(data.dateTime)}
-            </strong>
-
-          </div>
-
-        </div>
-
-
-        <div class="note">
-
-          <strong>
-            धन्यवाद 🙏
-          </strong>
-
-          <p>
-            माँ दुर्गा पूजा समिति में आपके सहयोग के लिए
-            हृदय से धन्यवाद।
-          </p>
-
-          <small>
-            यह receipt donation submission का acknowledgement है।
-            Final verification committee द्वारा की जाएगी।
-          </small>
-
-        </div>
-
-      </div>
-
-
-      <script>
-
-        window.onload = function() {
-          window.print();
-        };
-
-      <\/script>
-
-    </body>
-
-    </html>
-
-  `);
-
-
-  printWindow.document.close();
+<!DOCTYPE html>
+
+<html lang="hi">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>
+Donation Receipt - ${receiptEscape(data.receiptNumber)}
+</title>
+
+<style>
+
+* {
+  box-sizing:border-box;
+}
+
+body {
+  margin:0;
+  padding:25px;
+  background:#f1f5f9;
+  font-family:
+    Arial,
+    "Noto Sans Devanagari",
+    sans-serif;
+  color:#1f2937;
+}
+
+.receipt {
+  width:100%;
+  max-width:650px;
+  margin:0 auto;
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:18px;
+  overflow:hidden;
+}
+
+.header {
+  text-align:center;
+  background:#7f1111;
+  color:#fff;
+  padding:28px 20px;
+}
+
+.logo {
+  width:76px;
+  height:76px;
+  object-fit:cover;
+  border-radius:50%;
+  background:#fff;
+  padding:4px;
+  margin-bottom:12px;
+}
+
+h1 {
+  margin:0;
+  font-size:22px;
+}
+
+.subtitle {
+  margin:7px 0 0;
+  font-size:13px;
+}
+
+.address {
+  margin-top:6px;
+  font-size:11px;
+  opacity:.9;
+}
+
+.event {
+  text-align:center;
+  padding:22px 20px 8px;
+}
+
+.event strong {
+  display:block;
+  color:#7f1111;
+  font-size:18px;
+}
+
+.event span {
+  color:#64748b;
+  font-size:12px;
+}
+
+.amount {
+  margin:18px 25px;
+  padding:18px;
+  background:#fff7ed;
+  border:1px solid #fed7aa;
+  border-radius:14px;
+  text-align:center;
+}
+
+.amount-label {
+  color:#9a3412;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.amount-value {
+  color:#9a3412;
+  font-size:32px;
+  font-weight:900;
+  margin-top:4px;
+}
+
+.info {
+  margin:20px 25px;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+.row {
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:12px 14px;
+  border-bottom:1px solid #eef2f7;
+  font-size:13px;
+}
+
+.row:last-child {
+  border-bottom:0;
+}
+
+.label {
+  color:#64748b;
+  font-weight:bold;
+}
+
+.value {
+  text-align:right;
+  font-weight:bold;
+  word-break:break-word;
+}
+
+.note {
+  margin:20px 25px;
+  padding:14px;
+  background:#f8fafc;
+  border-radius:12px;
+  color:#475569;
+  font-size:11px;
+  line-height:1.6;
+  text-align:center;
+}
+
+.footer {
+  padding:0 25px 25px;
+  text-align:center;
+  color:#94a3b8;
+  font-size:10px;
+  line-height:1.5;
+}
+
+@media print {
+
+  body {
+    padding:0;
+    background:#fff;
+  }
+
+  .receipt {
+    border:0;
+    border-radius:0;
+    max-width:none;
+  }
 
 }
 
+</style>
 
-/* =========================================================
-   DONATION SUBMISSION
-========================================================= */
+</head>
 
-if (donationForm) {
 
-  donationForm.addEventListener("submit", async (event) => {
+<body>
 
+<div class="receipt">
+
+  <div class="header">
+
+    <img
+      class="logo"
+      src="${receiptEscape(logoSrc)}"
+      alt="Temple Logo"
+      onerror="this.style.display='none';"
+    >
+
+    <h1>
+      ${receiptEscape(templeName)}
+    </h1>
+
+    <div class="subtitle">
+      Donation Acknowledgement
+    </div>
+
+    <div class="address">
+      ${receiptEscape(address)}
+    </div>
+
+  </div>
+
+
+  <div class="event">
+
+    <strong>
+      दुर्गा पूजा ${currentYear}
+    </strong>
+
+    <span>
+      Donation Receipt / Acknowledgement
+    </span>
+
+  </div>
+
+
+  <div class="amount">
+
+    <div class="amount-label">
+      DONATION AMOUNT
+    </div>
+
+    <div class="amount-value">
+      ₹${receiptEscape(
+        Number(data.amount || 0).toLocaleString("en-IN")
+      )}
+    </div>
+
+  </div>
+
+
+  <div class="info">
+
+    <div class="row">
+      <span class="label">Receipt No.</span>
+      <span class="value">
+        ${receiptEscape(data.receiptNumber)}
+      </span>
+    </div>
+
+
+    <div class="row">
+      <span class="label">Donor Name</span>
+      <span class="value">
+        ${receiptEscape(data.donorName)}
+      </span>
+    </div>
+
+
+    <div class="row">
+      <span class="label">Purpose</span>
+      <span class="value">
+        ${receiptEscape(data.purpose || "General Donation")}
+      </span>
+    </div>
+
+
+    <div class="row">
+      <span class="label">UTR / Transaction ID</span>
+      <span class="value">
+        ${receiptEscape(data.utr)}
+      </span>
+    </div>
+
+
+    <div class="row">
+      <span class="label">Date & Time</span>
+      <span class="value">
+        ${receiptEscape(data.dateTime)}
+      </span>
+    </div>
+
+
+    <div class="row">
+      <span class="label">Status</span>
+      <span class="value">
+        Pending Verification
+      </span>
+    </div>
+
+  </div>
+
+
+  <div class="note">
+
+    धन्यवाद! आपकी donation details सफलतापूर्वक submit हो गई हैं।
+    यह acknowledgement है। UTR / transaction की final verification
+    समिति द्वारा की जाएगी।
+
+  </div>
+
+
+  <div class="footer">
+
+    ${receiptEscape(templeName)}<br>
+
+    Digital Donation Receipt • ${currentYear}
+
+  </div>
+
+</div>
+
+<script>
+
+window.onload = function() {
+
+  setTimeout(function() {
+    window.print();
+  }, 400);
+
+};
+
+window.onafterprint = function() {
+
+  setTimeout(function() {
+    window.close();
+  }, 300);
+
+};
+
+</script>
+
+</body>
+
+</html>
+  `);
+
+  printWindow.document.close();
+}
+
+
+// ============================================================
+// DONATION FORM
+// ============================================================
+
+function getDonationForm() {
+  return (
+    document.getElementById("donationForm") ||
+    document.querySelector("form[data-donation-form]") ||
+    document.querySelector(".donation-form")
+  );
+}
+
+
+function initDonationForm() {
+  const form = getDonationForm();
+
+  if (!form) {
+    console.warn("Donation form not found.");
+    return;
+  }
+
+  form.addEventListener("submit", async event => {
     event.preventDefault();
 
-
-    const donorName =
-      $("donorName")?.value.trim() || "Anonymous";
-
-    const amountValue =
-      $("donationAmount")?.value.trim() || "";
-
-    const purpose =
-      $("donationPurpose")?.value ||
-      "दुर्गा पूजा सेवा";
-
-    const utr =
-      $("utr")?.value.trim() || "";
-
-
-    if (!amountValue) {
-
-      showToast(
-        "कृपया Donation Amount भरें।"
+    const submitButton =
+      form.querySelector(
+        'button[type="submit"], input[type="submit"]'
       );
 
-      return;
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.dataset.originalText =
+        submitButton.textContent;
 
-    }
-
-
-    const amount =
-      Number(amountValue);
-
-
-    if (
-      !Number.isFinite(amount) ||
-      amount <= 0
-    ) {
-
-      showToast(
-        "कृपया सही Donation Amount डालें।"
-      );
-
-      return;
-
-    }
-
-
-    if (!utr) {
-
-      showToast(
-        "कृपया UTR / Transaction ID भरें।"
-      );
-
-      return;
-
-    }
-
-
-    if (utr.length < 4) {
-
-      showToast(
-        "कृपया सही UTR / Transaction ID डालें।"
-      );
-
-      return;
-
-    }
-
-
-    const submitBtn =
-      donationForm.querySelector(
-        'button[type="submit"]'
-      );
-
-
-    const oldButtonText =
-      submitBtn
-        ? submitBtn.textContent
-        : "";
-
-
-    if (submitBtn) {
-
-      submitBtn.disabled =
-        true;
-
-      submitBtn.textContent =
+      submitButton.textContent =
         "Submitting...";
-
     }
 
 
     try {
 
+      const formData = new FormData(form);
+
+      const donorName = String(
+        formData.get("donorName") ||
+        formData.get("name") ||
+        ""
+      ).trim();
+
+      const amount = Number(
+        formData.get("amount") || 0
+      );
+
+      const purpose = String(
+        formData.get("purpose") ||
+        "General Donation"
+      ).trim();
+
+      const utr = String(
+        formData.get("utr") ||
+        formData.get("transactionId") ||
+        formData.get("transaction") ||
+        ""
+      ).trim();
+
+
+      if (!donorName) {
+        throw new Error("कृपया donor name भरें।");
+      }
+
+
+      if (!Number.isFinite(amount) || amount <= 0) {
+        throw new Error(
+          "कृपया सही donation amount डालें।"
+        );
+      }
+
+
+      if (!utr) {
+        throw new Error(
+          "कृपया UTR / Transaction ID डालें।"
+        );
+      }
+
+
       const receiptNumber =
         generateReceiptNumber();
 
-
-      const now =
-        new Date();
-
-
-      /*
-        Donation Firestore में save.
-      */
-
-      const donationRef =
-        await addDoc(
-          collection(
-            db,
-            "donations"
-          ),
-          {
-            donorName:
-              donorName,
-
-            amount:
-              amount,
-
-            purpose:
-              purpose,
-
-            utr:
-              utr,
-
-            receiptNumber:
-              receiptNumber,
-
-            status:
-              "pending",
-
-            createdAt:
-              serverTimestamp()
-          }
-        );
-
-
-      console.log(
-        "Donation saved:",
-        donationRef.id
-      );
-
-
-      /*
-        Receipt data
-      */
+      const now = new Date();
 
       const receiptData = {
 
-        receiptNumber:
-          receiptNumber,
+        donorName,
 
-        donorName:
-          donorName,
-
-        amount:
-          amount,
+        amount,
 
         purpose:
-          purpose,
+          purpose || "General Donation",
 
-        utr:
-          utr,
+        utr,
 
-        dateTime:
-          formatReceiptDate(now),
+        receiptNumber,
 
         status:
-          "pending"
+          "pending",
+
+        createdAt:
+          serverTimestamp()
 
       };
 
 
-      /*
-        Modal close
-      */
-
-      if (donationModal) {
-
-        donationModal.classList.remove(
-          "active"
-        );
-
-      }
-
-
-      /*
-        Form reset
-      */
-
-      donationForm.reset();
-
-
-      /*
-        Success message
-      */
-
-      showToast(
-        "Donation submit हो गई। आपकी receipt तैयार है।"
+      await addDoc(
+        collection(db, "donations"),
+        receiptData
       );
 
 
-      /*
-        Receipt दिखाएँ
-      */
+      const displayData = {
 
-      setTimeout(() => {
+        ...receiptData,
 
-        showDonationReceipt(
-          receiptData
-        );
+        dateTime:
+          formatReceiptDate(now)
 
-      }, 250);
+      };
 
+
+      form.reset();
+
+      closeDonationModal();
+
+      showDonationReceipt(
+        displayData
+      );
+
+
+      showToast(
+        "Donation successfully submit हो गई।"
+      );
 
     } catch (error) {
 
@@ -1158,156 +1423,171 @@ if (donationForm) {
         error
       );
 
-
       showToast(
-        "Donation submit नहीं हो सकी। कृपया थोड़ी देर बाद फिर प्रयास करें।"
+        error?.message ||
+        "Donation submit नहीं हो पाई।",
+        "error"
       );
-
 
     } finally {
 
-      if (submitBtn) {
+      if (submitButton) {
 
-        submitBtn.disabled =
-          false;
+        submitButton.disabled = false;
 
-        submitBtn.textContent =
-          oldButtonText;
+        submitButton.textContent =
+          submitButton.dataset.originalText ||
+          "Submit";
 
       }
 
     }
 
   });
-
 }
 
 
-/* =========================================================
-   LOAD TEMPLE SETTINGS
-========================================================= */
+// ============================================================
+// TEMPLE SETTINGS
+// ============================================================
 
 async function loadTempleSettings() {
-
   try {
 
     const settingsRef =
-      doc(
-        db,
-        "temple",
-        "settings"
-      );
+      doc(db, "temple", "settings");
 
+    const snapshot =
+      await getDoc(settingsRef);
 
-    const settingsSnap =
-      await getDoc(
-        settingsRef
-      );
-
-
-    if (settingsSnap.exists()) {
-
-      const data =
-        settingsSnap.data();
-
-
-      templeSettings = {
-
-        upiId:
-          data.upiId || "",
-
-        aartiTime:
-          data.aartiTime || "",
-
-        liveUrl:
-          data.liveUrl || "",
-
-        qrUrl:
-          data.qrUrl || "",
-
-        contactNumber:
-          data.contactNumber || ""
-
-      };
-
+    if (!snapshot.exists()) {
+      return;
     }
 
+    templeSettings = {
+      ...templeSettings,
+      ...snapshot.data()
+    };
 
     applyTempleSettings();
-
 
   } catch (error) {
 
     console.error(
-      "Settings loading error:",
+      "Temple settings load error:",
       error
     );
 
-    applyTempleSettings();
+  }
+}
+
+
+function applyTempleSettings() {
+
+  // UPI
+  updateDonationUPI();
+
+  // QR
+  renderDonationQR();
+
+  // Aarti
+  const aartiElements =
+    document.querySelectorAll(
+      "#aartiTime, [data-aarti-time]"
+    );
+
+  aartiElements.forEach(element => {
+
+    if (templeSettings.aartiTime) {
+      element.textContent =
+        templeSettings.aartiTime;
+    }
+
+  });
+
+
+  // Contact
+  const contactElements =
+    document.querySelectorAll(
+      "#contactPhone, [data-contact-phone]"
+    );
+
+  contactElements.forEach(element => {
+
+    if (templeSettings.contactNumber) {
+
+      const cleanNumber =
+        String(
+          templeSettings.contactNumber
+        ).replace(/[^\d+]/g, "");
+
+      element.textContent =
+        templeSettings.contactNumber;
+
+      element.href =
+        `tel:${cleanNumber}`;
+
+      element.style.pointerEvents =
+        "auto";
+
+    } else {
+
+      element.textContent =
+        "संपर्क नंबर जल्द अपडेट होगा।";
+
+      element.removeAttribute("href");
+
+      element.style.pointerEvents =
+        "none";
+
+    }
+
+  });
+
+
+  // Live URL
+  if (templeSettings.liveUrl) {
+
+    renderLiveVideo(
+      templeSettings.liveUrl
+    );
 
   }
 
 }
 
 
-/* =========================================================
-   REALTIME TEMPLE SETTINGS
-========================================================= */
+// ============================================================
+// REALTIME TEMPLE SETTINGS
+// ============================================================
 
-function listenToTempleSettings() {
+function listenTempleSettings() {
 
   try {
 
     const settingsRef =
-      doc(
-        db,
-        "temple",
-        "settings"
-      );
-
+      doc(db, "temple", "settings");
 
     onSnapshot(
       settingsRef,
-
-      (snapshot) => {
+      snapshot => {
 
         if (!snapshot.exists()) {
           return;
         }
 
-
-        const data =
-          snapshot.data();
-
-
         templeSettings = {
-
-          upiId:
-            data.upiId || "",
-
-          aartiTime:
-            data.aartiTime || "",
-
-          liveUrl:
-            data.liveUrl || "",
-
-          qrUrl:
-            data.qrUrl || "",
-
-          contactNumber:
-            data.contactNumber || ""
-
+          ...templeSettings,
+          ...snapshot.data()
         };
-
 
         applyTempleSettings();
 
       },
-
-      (error) => {
+      error => {
 
         console.error(
-          "Realtime settings error:",
+          "Temple settings realtime error:",
           error
         );
 
@@ -1326,482 +1606,253 @@ function listenToTempleSettings() {
 }
 
 
-/* =========================================================
-   APPLY TEMPLE SETTINGS
-========================================================= */
-
-function applyTempleSettings() {
-
-  const aartiTime =
-    templeSettings.aartiTime ||
-    "समय जल्द अपडेट होगा";
-
-
-  if (todayAartiTime) {
-
-    todayAartiTime.textContent =
-      aartiTime;
-
-  }
-
-
-  if (liveAartiTime) {
-
-    liveAartiTime.textContent =
-      aartiTime;
-
-  }
-
-
-  if (upiId) {
-
-    upiId.textContent =
-      templeSettings.upiId ||
-      "Admin Panel से अपडेट होगा";
-
-  }
-
-
-  renderQRCode();
-
-  renderLiveVideo();
-
-  renderContactNumber();
-
-}
-
-
-/* =========================================================
-   CONTACT NUMBER
-========================================================= */
-
-function renderContactNumber() {
-
-  if (!contactPhone) {
-    return;
-  }
-
-
-  const number =
-    templeSettings.contactNumber?.trim();
-
-
-  if (!number) {
-
-    contactPhone.textContent =
-      "संपर्क नंबर जल्द अपडेट होगा।";
-
-    contactPhone.removeAttribute(
-      "href"
-    );
-
-    contactPhone.style.pointerEvents =
-      "none";
-
-    return;
-
-  }
-
-
-  contactPhone.textContent =
-    number;
-
-
-  const cleanNumber =
-    number.replace(
-      /[^\d+]/g,
-      ""
-    );
-
-
-  if (cleanNumber) {
-
-    contactPhone.href =
-      `tel:${cleanNumber}`;
-
-    contactPhone.style.pointerEvents =
-      "auto";
-
-  }
-
-}
-
-
-/* =========================================================
-   QR CODE
-========================================================= */
-
-function renderQRCode() {
-
-  if (!qrBox) {
-    return;
-  }
-
-
-  const qrUrl =
-    templeSettings.qrUrl?.trim();
-
-
-  if (!qrUrl) {
-
-    qrBox.innerHTML = `
-
-      <span>
-        QR
-      </span>
-
-      <small>
-        QR Code यहाँ दिखेगा
-      </small>
-
-    `;
-
-    return;
-
-  }
-
-
-  const img =
-    document.createElement(
-      "img"
-    );
-
-
-  img.src =
-    qrUrl;
-
-  img.alt =
-    "माँ मनोकामना मंदिर Donation QR Code";
-
-  img.loading =
-    "lazy";
-
-  img.style.width =
-    "100%";
-
-  img.style.height =
-    "100%";
-
-  img.style.objectFit =
-    "contain";
-
-  img.style.display =
-    "block";
-
-
-  img.onerror = () => {
-
-    qrBox.innerHTML = `
-
-      <span>
-        QR
-      </span>
-
-      <small>
-        QR Code load नहीं हो सका
-      </small>
-
-    `;
-
-  };
-
-
-  qrBox.innerHTML = "";
-
-  qrBox.appendChild(
-    img
-  );
-
-}
-
-
-/* =========================================================
-   LIVE AARTI
-========================================================= */
-
-function renderLiveVideo() {
-
-  if (!liveVideo) {
-    return;
-  }
-
-
-  const liveUrl =
-    templeSettings.liveUrl?.trim();
-
-
-  if (!liveUrl) {
-
-    liveVideo.innerHTML = `
-
-      <div class="play-icon">
-        ▶
-      </div>
-
-      <h3>
-        Live Aarti
-      </h3>
-
-      <p>
-        आरती शुरू होने पर यहाँ Live दिखाई देगा।
-      </p>
-
-    `;
-
-    return;
-
-  }
-
-
-  const embedUrl =
-    getYouTubeEmbedUrl(
-      liveUrl
-    );
-
-
-  if (embedUrl) {
-
-    liveVideo.innerHTML = `
-
-      <iframe
-        src="${escapeHtml(embedUrl)}"
-        title="माँ मनोकामना Live Aarti"
-        width="100%"
-        height="100%"
-        frameborder="0"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        style="border:0; width:100%; height:100%; display:block;"
-      ></iframe>
-
-    `;
-
-    return;
-
-  }
-
-
-  liveVideo.innerHTML = `
-
-    <div class="play-icon">
-      ▶
-    </div>
-
-    <h3>
-      Live Aarti
-    </h3>
-
-    <p>
-      Live Aarti देखने के लिए नीचे दिए बटन पर जाएँ।
-    </p>
-
-    <a
-      href="${escapeHtml(liveUrl)}"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="btn btn-primary"
-      style="margin-top:12px; display:inline-block;"
-    >
-      🔴 Open Live
-    </a>
-
-  `;
-
-}
-
-
-/* =========================================================
-   YOUTUBE URL → EMBED URL
-========================================================= */
+// ============================================================
+// LIVE VIDEO
+// ============================================================
 
 function getYouTubeEmbedUrl(url) {
 
-  if (!url) {
-    return "";
-  }
-
+  if (!url) return "";
 
   try {
 
     const parsed =
       new URL(url);
 
+    let videoId = "";
 
     if (
       parsed.hostname.includes(
         "youtube.com"
-      ) &&
-      parsed.pathname ===
-        "/watch"
+      )
     ) {
 
-      const videoId =
+      videoId =
         parsed.searchParams.get(
           "v"
-        );
+        ) || "";
 
+      if (
+        parsed.pathname.startsWith(
+          "/live/"
+        )
+      ) {
 
-      if (videoId) {
-
-        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
-
-      }
-
-    }
-
-
-    if (
-      parsed.hostname ===
-        "youtu.be" ||
-      parsed.hostname ===
-        "www.youtu.be"
-    ) {
-
-      const videoId =
-        parsed.pathname.replace(
-          "/",
-          ""
-        );
-
-
-      if (videoId) {
-
-        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
+        videoId =
+          parsed.pathname
+            .split("/live/")[1]
+            ?.split("/")[0] || "";
 
       }
 
-    }
-
-
-    if (
-      parsed.hostname.includes(
-        "youtube.com"
-      ) &&
-      parsed.pathname.startsWith(
-        "/live/"
-      )
+    } else if (
+      parsed.hostname === "youtu.be"
     ) {
 
-      const videoId =
-        parsed.pathname.split(
-          "/"
-        )[2];
-
-
-      if (videoId) {
-
-        return `https://www.youtube.com/embed/${encodeURIComponent(videoId)}`;
-
-      }
+      videoId =
+        parsed.pathname
+          .replace("/", "")
+          .split("/")[0];
 
     }
 
-
-    if (
-      parsed.hostname.includes(
-        "youtube.com"
-      ) &&
-      parsed.pathname.startsWith(
-        "/embed/"
-      )
-    ) {
-
-      return url;
-
+    if (!videoId) {
+      return "";
     }
 
-
-  } catch (error) {
-
-    console.warn(
-      "Invalid live URL:",
-      error
+    return (
+      `https://www.youtube.com/embed/` +
+      `${encodeURIComponent(videoId)}`
     );
 
+  } catch {
+
+    return "";
+
   }
-
-
-  return "";
 
 }
 
 
-/* =========================================================
-   LOAD SCHEDULE
-========================================================= */
+function renderLiveVideo(url) {
 
-async function loadSchedule() {
+  const container =
+    document.querySelector(
+      "#liveVideo"
+    ) ||
+    document.querySelector(
+      "[data-live-video]"
+    );
 
-  if (!scheduleList) {
+  if (!container) {
+    return;
+  }
+
+  const embedUrl =
+    getYouTubeEmbedUrl(url);
+
+  if (!embedUrl) {
+
+    container.innerHTML = `
+      <div style="
+        padding:20px;
+        text-align:center;
+        color:#64748b;
+      ">
+        Live video जल्द उपलब्ध होगा।
+      </div>
+    `;
+
     return;
   }
 
 
+  container.innerHTML = `
+    <div style="
+      position:relative;
+      width:100%;
+      padding-bottom:56.25%;
+      height:0;
+      overflow:hidden;
+      border-radius:16px;
+    ">
+
+      <iframe
+        src="${escapeHtml(embedUrl)}"
+        title="Temple Live"
+        style="
+          position:absolute;
+          inset:0;
+          width:100%;
+          height:100%;
+          border:0;
+        "
+        allow="
+          accelerometer;
+          autoplay;
+          clipboard-write;
+          encrypted-media;
+          gyroscope;
+          picture-in-picture;
+          web-share
+        "
+        allowfullscreen
+        loading="lazy"
+      ></iframe>
+
+    </div>
+  `;
+
+}
+
+
+// ============================================================
+// SCHEDULE
+// ============================================================
+
+async function loadSchedule() {
+
+  const container =
+    document.querySelector(
+      "#scheduleList"
+    ) ||
+    document.querySelector(
+      "[data-schedule-list]"
+    );
+
+  if (!container) {
+    return;
+  }
+
   try {
+
+    const scheduleRef =
+      collection(
+        db,
+        "schedule"
+      );
 
     const scheduleQuery =
       query(
-        collection(
-          db,
-          "schedule"
-        ),
+        scheduleRef,
         orderBy(
           "date",
           "asc"
-        ),
-        limit(30)
+        )
       );
-
 
     const snapshot =
       await getDocs(
         scheduleQuery
       );
 
-
     if (snapshot.empty) {
 
-      renderEmptySchedule();
+      container.innerHTML = `
+        <div style="
+          padding:20px;
+          text-align:center;
+          color:#64748b;
+        ">
+          कार्यक्रम की जानकारी जल्द अपडेट होगी।
+        </div>
+      `;
 
       return;
-
     }
 
 
-    const schedules = [];
-
+    container.innerHTML = "";
 
     snapshot.forEach(
-      (scheduleDoc) => {
+      documentSnapshot => {
 
-        schedules.push({
+        const data =
+          documentSnapshot.data();
 
-          id:
-            scheduleDoc.id,
+        const item =
+          document.createElement(
+            "div"
+          );
 
-          ...scheduleDoc.data()
+        item.className =
+          "schedule-item";
 
-        });
+        item.innerHTML = `
+          <div>
+            <strong>
+              ${escapeHtml(
+                data.title ||
+                data.name ||
+                "कार्यक्रम"
+              )}
+            </strong>
+
+            <div>
+              ${escapeHtml(
+                data.date || ""
+              )}
+              ${
+                data.time
+                  ? ` • ${escapeHtml(data.time)}`
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+
+        container.appendChild(
+          item
+        );
 
       }
     );
 
-
-    renderSchedule(
-      schedules
-    );
-
-
   } catch (error) {
 
     console.error(
-      "Schedule loading error:",
+      "Schedule load error:",
       error
-    );
-
-
-    renderEmptySchedule(
-      "कार्यक्रम अभी उपलब्ध नहीं हैं।"
     );
 
   }
@@ -1809,81 +1860,35 @@ async function loadSchedule() {
 }
 
 
-/* =========================================================
-   REALTIME SCHEDULE
-========================================================= */
-
-function listenToSchedule() {
-
-  if (!scheduleList) {
-    return;
-  }
-
+function listenSchedule() {
 
   try {
 
+    const scheduleRef =
+      collection(
+        db,
+        "schedule"
+      );
+
     const scheduleQuery =
       query(
-        collection(
-          db,
-          "schedule"
-        ),
+        scheduleRef,
         orderBy(
           "date",
           "asc"
-        ),
-        limit(30)
+        )
       );
-
 
     onSnapshot(
       scheduleQuery,
-
-      (snapshot) => {
-
-        const schedules = [];
-
-
-        snapshot.forEach(
-          (scheduleDoc) => {
-
-            schedules.push({
-
-              id:
-                scheduleDoc.id,
-
-              ...scheduleDoc.data()
-
-            });
-
-          }
-        );
-
-
-        if (
-          schedules.length === 0
-        ) {
-
-          renderEmptySchedule();
-
-          return;
-
-        }
-
-
-        renderSchedule(
-          schedules
-        );
-
+      () => {
+        loadSchedule();
       },
-
-      (error) => {
-
+      error => {
         console.error(
-          "Realtime schedule error:",
+          "Schedule realtime error:",
           error
         );
-
       }
     );
 
@@ -1899,323 +1904,122 @@ function listenToSchedule() {
 }
 
 
-/* =========================================================
-   RENDER SCHEDULE
-========================================================= */
+// ============================================================
+// GALLERY
+// ============================================================
 
-function renderSchedule(
-  schedules
-) {
+async function loadGallery() {
 
-  if (!scheduleList) {
+  const container =
+    document.querySelector(
+      "#galleryGrid"
+    ) ||
+    document.querySelector(
+      "[data-gallery]"
+    );
+
+  if (!container) {
     return;
   }
 
+  try {
 
-  scheduleList.innerHTML =
-    "";
+    const galleryRef =
+      collection(
+        db,
+        "gallery"
+      );
 
+    const snapshot =
+      await getDocs(
+        galleryRef
+      );
 
-  schedules.forEach(
-    (item) => {
+    if (snapshot.empty) {
 
-      const scheduleItem =
-        document.createElement(
-          "div"
-        );
-
-
-      scheduleItem.className =
-        "schedule-item";
-
-
-      const dateInfo =
-        formatScheduleDate(
-          item.date
-        );
-
-
-      scheduleItem.innerHTML = `
-
-        <div class="schedule-date">
-
-          <strong>
-            ${escapeHtml(
-              dateInfo.day
-            )}
-          </strong>
-
-          <span>
-            ${escapeHtml(
-              dateInfo.month
-            )}
-          </span>
-
+      container.innerHTML = `
+        <div style="
+          padding:20px;
+          text-align:center;
+          color:#64748b;
+          grid-column:1/-1;
+        ">
+          Gallery photos जल्द अपडेट होंगी।
         </div>
+      `;
+
+      return;
+    }
 
 
-        <div class="schedule-info">
+    container.innerHTML = "";
 
-          <h3>
-            ${escapeHtml(
-              item.title ||
-              "कार्यक्रम"
-            )}
-          </h3>
 
-          <p>
-            ${escapeHtml(
-              item.description ||
-              ""
-            )}
-          </p>
+    snapshot.forEach(
+      documentSnapshot => {
+
+        const data =
+          documentSnapshot.data();
+
+        const imageUrl =
+          data.imageUrl ||
+          data.url ||
+          data.photoUrl ||
+          "";
+
+        if (!imageUrl) {
+          return;
+        }
+
+
+        const item =
+          document.createElement(
+            "div"
+          );
+
+        item.className =
+          "gallery-item";
+
+
+        item.innerHTML = `
+
+          <img
+            src="${escapeHtml(imageUrl)}"
+            alt="${escapeHtml(
+              data.title ||
+              "Temple Gallery"
+            )}"
+            loading="lazy"
+          >
 
           ${
-            item.time
+            data.title
               ? `
-                <small>
-                  🕐 ${escapeHtml(
-                    item.time
+                <div>
+                  ${escapeHtml(
+                    data.title
                   )}
-                </small>
+                </div>
               `
               : ""
           }
 
-        </div>
+        `;
 
-      `;
 
-
-      scheduleList.appendChild(
-        scheduleItem
-      );
-
-    }
-  );
-
-}
-
-
-/* =========================================================
-   EMPTY SCHEDULE
-========================================================= */
-
-function renderEmptySchedule(
-  message =
-    "कार्यक्रम जल्द अपडेट होगा।"
-) {
-
-  if (!scheduleList) {
-    return;
-  }
-
-
-  scheduleList.innerHTML = `
-
-    <div class="schedule-item">
-
-      <div class="schedule-date">
-
-        <strong>
-          —
-        </strong>
-
-        <span>
-          DATE
-        </span>
-
-      </div>
-
-
-      <div class="schedule-info">
-
-        <h3>
-          ${escapeHtml(
-            message
-          )}
-        </h3>
-
-        <p>
-          Admin Panel से कार्यक्रम जोड़े जाएंगे।
-        </p>
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================================================
-   FORMAT SCHEDULE DATE
-========================================================= */
-
-function formatScheduleDate(
-  dateValue
-) {
-
-  if (!dateValue) {
-
-    return {
-      day: "—",
-      month: "DATE"
-    };
-
-  }
-
-
-  try {
-
-    const date =
-      new Date(
-        dateValue
-      );
-
-
-    if (
-      Number.isNaN(
-        date.getTime()
-      )
-    ) {
-
-      return {
-
-        day:
-          dateValue,
-
-        month:
-          "DATE"
-
-      };
-
-    }
-
-
-    const months = [
-
-      "JAN",
-      "FEB",
-      "MAR",
-      "APR",
-      "MAY",
-      "JUN",
-      "JUL",
-      "AUG",
-      "SEP",
-      "OCT",
-      "NOV",
-      "DEC"
-
-    ];
-
-
-    return {
-
-      day:
-        String(
-          date.getDate()
-        ).padStart(
-          2,
-          "0"
-        ),
-
-      month:
-        months[
-          date.getMonth()
-        ]
-
-    };
-
-
-  } catch {
-
-    return {
-
-      day:
-        String(
-          dateValue
-        ),
-
-      month:
-        "DATE"
-
-    };
-
-  }
-
-}
-
-
-/* =========================================================
-   GALLERY
-========================================================= */
-
-async function loadGallery() {
-
-  if (!galleryGrid) {
-    return;
-  }
-
-
-  try {
-
-    const galleryQuery =
-      query(
-        collection(
-          db,
-          "gallery"
-        ),
-        orderBy(
-          "createdAt",
-          "desc"
-        ),
-        limit(30)
-      );
-
-
-    const snapshot =
-      await getDocs(
-        galleryQuery
-      );
-
-
-    const items = [];
-
-
-    snapshot.forEach(
-      (galleryDoc) => {
-
-        items.push({
-
-          id:
-            galleryDoc.id,
-
-          ...galleryDoc.data()
-
-        });
+        container.appendChild(
+          item
+        );
 
       }
-    );
-
-
-    renderGallery(
-      items
     );
 
 
   } catch (error) {
 
     console.error(
-      "Gallery loading error:",
+      "Gallery load error:",
       error
-    );
-
-
-    renderEmptyGallery(
-      "Photos अभी load नहीं हो पाईं।"
     );
 
   }
@@ -2223,70 +2027,26 @@ async function loadGallery() {
 }
 
 
-/* =========================================================
-   REALTIME GALLERY
-========================================================= */
-
-function listenToGallery() {
-
-  if (!galleryGrid) {
-    return;
-  }
-
+function listenGallery() {
 
   try {
 
-    const galleryQuery =
-      query(
-        collection(
-          db,
-          "gallery"
-        ),
-        orderBy(
-          "createdAt",
-          "desc"
-        ),
-        limit(30)
+    const galleryRef =
+      collection(
+        db,
+        "gallery"
       );
 
-
     onSnapshot(
-      galleryQuery,
-
-      (snapshot) => {
-
-        const items = [];
-
-
-        snapshot.forEach(
-          (galleryDoc) => {
-
-            items.push({
-
-              id:
-                galleryDoc.id,
-
-              ...galleryDoc.data()
-
-            });
-
-          }
-        );
-
-
-        renderGallery(
-          items
-        );
-
+      galleryRef,
+      () => {
+        loadGallery();
       },
-
-      (error) => {
-
+      error => {
         console.error(
-          "Realtime gallery error:",
+          "Gallery realtime error:",
           error
         );
-
       }
     );
 
@@ -2302,131 +2062,39 @@ function listenToGallery() {
 }
 
 
-/* =========================================================
-   RENDER GALLERY
-========================================================= */
+// ============================================================
+// GOOGLE MAPS
+// ============================================================
 
-function renderGallery(
-  items
-) {
+function initGoogleMap() {
 
-  if (!galleryGrid) {
-    return;
-  }
+  const mapElements =
+    document.querySelectorAll(
+      "[data-map-link], #mapLink"
+    );
 
+  mapElements.forEach(
+    element => {
 
-  if (
-    !items ||
-    items.length === 0
-  ) {
+      element.addEventListener(
+        "click",
+        event => {
 
-    renderEmptyGallery();
+          event.preventDefault();
 
-    return;
+          const destination =
+            "Maa Manokamana Temple, Chakshivganj, Maulanagar, Suryagarha, Lakhisarai, Bihar";
 
-  }
+          const url =
+            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`;
 
+          window.open(
+            url,
+            "_blank",
+            "noopener"
+          );
 
-  galleryGrid.innerHTML =
-    "";
-
-
-  items.forEach(
-    (item) => {
-
-      const galleryItem =
-        document.createElement(
-          "article"
-        );
-
-
-      galleryItem.className =
-        "gallery-item";
-
-
-      const image =
-        document.createElement(
-          "img"
-        );
-
-
-      image.src =
-        item.imageUrl || "";
-
-
-      image.alt =
-        item.title ||
-        "माँ मनोकामना मंदिर";
-
-
-      image.loading =
-        "lazy";
-
-
-      image.decoding =
-        "async";
-
-
-      image.onerror = () => {
-
-        image.style.display =
-          "none";
-
-      };
-
-
-      const caption =
-        document.createElement(
-          "div"
-        );
-
-
-      caption.className =
-        "gallery-caption";
-
-
-      const title =
-        document.createElement(
-          "h3"
-        );
-
-
-      title.textContent =
-        item.title ||
-        "मंदिर दर्शन";
-
-
-      const category =
-        document.createElement(
-          "span"
-        );
-
-
-      category.textContent =
-        item.category ||
-        "मंदिर";
-
-
-      caption.appendChild(
-        title
-      );
-
-      caption.appendChild(
-        category
-      );
-
-
-      galleryItem.appendChild(
-        image
-      );
-
-      galleryItem.appendChild(
-        caption
-      );
-
-
-      galleryGrid.appendChild(
-        galleryItem
+        }
       );
 
     }
@@ -2435,199 +2103,268 @@ function renderGallery(
 }
 
 
-/* =========================================================
-   EMPTY GALLERY
-========================================================= */
+// ============================================================
+// LANGUAGE TOGGLE
+// ============================================================
 
-function renderEmptyGallery(
-  message =
-    "अभी कोई फोटो उपलब्ध नहीं है।"
-) {
+function initLanguageToggle() {
 
-  if (!galleryGrid) {
+  const buttons =
+    document.querySelectorAll(
+      "[data-language], #languageToggle"
+    );
+
+  buttons.forEach(
+    button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          document.documentElement.classList.toggle(
+            "english-mode"
+          );
+
+        }
+      );
+
+    }
+  );
+
+}
+
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+
+function createInstallButton() {
+
+  if (document.getElementById("installAppBtn")) {
+
+    installButton =
+      document.getElementById(
+        "installAppBtn"
+      );
+
+    installButton.style.display =
+      "inline-flex";
+
     return;
   }
 
 
-  galleryGrid.innerHTML = `
+  installButton =
+    document.createElement(
+      "button"
+    );
 
-    <div class="gallery-placeholder">
+  installButton.id =
+    "floatingInstallAppBtn";
 
-      <span>
-        📸
-      </span>
+  installButton.type =
+    "button";
 
-      <p>
-        ${escapeHtml(
-          message
-        )}
-      </p>
+  installButton.innerHTML =
+    "📱 App Install करें";
 
-    </div>
 
+  installButton.style.cssText = `
+    position:fixed;
+    right:18px;
+    bottom:18px;
+    z-index:9998;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    min-height:48px;
+    padding:12px 18px;
+    border:0;
+    border-radius:14px;
+    background:#7f1111;
+    color:#fff;
+    font-size:13px;
+    font-weight:800;
+    box-shadow:0 10px 30px rgba(127,17,17,.30);
+    cursor:pointer;
   `;
 
-}
+
+  document.body.appendChild(
+    installButton
+  );
 
 
-/* =========================================================
-   GOOGLE MAPS
-========================================================= */
-
-if (mapBtn) {
-
-  mapBtn.addEventListener(
+  installButton.addEventListener(
     "click",
-    () => {
-
-      const address =
-        encodeURIComponent(
-          "श्री श्री 108 माँ मनोकामना छोटी दुर्गा पूजा समिति, चकशिवगंज, मौलानगर, सूर्यगढ़ा, लखीसराय, बिहार"
-        );
-
-
-      const mapsUrl =
-        "https://www.google.com/maps/search/?api=1&query=" +
-        address;
-
-
-      window.open(
-        mapsUrl,
-        "_blank",
-        "noopener,noreferrer"
-      );
-
-    }
+    installApp
   );
 
 }
 
 
-/* =========================================================
-   LANGUAGE BUTTON
-========================================================= */
+function isAppInstalled() {
 
-let englishMode =
-  false;
+  return (
+    window.matchMedia &&
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches
+  ) ||
+  window.navigator.standalone === true;
 
-
-if (languageBtn) {
-
-  languageBtn.addEventListener(
-    "click",
-    () => {
-
-      englishMode =
-        !englishMode;
+}
 
 
-      if (englishMode) {
+async function installApp() {
 
-        languageBtn.textContent =
-          "English | हिंदी";
+  if (isAppInstalled()) {
 
+    showToast(
+      "App पहले से installed है।"
+    );
 
-        showToast(
-          "English interface जल्द पूरी तरह उपलब्ध होगा।"
-        );
+    return;
 
-      } else {
-
-        languageBtn.textContent =
-          "हिंदी | English";
+  }
 
 
-        showToast(
-          "हिंदी भाषा चयनित है।"
-        );
+  if (!deferredInstallPrompt) {
 
+    showToast(
+      "Install option अभी browser द्वारा available नहीं है। Chrome menu में Install app / Add to Home screen देखें।"
+    );
+
+    return;
+
+  }
+
+
+  try {
+
+    deferredInstallPrompt.prompt();
+
+    const choice =
+      await deferredInstallPrompt.userChoice;
+
+    if (
+      choice &&
+      choice.outcome === "accepted"
+    ) {
+
+      showToast(
+        "App installation शुरू हो गई।"
+      );
+
+    }
+
+
+    deferredInstallPrompt =
+      null;
+
+  } catch (error) {
+
+    console.error(
+      "PWA install error:",
+      error
+    );
+
+  }
+
+}
+
+
+function initPWA() {
+
+  createInstallButton();
+
+
+  window.addEventListener(
+    "beforeinstallprompt",
+    event => {
+
+      event.preventDefault();
+
+      deferredInstallPrompt =
+        event;
+
+      if (installButton) {
+        installButton.style.display =
+          "inline-flex";
       }
 
     }
   );
 
-}
+
+  window.addEventListener(
+    "appinstalled",
+    () => {
+
+      deferredInstallPrompt =
+        null;
+
+      if (installButton) {
+
+        installButton.style.display =
+          "none";
+
+      }
+
+      showToast(
+        "App successfully installed 🎉"
+      );
+
+    }
+  );
 
 
-/* =========================================================
-   ESCAPE HTML
-========================================================= */
+  if (isAppInstalled()) {
 
-function escapeHtml(
-  value
-) {
+    if (installButton) {
 
-  if (
-    value === null ||
-    value === undefined
-  ) {
+      installButton.style.display =
+        "none";
 
-    return "";
+    }
 
   }
 
-
-  return String(value)
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
 }
 
 
-/* =========================================================
-   PWA SERVICE WORKER
-========================================================= */
+// ============================================================
+// SERVICE WORKER
+// ============================================================
 
-if (
-  "serviceWorker" in navigator
-) {
+function registerServiceWorker() {
+
+  if (
+    !("serviceWorker" in navigator)
+  ) {
+    return;
+  }
+
 
   window.addEventListener(
     "load",
     () => {
 
       navigator.serviceWorker
-
-        .register(
-          "./sw.js"
-        )
-
+        .register("./sw.js")
         .then(
-          (registration) => {
+          registration => {
 
             console.log(
-              "Service Worker registered successfully.",
-              registration
+              "Service Worker registered:",
+              registration.scope
             );
 
           }
         )
-
         .catch(
-          (error) => {
+          error => {
 
             console.error(
               "Service Worker registration failed:",
@@ -2643,372 +2380,68 @@ if (
 }
 
 
-/* =========================================================
-   PWA INSTALL BUTTON
-========================================================= */
+// ============================================================
+// INITIALIZE APP
+// ============================================================
 
-function createInstallButton() {
+document.addEventListener(
+  "DOMContentLoaded",
+  async () => {
 
-  const existingButton =
-    $("installAppBtn");
-
-
-  if (existingButton) {
-
-    installButton =
-      existingButton;
-
-  } else {
-
-    installButton =
-      document.createElement(
-        "button"
-      );
-
-    installButton.id =
-      "installAppBtn";
-
-    installButton.type =
-      "button";
-
-    installButton.innerHTML =
-      "📱 Install App";
-
-    document.body.appendChild(
-      installButton
-    );
-
-  }
-
-
-  installButton.style.position =
-    "fixed";
-
-  installButton.style.right =
-    "18px";
-
-  installButton.style.bottom =
-    "18px";
-
-  installButton.style.zIndex =
-    "99999";
-
-  installButton.style.display =
-    "flex";
-
-  installButton.style.alignItems =
-    "center";
-
-  installButton.style.justifyContent =
-    "center";
-
-  installButton.style.gap =
-    "7px";
-
-  installButton.style.border =
-    "0";
-
-  installButton.style.borderRadius =
-    "999px";
-
-  installButton.style.padding =
-    "12px 18px";
-
-  installButton.style.background =
-    "#7f1111";
-
-  installButton.style.color =
-    "#ffffff";
-
-  installButton.style.fontSize =
-    "14px";
-
-  installButton.style.fontWeight =
-    "800";
-
-  installButton.style.cursor =
-    "pointer";
-
-  installButton.style.boxShadow =
-    "0 8px 25px rgba(0,0,0,.25)";
-
-  installButton.style.transition =
-    "transform .2s ease, opacity .2s ease";
-
-
-  installButton.setAttribute(
-    "aria-label",
-    "Install App"
-  );
-
-
-  if (
-    !installButton.dataset.installListener
-  ) {
-
-    installButton.addEventListener(
-      "click",
-      installApp
-    );
-
-    installButton.dataset.installListener =
-      "true";
-
-  }
-
-
-  if (
-    !installButton.dataset.hoverListener
-  ) {
-
-    installButton.addEventListener(
-      "mouseenter",
-      () => {
-
-        installButton.style.transform =
-          "translateY(-2px)";
-
-      }
+    console.log(
+      "Maa Manokamana Temple app starting..."
     );
 
 
-    installButton.addEventListener(
-      "mouseleave",
-      () => {
-
-        installButton.style.transform =
-          "translateY(0)";
-
-      }
-    );
+    // Mobile menu
+    initMobileMenu();
 
 
-    installButton.dataset.hoverListener =
-      "true";
+    // Donation
+    initDonationModal();
 
-  }
-
-}
+    initDonationForm();
 
 
-if (
-  document.readyState ===
-  "loading"
-) {
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    createInstallButton,
-    {
-      once: true
-    }
-  );
-
-} else {
-
-  createInstallButton();
-
-}
+    // PWA
+    initPWA();
 
 
-/* =========================================================
-   BEFORE INSTALL PROMPT
-========================================================= */
+    // Language
+    initLanguageToggle();
 
-window.addEventListener(
-  "beforeinstallprompt",
-  (event) => {
 
-    event.preventDefault();
+    // Map
+    initGoogleMap();
 
-    deferredInstallPrompt =
-      event;
+
+    // Firebase settings
+    await loadTempleSettings();
+
+
+    // Realtime settings
+    listenTempleSettings();
+
+
+    // Schedule
+    await loadSchedule();
+
+    listenSchedule();
+
+
+    // Gallery
+    await loadGallery();
+
+    listenGallery();
+
+
+    // Service worker
+    registerServiceWorker();
 
 
     console.log(
-      "PWA install prompt is ready."
-    );
-
-
-    createInstallButton();
-
-  }
-);
-
-
-/* =========================================================
-   INSTALL APP
-========================================================= */
-
-async function installApp() {
-
-  if (!deferredInstallPrompt) {
-
-    showToast(
-      "Install option अभी browser से available नहीं है। Chrome में थोड़ी देर बाद फिर Install App दबाएँ।"
-    );
-
-    return;
-
-  }
-
-
-  try {
-
-    deferredInstallPrompt.prompt();
-
-
-    const choice =
-      await deferredInstallPrompt.userChoice;
-
-
-    console.log(
-      "Install choice:",
-      choice.outcome
-    );
-
-
-    if (
-      choice.outcome ===
-      "accepted"
-    ) {
-
-      showToast(
-        "App install हो रहा है..."
-      );
-
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "PWA install error:",
-      error
-    );
-
-  } finally {
-
-    deferredInstallPrompt =
-      null;
-
-  }
-
-}
-
-
-/* =========================================================
-   APP INSTALLED
-========================================================= */
-
-window.addEventListener(
-  "appinstalled",
-  () => {
-
-    console.log(
-      "PWA successfully installed."
-    );
-
-
-    deferredInstallPrompt =
-      null;
-
-
-    if (installButton) {
-
-      installButton.style.display =
-        "none";
-
-    }
-
-
-    showToast(
-      "माँ मनोकामना App successfully install हो गया।"
+      "Maa Manokamana Temple app ready."
     );
 
   }
 );
-
-
-/* =========================================================
-   CHECK IF APP IS ALREADY INSTALLED
-========================================================= */
-
-function checkIfAppIsInstalled() {
-
-  if (
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches
-  ) {
-
-    return true;
-
-  }
-
-
-  if (
-    window.navigator.standalone === true
-  ) {
-
-    return true;
-
-  }
-
-
-  return false;
-
-}
-
-
-if (
-  checkIfAppIsInstalled()
-) {
-
-  if (installButton) {
-
-    installButton.style.display =
-      "none";
-
-  }
-
-}
-
-
-/* =========================================================
-   INITIAL LOAD
-========================================================= */
-
-async function initializeTempleApp() {
-
-  console.log(
-    "🙏 माँ मनोकामना Temple App initializing..."
-  );
-
-
-  await loadTempleSettings();
-
-  await loadSchedule();
-
-  await loadGallery();
-
-
-  listenToTempleSettings();
-
-  listenToSchedule();
-
-  listenToGallery();
-
-
-  console.log(
-    "🙏 माँ मनोकामना Temple App ready."
-  );
-
-}
-
-
-/* =========================================================
-   START APP
-========================================================= */
-
-initializeTempleApp();
