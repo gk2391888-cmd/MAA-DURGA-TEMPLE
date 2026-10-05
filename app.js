@@ -1,7 +1,7 @@
 /* =========================================================
    MAA MANOKAMANA TEMPLE
    PUBLIC WEBSITE APP.JS
-   FINAL FIXED VERSION
+   FINAL COMPLETE VERSION
    ========================================================= */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
@@ -17,13 +17,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
 
-/*
-  IMPORTANT:
-  firebase-config.js uses:
-  export default firebaseConfig;
-
-  इसलिए यहां DEFAULT IMPORT होगा.
-*/
 import firebaseConfig from "./firebase-config.js";
 
 
@@ -79,9 +72,6 @@ function cleanUrl(url) {
 
   let value = String(url).trim();
 
-  /*
-    Cloudinary HTTP → HTTPS
-  */
   if (value.startsWith("http://res.cloudinary.com/")) {
     value = value.replace(
       "http://res.cloudinary.com/",
@@ -113,7 +103,6 @@ function showToast(message, type = "info") {
   if (!toast) {
 
     toast = document.createElement("div");
-
     toast.id = "appToast";
 
     toast.style.cssText = `
@@ -148,7 +137,6 @@ function showToast(message, type = "info") {
   }
 
   toast.textContent = message;
-
   toast.style.opacity = "1";
   toast.style.transform =
     "translateX(-50%) translateY(0)";
@@ -184,14 +172,11 @@ function initMobileMenu() {
     document.querySelector(".nav-menu") ||
     document.querySelector("nav");
 
-  if (!menuBtn || !nav) {
-    return;
-  }
+  if (!menuBtn || !nav) return;
 
   menuBtn.addEventListener("click", () => {
 
     nav.classList.toggle("active");
-
     menuBtn.classList.toggle("active");
 
     const expanded =
@@ -201,7 +186,6 @@ function initMobileMenu() {
       "aria-expanded",
       expanded ? "false" : "true"
     );
-
   });
 
   nav.querySelectorAll("a").forEach(link => {
@@ -209,7 +193,6 @@ function initMobileMenu() {
     link.addEventListener("click", () => {
 
       nav.classList.remove("active");
-
       menuBtn.classList.remove("active");
 
       menuBtn.setAttribute(
@@ -231,10 +214,6 @@ async function loadTempleSettings() {
 
   try {
 
-    console.log(
-      "📖 Reading Firestore: temple/settings"
-    );
-
     const settingsRef =
       doc(db, "temple", "settings");
 
@@ -244,16 +223,17 @@ async function loadTempleSettings() {
     if (!snapshot.exists()) {
 
       console.warn(
-        "⚠️ Firestore document temple/settings not found"
+        "⚠️ temple/settings document not found"
       );
 
+      applyTempleSettings();
       return;
     }
 
     const data = snapshot.data();
 
     console.log(
-      "✅ temple/settings data:",
+      "✅ temple/settings:",
       data
     );
 
@@ -267,20 +247,17 @@ async function loadTempleSettings() {
   } catch (error) {
 
     console.error(
-      "❌ temple/settings read failed:",
+      "❌ Settings loading error:",
       error
     );
 
-    showToast(
-      "Temple settings load नहीं हो पाई।",
-      "error"
-    );
+    applyTempleSettings();
   }
 }
 
 
 /* =========================================================
-   REALTIME TEMPLE SETTINGS
+   REALTIME SETTINGS
    ========================================================= */
 
 function listenTempleSettings() {
@@ -289,17 +266,14 @@ function listenTempleSettings() {
     doc(db, "temple", "settings");
 
   onSnapshot(
-
     settingsRef,
 
     snapshot => {
 
       if (!snapshot.exists()) {
-
         console.warn(
-          "⚠️ temple/settings document does not exist"
+          "⚠️ temple/settings does not exist"
         );
-
         return;
       }
 
@@ -307,7 +281,7 @@ function listenTempleSettings() {
         snapshot.data();
 
       console.log(
-        "🔄 temple/settings updated:",
+        "🔄 Settings updated:",
         data
       );
 
@@ -323,7 +297,7 @@ function listenTempleSettings() {
     error => {
 
       console.error(
-        "❌ temple/settings realtime error:",
+        "❌ Settings realtime error:",
         error
       );
 
@@ -333,29 +307,15 @@ function listenTempleSettings() {
 
 
 /* =========================================================
-   APPLY TEMPLE SETTINGS
+   APPLY ALL TEMPLE SETTINGS
    ========================================================= */
 
 function applyTempleSettings() {
-
-  console.log(
-    "🎨 Applying temple settings..."
-  );
 
   const aartiTime =
     safeText(
       templeSettings.aartiTime,
       "समय जल्द अपडेट होगा"
-    );
-
-  const liveUrl =
-    cleanUrl(
-      templeSettings.liveUrl
-    );
-
-  const qrUrl =
-    cleanUrl(
-      templeSettings.qrUrl
     );
 
   const upiId =
@@ -368,49 +328,67 @@ function applyTempleSettings() {
       templeSettings.contactNumber
     );
 
+  const liveUrl =
+    cleanUrl(
+      templeSettings.liveUrl
+    );
 
-  /* -----------------------------
-     AARTI
-     ----------------------------- */
+  const qrUrl =
+    cleanUrl(
+      templeSettings.qrUrl
+    );
 
-  const aartiSelectors = [
-    "#aartiTime",
-    "#todayAartiTime",
-    "#liveAartiTime",
-    "[data-aarti-time]"
-  ];
 
-  aartiSelectors.forEach(selector => {
-
-    $$(selector).forEach(element => {
-
-      element.textContent =
-        aartiTime;
-
-    });
-
+  console.log("🎨 Applying settings:", {
+    aartiTime,
+    upiId,
+    contactNumber,
+    liveUrl,
+    qrUrl
   });
 
 
-  /* -----------------------------
-     LIVE VIDEO
-     ----------------------------- */
+  /* =======================================================
+     AARTI TIME
+     ======================================================= */
 
-  renderLiveVideo(liveUrl);
+  const aartiElements = [
+    ...Array.from($$(
+      "#aartiTime"
+    )),
+    ...Array.from($$(
+      "#todayAartiTime"
+    )),
+    ...Array.from($$(
+      "#liveAartiTime"
+    )),
+    ...Array.from($$(
+      "[data-aarti-time]"
+    ))
+  ];
+
+  aartiElements.forEach(element => {
+    element.textContent = aartiTime;
+  });
 
 
-  /* -----------------------------
-     QR
-     ----------------------------- */
+  /* =======================================================
+     UPI ID
+     ======================================================= */
 
-  renderQR(qrUrl);
+  const upiElements = [
+    ...Array.from($$(
+      "#upiId"
+    )),
+    ...Array.from($$(
+      "[data-upi-id]"
+    )),
+    ...Array.from($$(
+      ".upi-id"
+    ))
+  ];
 
-
-  /* -----------------------------
-     UPI
-     ----------------------------- */
-
-  $$("#upiId, [data-upi-id]").forEach(element => {
+  upiElements.forEach(element => {
 
     element.textContent =
       upiId ||
@@ -419,11 +397,83 @@ function applyTempleSettings() {
   });
 
 
-  /* -----------------------------
-     CONTACT
-     ----------------------------- */
+  /* =======================================================
+     UPI COPY BUTTON
+     ======================================================= */
 
-  renderContactNumber(contactNumber);
+  const copyButtons = [
+    ...Array.from($$(
+      "#copyUpiBtn"
+    )),
+    ...Array.from($$(
+      "[data-copy-upi]"
+    ))
+  ];
+
+  copyButtons.forEach(button => {
+
+    button.onclick = async () => {
+
+      if (!upiId) {
+
+        showToast(
+          "UPI ID अभी उपलब्ध नहीं है।",
+          "error"
+        );
+
+        return;
+      }
+
+      try {
+
+        await navigator.clipboard.writeText(
+          upiId
+        );
+
+        showToast(
+          "UPI ID copy हो गई।",
+          "success"
+        );
+
+      } catch (error) {
+
+        showToast(
+          "UPI ID copy नहीं हो पाई।",
+          "error"
+        );
+
+      }
+
+    };
+
+  });
+
+
+  /* =======================================================
+     CONTACT
+     ======================================================= */
+
+  renderContactNumber(
+    contactNumber
+  );
+
+
+  /* =======================================================
+     QR
+     ======================================================= */
+
+  renderQR(
+    qrUrl
+  );
+
+
+  /* =======================================================
+     LIVE
+     ======================================================= */
+
+  renderLiveVideo(
+    liveUrl
+  );
 }
 
 
@@ -438,7 +488,8 @@ function renderContactNumber(number) {
 
   const selectors = [
     "#contactPhone",
-    "[data-contact-phone]"
+    "[data-contact-phone]",
+    ".contact-phone"
   ];
 
   selectors.forEach(selector => {
@@ -477,34 +528,190 @@ function renderContactNumber(number) {
     });
 
   });
+
+
+  /* Contact buttons */
+
+  const contactButtons = [
+    ...Array.from($$(
+      "#callBtn"
+    )),
+    ...Array.from($$(
+      "[data-call]"
+    ))
+  ];
+
+  contactButtons.forEach(button => {
+
+    if (!cleanNumber) {
+      button.style.display = "";
+      button.removeAttribute("href");
+      return;
+    }
+
+    const digits =
+      cleanNumber.replace(/[^\d+]/g, "");
+
+    if (button.tagName === "A") {
+      button.href =
+        `tel:${digits}`;
+    }
+
+    button.onclick = () => {
+
+      if (digits) {
+        window.location.href =
+          `tel:${digits}`;
+      }
+
+    };
+
+  });
 }
 
 
 /* =========================================================
-   YOUTUBE URL → EMBED URL
+   QR CODE
+   ========================================================= */
+
+function renderQR(url) {
+
+  const qrUrl =
+    cleanUrl(url);
+
+  console.log(
+    "🧾 QR:",
+    qrUrl
+  );
+
+
+  /* -------------------------------------------------------
+     Existing QR image
+     ------------------------------------------------------- */
+
+  const qrImages = [
+    ...Array.from($$(
+      "#qrImage"
+    )),
+    ...Array.from($$(
+      "[data-qr-image]"
+    )),
+    ...Array.from($$(
+      ".qr-image"
+    ))
+  ];
+
+
+  qrImages.forEach(img => {
+
+    if (!qrUrl) {
+
+      img.removeAttribute("src");
+      img.style.display = "none";
+
+      return;
+    }
+
+    img.src = qrUrl;
+    img.style.display = "block";
+
+    img.onerror = () => {
+
+      console.error(
+        "❌ QR image failed:",
+        qrUrl
+      );
+
+      img.style.display = "none";
+    };
+
+  });
+
+
+  /* -------------------------------------------------------
+     QR container
+     ------------------------------------------------------- */
+
+  const qrContainers = [
+    ...Array.from($$(
+      "#qrContainer"
+    )),
+    ...Array.from($$(
+      "[data-qr-container]"
+    )),
+    ...Array.from($$(
+      ".qr-container"
+    ))
+  ];
+
+
+  qrContainers.forEach(container => {
+
+    if (!qrUrl) {
+
+      container.innerHTML = `
+        <div style="
+          padding:20px;
+          text-align:center;
+          color:#777;
+        ">
+          QR Code जल्द अपडेट होगा।
+        </div>
+      `;
+
+      return;
+    }
+
+
+    container.innerHTML = `
+      <div style="
+        text-align:center;
+      ">
+
+        <img
+          src="${escapeHtml(qrUrl)}"
+          alt="Donation QR Code"
+          style="
+            width:min(280px,100%);
+            height:auto;
+            display:block;
+            margin:0 auto;
+            border-radius:16px;
+            background:#fff;
+          "
+        >
+
+        <div style="
+          margin-top:10px;
+          font-size:12px;
+          color:#777;
+        ">
+          Scan करके Donation करें
+        </div>
+
+      </div>
+    `;
+
+  });
+}
+
+
+/* =========================================================
+   YOUTUBE URL
    ========================================================= */
 
 function getYouTubeEmbedUrl(url) {
 
-  if (!url) {
-    return "";
-  }
-
-  let value =
-    String(url).trim();
+  if (!url) return "";
 
   try {
 
     const parsed =
-      new URL(value);
+      new URL(url);
 
     const hostname =
       parsed.hostname.toLowerCase();
 
-
-    /* ---------------------------------
-       youtube.com/embed/VIDEO_ID
-       --------------------------------- */
 
     if (
       hostname.includes("youtube.com") &&
@@ -517,16 +724,10 @@ function getYouTubeEmbedUrl(url) {
           ?.split("/")[0];
 
       if (id) {
-
         return `https://www.youtube.com/embed/${id}`;
-
       }
     }
 
-
-    /* ---------------------------------
-       youtube.com/watch?v=VIDEO_ID
-       --------------------------------- */
 
     if (
       hostname.includes("youtube.com") &&
@@ -537,16 +738,10 @@ function getYouTubeEmbedUrl(url) {
         parsed.searchParams.get("v");
 
       if (id) {
-
         return `https://www.youtube.com/embed/${id}`;
-
       }
     }
 
-
-    /* ---------------------------------
-       youtube.com/live/VIDEO_ID
-       --------------------------------- */
 
     if (
       hostname.includes("youtube.com") &&
@@ -559,16 +754,10 @@ function getYouTubeEmbedUrl(url) {
           ?.split("/")[0];
 
       if (id) {
-
         return `https://www.youtube.com/embed/${id}`;
-
       }
     }
 
-
-    /* ---------------------------------
-       youtube.com/shorts/VIDEO_ID
-       --------------------------------- */
 
     if (
       hostname.includes("youtube.com") &&
@@ -581,16 +770,10 @@ function getYouTubeEmbedUrl(url) {
           ?.split("/")[0];
 
       if (id) {
-
         return `https://www.youtube.com/embed/${id}`;
-
       }
     }
 
-
-    /* ---------------------------------
-       youtu.be/VIDEO_ID
-       --------------------------------- */
 
     if (
       hostname === "youtu.be"
@@ -602,16 +785,14 @@ function getYouTubeEmbedUrl(url) {
           .split("/")[0];
 
       if (id) {
-
         return `https://www.youtube.com/embed/${id}`;
-
       }
     }
 
   } catch (error) {
 
     console.warn(
-      "⚠️ Invalid YouTube URL:",
+      "Invalid YouTube URL:",
       url
     );
 
@@ -628,28 +809,20 @@ function getYouTubeEmbedUrl(url) {
 function renderLiveVideo(url) {
 
   const containers = [
-    $("#liveVideo"),
-    ...Array.from(
-      $$("[data-live-video]")
-    )
+    ...Array.from($$(
+      "#liveVideo"
+    )),
+    ...Array.from($$(
+      "[data-live-video]"
+    ))
   ];
 
   if (!containers.length) {
-
-    console.warn(
-      "⚠️ #liveVideo container not found"
-    );
-
     return;
   }
 
   const cleanLiveUrl =
     cleanUrl(url);
-
-  console.log(
-    "🎥 Live URL:",
-    cleanLiveUrl
-  );
 
   const embedUrl =
     getYouTubeEmbedUrl(
@@ -682,12 +855,6 @@ function renderLiveVideo(url) {
     }
 
 
-    /*
-      If admin has entered a YouTube URL
-      that cannot be converted to an embed,
-      show a direct Live button.
-    */
-
     if (!embedUrl) {
 
       container.innerHTML = `
@@ -699,7 +866,7 @@ function renderLiveVideo(url) {
         ">
 
           <div style="
-            font-size:28px;
+            font-size:30px;
             margin-bottom:10px;
           ">
             🔴
@@ -710,10 +877,10 @@ function renderLiveVideo(url) {
           </strong>
 
           <p style="
-            margin:10px 0;
             color:#666;
+            margin:10px 0;
           ">
-            Live देखने के लिए नीचे दिए button पर जाएँ।
+            Live देखने के लिए नीचे button दबाएँ।
           </p>
 
           <a
@@ -725,7 +892,7 @@ function renderLiveVideo(url) {
               padding:11px 18px;
               border-radius:12px;
               background:#7f1111;
-              color:white;
+              color:#fff;
               text-decoration:none;
               font-weight:700;
             "
@@ -781,121 +948,21 @@ function renderLiveVideo(url) {
 
 
 /* =========================================================
-   QR CODE
-   ========================================================= */
-
-function renderQR(url) {
-
-  const qrUrl =
-    cleanUrl(url);
-
-  console.log(
-    "🧾 QR URL:",
-    qrUrl
-  );
-
-  const containers = [
-    $("#qrContainer"),
-    ...Array.from(
-      $$("[data-qr-container]")
-    )
-  ];
-
-  const images = [
-    $("#qrImage"),
-    ...Array.from(
-      $$("[data-qr-image]")
-    )
-  ];
-
-
-  images.forEach(img => {
-
-    if (!qrUrl) {
-
-      img.removeAttribute("src");
-
-      img.style.display =
-        "none";
-
-      return;
-    }
-
-    img.src =
-      qrUrl;
-
-    img.style.display =
-      "block";
-
-    img.onerror = () => {
-
-      console.error(
-        "❌ QR image failed:",
-        qrUrl
-      );
-
-      img.style.display =
-        "none";
-
-    };
-
-  });
-
-
-  containers.forEach(container => {
-
-    if (!qrUrl) {
-
-      container.innerHTML = `
-        <div style="
-          padding:20px;
-          text-align:center;
-          color:#777;
-        ">
-          QR Code जल्द अपडेट होगा।
-        </div>
-      `;
-
-      return;
-    }
-
-    container.innerHTML = `
-      <img
-        src="${escapeHtml(qrUrl)}"
-        alt="Donation QR Code"
-        style="
-          width:min(280px,100%);
-          height:auto;
-          display:block;
-          margin:auto;
-          border-radius:16px;
-        "
-      />
-    `;
-
-  });
-}
-
-
-/* =========================================================
    GALLERY
    ========================================================= */
 
 function renderGallery(snapshot) {
 
   const grids = [
-    $("#galleryGrid"),
-    ...Array.from(
-      $$("[data-gallery]")
-    )
+    ...Array.from($$(
+      "#galleryGrid"
+    )),
+    ...Array.from($$(
+      "[data-gallery]"
+    ))
   ];
 
   if (!grids.length) {
-
-    console.warn(
-      "⚠️ Gallery container not found"
-    );
-
     return;
   }
 
@@ -908,18 +975,6 @@ function renderGallery(snapshot) {
     const data =
       docSnap.data();
 
-    console.log(
-      "📸 Gallery document:",
-      docSnap.id,
-      data
-    );
-
-
-    /*
-      Admin panel may contain any of these
-      image fields. We support all.
-    */
-
     const rawImageUrl =
       data.secure_url ||
       data.secureUrl ||
@@ -929,21 +984,12 @@ function renderGallery(snapshot) {
       data.image ||
       "";
 
-
     const imageUrl =
       cleanUrl(rawImageUrl);
 
-
     if (!imageUrl) {
-
-      console.warn(
-        "⚠️ Gallery item has no image URL:",
-        docSnap.id
-      );
-
       return;
     }
-
 
     items.push({
 
@@ -980,11 +1026,6 @@ function renderGallery(snapshot) {
   );
 
 
-  console.log(
-    `📸 Rendering ${items.length} gallery photos`
-  );
-
-
   grids.forEach(grid => {
 
     if (!items.length) {
@@ -1009,7 +1050,6 @@ function renderGallery(snapshot) {
 
         <article
           class="gallery-item"
-          data-gallery-id="${escapeHtml(item.id)}"
           style="
             overflow:hidden;
             border-radius:18px;
@@ -1034,15 +1074,12 @@ function renderGallery(snapshot) {
                 height:100%;
                 object-fit:cover;
                 display:block;
-                transition:transform .3s ease;
               "
-            />
+            >
 
           </div>
 
-          <div style="
-            padding:14px;
-          ">
+          <div style="padding:14px;">
 
             <div style="
               font-size:12px;
@@ -1066,52 +1103,6 @@ function renderGallery(snapshot) {
 
       `).join("");
 
-
-    /*
-      Image error handling after DOM insertion.
-    */
-
-    grid
-      .querySelectorAll("img")
-      .forEach(img => {
-
-        img.addEventListener(
-          "error",
-          () => {
-
-            console.error(
-              "❌ Gallery image failed:",
-              img.src
-            );
-
-            const parent =
-              img.parentElement;
-
-            if (parent) {
-
-              parent.innerHTML = `
-                <div style="
-                  height:100%;
-                  min-height:180px;
-                  display:flex;
-                  align-items:center;
-                  justify-content:center;
-                  color:#888;
-                  font-size:13px;
-                  text-align:center;
-                  padding:20px;
-                ">
-                  Photo load नहीं हुई
-                </div>
-              `;
-
-            }
-
-          }
-        );
-
-      });
-
   });
 }
 
@@ -1122,22 +1113,17 @@ function renderGallery(snapshot) {
 
 function listenGallery() {
 
-  console.log(
-    "📸 Listening to Firestore gallery..."
-  );
-
   const galleryRef =
     collection(db, "gallery");
 
-
   onSnapshot(
-
     galleryRef,
 
     snapshot => {
 
       console.log(
-        `✅ Gallery Firestore snapshot: ${snapshot.size} photos`
+        "📸 Gallery:",
+        snapshot.size
       );
 
       renderGallery(snapshot);
@@ -1147,68 +1133,30 @@ function listenGallery() {
     error => {
 
       console.error(
-        "❌ Gallery Firestore error:",
+        "❌ Gallery error:",
         error
       );
 
-      const grids = [
-        $("#galleryGrid"),
-        ...Array.from(
-          $$("[data-gallery]")
-        )
-      ];
-
-      grids.forEach(grid => {
-
-        grid.innerHTML = `
-          <div style="
-            grid-column:1/-1;
-            padding:30px;
-            text-align:center;
-            color:#991b1b;
-            background:#fff5f5;
-            border-radius:16px;
-          ">
-            Gallery load नहीं हो पाई।
-          </div>
-        `;
-
-      });
-
     }
-
   );
 }
 
-
-/* =========================================================
-   INITIAL GALLERY LOAD
-   ========================================================= */
 
 async function loadGallery() {
 
   try {
 
-    console.log(
-      "📸 Initial gallery loading..."
-    );
-
-    const galleryRef =
-      collection(db, "gallery");
-
     const snapshot =
-      await getDocs(galleryRef);
-
-    console.log(
-      `📸 Initial gallery load: ${snapshot.size} photos`
-    );
+      await getDocs(
+        collection(db, "gallery")
+      );
 
     renderGallery(snapshot);
 
   } catch (error) {
 
     console.error(
-      "❌ Initial gallery load error:",
+      "❌ Gallery initial error:",
       error
     );
 
@@ -1217,19 +1165,27 @@ async function loadGallery() {
 
 
 /* =========================================================
-   SCHEDULE
+   SCHEDULE / CALENDAR
    ========================================================= */
 
 function renderSchedule(snapshot) {
 
   const containers = [
-    $("#scheduleList"),
-    ...Array.from(
-      $$("[data-schedule]")
-    )
+    ...Array.from($$(
+      "#scheduleList"
+    )),
+    ...Array.from($$(
+      "[data-schedule]"
+    )),
+    ...Array.from($$(
+      ".schedule-list"
+    ))
   ];
 
   if (!containers.length) {
+    console.warn(
+      "⚠️ Schedule container not found"
+    );
     return;
   }
 
@@ -1282,14 +1238,32 @@ function renderSchedule(snapshot) {
   });
 
 
+  /* -------------------------------------------------------
+     DATE SORT
+     ------------------------------------------------------- */
+
   items.sort((a, b) => {
 
     if (a.date && b.date) {
 
+      const da =
+        new Date(a.date);
+
+      const dbDate =
+        new Date(b.date);
+
+      if (
+        !isNaN(da.getTime()) &&
+        !isNaN(dbDate.getTime())
+      ) {
+
+        return da - dbDate;
+
+      }
+
       return a.date.localeCompare(
         b.date
       );
-
     }
 
     return (
@@ -1323,6 +1297,7 @@ function renderSchedule(snapshot) {
 
         <div
           class="schedule-item"
+          data-schedule-id="${escapeHtml(item.id)}"
           style="
             display:flex;
             gap:15px;
@@ -1355,12 +1330,12 @@ function renderSchedule(snapshot) {
           </div>
 
 
-          <div>
+          <div style="flex:1;">
 
             <div style="
               font-weight:800;
               color:#40100d;
-              margin-bottom:4px;
+              margin-bottom:5px;
             ">
               ${escapeHtml(item.title)}
             </div>
@@ -1380,6 +1355,7 @@ function renderSchedule(snapshot) {
                   <div style="
                     font-size:13px;
                     color:#666;
+                    line-height:1.5;
                   ">
                     ${escapeHtml(item.description)}
                   </div>
@@ -1407,13 +1383,13 @@ function listenSchedule() {
     collection(db, "schedule");
 
   onSnapshot(
-
     scheduleRef,
 
     snapshot => {
 
       console.log(
-        `📅 Schedule loaded: ${snapshot.size}`
+        "📅 Schedule:",
+        snapshot.size
       );
 
       renderSchedule(snapshot);
@@ -1428,31 +1404,25 @@ function listenSchedule() {
       );
 
     }
-
   );
 }
 
-
-/* =========================================================
-   INITIAL SCHEDULE
-   ========================================================= */
 
 async function loadSchedule() {
 
   try {
 
-    const scheduleRef =
-      collection(db, "schedule");
-
     const snapshot =
-      await getDocs(scheduleRef);
+      await getDocs(
+        collection(db, "schedule")
+      );
 
     renderSchedule(snapshot);
 
   } catch (error) {
 
     console.error(
-      "❌ Initial schedule error:",
+      "❌ Schedule initial error:",
       error
     );
 
@@ -1471,20 +1441,17 @@ function initMapLinks() {
 
   mapLinks.forEach(link => {
 
-    if (
-      link.tagName === "A" &&
-      !link.href.includes("google")
-    ) {
+    if (link.tagName !== "A") {
+      return;
+    }
+
+    if (!link.href.includes("google")) {
 
       link.href =
         "https://www.google.com/maps/search/?api=1&query=श्री+श्री+108+माँ+मनोकामना+छोटी+दुर्गा+पूजा+समिति+चकशिवगंज+मौलानगर+सूर्यगढ़ा";
 
-      link.target =
-        "_blank";
-
-      link.rel =
-        "noopener noreferrer";
-
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
     }
 
   });
@@ -1492,15 +1459,13 @@ function initMapLinks() {
 
 
 /* =========================================================
-   LANGUAGE TOGGLE
+   LANGUAGE
    ========================================================= */
 
 function initLanguageToggle() {
 
   const buttons =
-    $$(
-      "#languageToggle, [data-language-toggle]"
-    );
+    $$("#languageToggle, [data-language-toggle]");
 
   buttons.forEach(button => {
 
@@ -1509,25 +1474,17 @@ function initLanguageToggle() {
       () => {
 
         const current =
-          document.documentElement.lang ||
-          "hi";
-
+          document.documentElement.lang || "hi";
 
         if (current === "hi") {
 
-          document.documentElement.lang =
-            "en";
-
-          button.textContent =
-            "हिंदी";
+          document.documentElement.lang = "en";
+          button.textContent = "हिंदी";
 
         } else {
 
-          document.documentElement.lang =
-            "hi";
-
-          button.textContent =
-            "English";
+          document.documentElement.lang = "hi";
+          button.textContent = "English";
 
         }
 
@@ -1547,33 +1504,18 @@ function initDonationModal() {
   const modal =
     $("#donationModal");
 
-  const openButtons =
-    $$(
-      "#donateBtn, [data-open-donation]"
-    );
+  if (!modal) return;
 
-  const closeButtons =
-    $$(
-      "#closeDonationModal, [data-close-donation]"
-    );
-
-
-  if (!modal) {
-    return;
-  }
-
-
-  openButtons.forEach(button => {
+  $$(
+    "#donateBtn, [data-open-donation]"
+  ).forEach(button => {
 
     button.addEventListener(
       "click",
       () => {
 
-        modal.style.display =
-          "flex";
-
-        document.body.style.overflow =
-          "hidden";
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
 
       }
     );
@@ -1581,17 +1523,16 @@ function initDonationModal() {
   });
 
 
-  closeButtons.forEach(button => {
+  $$(
+    "#closeDonationModal, [data-close-donation]"
+  ).forEach(button => {
 
     button.addEventListener(
       "click",
       () => {
 
-        modal.style.display =
-          "none";
-
-        document.body.style.overflow =
-          "";
+        modal.style.display = "none";
+        document.body.style.overflow = "";
 
       }
     );
@@ -1605,11 +1546,8 @@ function initDonationModal() {
 
       if (event.target === modal) {
 
-        modal.style.display =
-          "none";
-
-        document.body.style.overflow =
-          "";
+        modal.style.display = "none";
+        document.body.style.overflow = "";
 
       }
 
@@ -1619,13 +1557,12 @@ function initDonationModal() {
 
 
 /* =========================================================
-   RECEIPT NUMBER
+   RECEIPT
    ========================================================= */
 
 function generateReceiptNumber() {
 
-  const now =
-    new Date();
+  const now = new Date();
 
   const year =
     now.getFullYear();
@@ -1645,10 +1582,6 @@ function generateReceiptNumber() {
 }
 
 
-/* =========================================================
-   RECEIPT DATE
-   ========================================================= */
-
 function formatReceiptDate(
   date = new Date()
 ) {
@@ -1666,10 +1599,6 @@ function formatReceiptDate(
   );
 }
 
-
-/* =========================================================
-   RECEIPT ESCAPE
-   ========================================================= */
 
 function receiptEscape(value) {
 
@@ -1691,9 +1620,7 @@ function initDonationForm() {
   const form =
     $("#donationForm");
 
-  if (!form) {
-    return;
-  }
+  if (!form) return;
 
 
   form.addEventListener(
@@ -1747,10 +1674,7 @@ function initDonationForm() {
       }
 
 
-      if (
-        !amount ||
-        amount <= 0
-      ) {
+      if (!amount || amount <= 0) {
 
         showToast(
           "कृपया सही donation amount डालें।",
@@ -1777,10 +1701,8 @@ function initDonationForm() {
           "button[type='submit']"
         );
 
-
       if (submitButton) {
-        submitButton.disabled =
-          true;
+        submitButton.disabled = true;
       }
 
 
@@ -1793,35 +1715,19 @@ function initDonationForm() {
         const donationData = {
 
           donorName,
-
           amount,
-
           purpose,
-
           utr,
-
           receiptNumber,
-
-          status:
-            "pending",
-
-          createdAt:
-            serverTimestamp()
+          status: "pending",
+          createdAt: serverTimestamp()
 
         };
 
 
         await addDoc(
-          collection(
-            db,
-            "donations"
-          ),
+          collection(db, "donations"),
           donationData
-        );
-
-
-        console.log(
-          "✅ Donation submitted"
         );
 
 
@@ -1829,8 +1735,7 @@ function initDonationForm() {
 
           ...donationData,
 
-          createdAt:
-            new Date()
+          createdAt: new Date()
 
         });
 
@@ -1853,8 +1758,7 @@ function initDonationForm() {
       } finally {
 
         if (submitButton) {
-          submitButton.disabled =
-            false;
+          submitButton.disabled = false;
         }
 
       }
@@ -1907,7 +1811,6 @@ function showDonationReceipt(data) {
         background:white;
         border-radius:22px;
         padding:24px;
-        box-shadow:0 20px 60px rgba(0,0,0,.3);
       ">
 
         <div style="
@@ -1915,15 +1818,11 @@ function showDonationReceipt(data) {
           color:#7f1111;
         ">
 
-          <div style="
-            font-size:30px;
-          ">
+          <div style="font-size:30px;">
             🛕
           </div>
 
-          <h2 style="
-            margin:5px 0;
-          ">
+          <h2 style="margin:5px 0;">
             श्री श्री 108 माँ मनोकामना
           </h2>
 
@@ -1965,87 +1864,41 @@ function showDonationReceipt(data) {
           padding:15px;
         ">
 
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:9px;
-          ">
-            <strong>Receipt No.</strong>
-            <span>
-              ${receiptEscape(data.receiptNumber)}
-            </span>
-          </div>
+          <p>
+            <strong>Receipt No.:</strong>
+            ${receiptEscape(data.receiptNumber)}
+          </p>
 
+          <p>
+            <strong>नाम:</strong>
+            ${receiptEscape(data.donorName)}
+          </p>
 
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:9px;
-          ">
-            <strong>नाम</strong>
-            <span>
-              ${receiptEscape(data.donorName)}
-            </span>
-          </div>
+          <p>
+            <strong>Amount:</strong>
+            ₹${receiptEscape(data.amount)}
+          </p>
 
+          <p>
+            <strong>Purpose:</strong>
+            ${receiptEscape(data.purpose)}
+          </p>
 
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:9px;
-          ">
-            <strong>Amount</strong>
-            <span>
-              ₹${receiptEscape(data.amount)}
-            </span>
-          </div>
+          <p>
+            <strong>UTR:</strong>
+            ${receiptEscape(data.utr)}
+          </p>
 
-
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:9px;
-          ">
-            <strong>Purpose</strong>
-            <span>
-              ${receiptEscape(data.purpose)}
-            </span>
-          </div>
-
-
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-            margin-bottom:9px;
-          ">
-            <strong>UTR</strong>
-            <span>
-              ${receiptEscape(data.utr)}
-            </span>
-          </div>
-
-
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            gap:15px;
-          ">
-            <strong>Date</strong>
-            <span>
-              ${receiptEscape(
-                formatReceiptDate(
-                  data.createdAt instanceof Date
-                    ? data.createdAt
-                    : new Date()
-                )
-              )}
-            </span>
-          </div>
+          <p>
+            <strong>Date:</strong>
+            ${receiptEscape(
+              formatReceiptDate(
+                data.createdAt instanceof Date
+                  ? data.createdAt
+                  : new Date()
+              )
+            )}
+          </p>
 
         </div>
 
@@ -2055,9 +1908,8 @@ function showDonationReceipt(data) {
           color:#777;
           font-size:12px;
           line-height:1.6;
-          margin:16px 0;
         ">
-          धन्यवाद। यह receipt donation acknowledgement है।
+          धन्यवाद। यह donation acknowledgement receipt है।
           अंतिम verification समिति द्वारा की जाएगी।
         </p>
 
@@ -2084,7 +1936,6 @@ function showDonationReceipt(data) {
             🖨️ Print / Save PDF
           </button>
 
-
           <button
             type="button"
             id="closeReceiptBtn"
@@ -2094,7 +1945,6 @@ function showDonationReceipt(data) {
               border-radius:12px;
               padding:12px;
               background:white;
-              color:#333;
               font-weight:800;
               cursor:pointer;
             "
@@ -2111,24 +1961,20 @@ function showDonationReceipt(data) {
   `;
 
 
-  document.body.appendChild(
-    modal
-  );
+  document.body.appendChild(modal);
 
 
   $("#printReceiptBtn")
     ?.addEventListener(
       "click",
-      () =>
-        printDonationReceipt(data)
+      () => printDonationReceipt(data)
     );
 
 
   $("#closeReceiptBtn")
     ?.addEventListener(
       "click",
-      () =>
-        modal.remove()
+      () => modal.remove()
     );
 }
 
@@ -2145,7 +1991,6 @@ function printDonationReceipt(data) {
       "_blank",
       "width=700,height=800"
     );
-
 
   if (!printWindow) {
 
@@ -2168,9 +2013,7 @@ function printDonationReceipt(data) {
 
       <meta charset="UTF-8">
 
-      <title>
-        Donation Receipt
-      </title>
+      <title>Donation Receipt</title>
 
       <style>
 
@@ -2182,8 +2025,6 @@ function printDonationReceipt(data) {
           margin:0;
           padding:30px;
           font-family:Arial,sans-serif;
-          background:#fff;
-          color:#222;
         }
 
         .receipt {
@@ -2196,7 +2037,6 @@ function printDonationReceipt(data) {
 
         h1 {
           color:#7f1111;
-          margin:0 0 5px;
           text-align:center;
         }
 
@@ -2231,20 +2071,13 @@ function printDonationReceipt(data) {
           margin-top:20px;
           color:#666;
           font-size:12px;
-          line-height:1.6;
           text-align:center;
         }
 
         @media print {
-
           body {
             padding:0;
           }
-
-          .receipt {
-            border:1px solid #7f1111;
-          }
-
         }
 
       </style>
@@ -2275,37 +2108,27 @@ function printDonationReceipt(data) {
 
           <tr>
             <td>Receipt No.</td>
-            <td>
-              ${receiptEscape(data.receiptNumber)}
-            </td>
+            <td>${receiptEscape(data.receiptNumber)}</td>
           </tr>
 
           <tr>
             <td>Donor Name</td>
-            <td>
-              ${receiptEscape(data.donorName)}
-            </td>
+            <td>${receiptEscape(data.donorName)}</td>
           </tr>
 
           <tr>
             <td>Amount</td>
-            <td>
-              ₹${receiptEscape(data.amount)}
-            </td>
+            <td>₹${receiptEscape(data.amount)}</td>
           </tr>
 
           <tr>
             <td>Purpose</td>
-            <td>
-              ${receiptEscape(data.purpose)}
-            </td>
+            <td>${receiptEscape(data.purpose)}</td>
           </tr>
 
           <tr>
             <td>UTR</td>
-            <td>
-              ${receiptEscape(data.utr)}
-            </td>
+            <td>${receiptEscape(data.utr)}</td>
           </tr>
 
           <tr>
@@ -2325,18 +2148,14 @@ function printDonationReceipt(data) {
 
         <div class="note">
           धन्यवाद। यह donation acknowledgement receipt है।
-          अंतिम verification समिति द्वारा की जाएगी।
         </div>
 
       </div>
 
-
       <script>
-
         window.onload = function() {
           window.print();
         };
-
       <\/script>
 
     </body>
@@ -2350,15 +2169,12 @@ function printDonationReceipt(data) {
 
 
 /* =========================================================
-   PWA INSTALL BUTTON
+   PWA INSTALL
    ========================================================= */
 
 function createInstallButton() {
 
-  if (installButton) {
-    return;
-  }
-
+  if (installButton) return;
 
   installButton =
     document.getElementById(
@@ -2379,7 +2195,6 @@ function createInstallButton() {
 
     installButton.textContent =
       "📱 App Install करें";
-
 
     installButton.style.cssText = `
       position:fixed;
@@ -2407,16 +2222,10 @@ function createInstallButton() {
     "inline-flex";
 
 
-  installButton.addEventListener(
-    "click",
-    installApp
-  );
+  installButton.onclick =
+    installApp;
 }
 
-
-/* =========================================================
-   INSTALL APP
-   ========================================================= */
 
 async function installApp() {
 
@@ -2428,27 +2237,21 @@ async function installApp() {
       await deferredInstallPrompt.userChoice;
 
     console.log(
-      "📱 PWA install result:",
+      "📱 Install result:",
       result.outcome
     );
 
-    deferredInstallPrompt =
-      null;
+    deferredInstallPrompt = null;
 
     return;
   }
 
-
   showToast(
-    "Browser ने अभी native install prompt उपलब्ध नहीं किया है। Chrome menu में Install app देखें।",
+    "Chrome menu में Install app देखें।",
     "info"
   );
 }
 
-
-/* =========================================================
-   BEFORE INSTALL PROMPT
-   ========================================================= */
 
 window.addEventListener(
   "beforeinstallprompt",
@@ -2459,48 +2262,23 @@ window.addEventListener(
     deferredInstallPrompt =
       event;
 
-    console.log(
-      "📱 PWA install prompt ready"
-    );
-
     if (!installButton) {
       createInstallButton();
-    }
-
-    if (installButton) {
-
-      installButton.style.display =
-        "inline-flex";
-
     }
 
   }
 );
 
 
-/* =========================================================
-   APP INSTALLED
-   ========================================================= */
-
 window.addEventListener(
   "appinstalled",
   () => {
 
-    console.log(
-      "✅ App installed"
-    );
-
-    deferredInstallPrompt =
-      null;
-
+    deferredInstallPrompt = null;
 
     if (installButton) {
-
-      installButton.style.display =
-        "none";
-
+      installButton.style.display = "none";
     }
-
 
     showToast(
       "App successfully install हो गया ❤️",
@@ -2510,10 +2288,6 @@ window.addEventListener(
   }
 );
 
-
-/* =========================================================
-   CHECK STANDALONE
-   ========================================================= */
 
 function checkIfAppIsInstalled() {
 
@@ -2525,17 +2299,10 @@ function checkIfAppIsInstalled() {
   const iosStandalone =
     window.navigator.standalone === true;
 
-
-  if (
-    standalone ||
-    iosStandalone
-  ) {
+  if (standalone || iosStandalone) {
 
     if (installButton) {
-
-      installButton.style.display =
-        "none";
-
+      installButton.style.display = "none";
     }
 
     return true;
@@ -2551,17 +2318,9 @@ function checkIfAppIsInstalled() {
 
 function registerServiceWorker() {
 
-  if (
-    !("serviceWorker" in navigator)
-  ) {
-
-    console.warn(
-      "Service Worker not supported"
-    );
-
+  if (!("serviceWorker" in navigator)) {
     return;
   }
-
 
   window.addEventListener(
     "load",
@@ -2578,14 +2337,14 @@ function registerServiceWorker() {
           );
 
         console.log(
-          "✅ Service Worker registered:",
+          "✅ Service Worker:",
           registration.scope
         );
 
       } catch (error) {
 
         console.error(
-          "❌ Service Worker registration failed:",
+          "❌ Service Worker:",
           error
         );
 
@@ -2597,53 +2356,7 @@ function registerServiceWorker() {
 
 
 /* =========================================================
-   DEBUG INFORMATION
-   ========================================================= */
-
-function showDebugInfo() {
-
-  console.log(
-    "===================================="
-  );
-
-  console.log(
-    "🏛️ MAA MANOKAMANA TEMPLE"
-  );
-
-  console.log(
-    "Firebase project:",
-    firebaseConfig?.projectId ||
-      "unknown"
-  );
-
-  console.log(
-    "Firestore paths:"
-  );
-
-  console.log(
-    " - temple/settings"
-  );
-
-  console.log(
-    " - gallery"
-  );
-
-  console.log(
-    " - schedule"
-  );
-
-  console.log(
-    " - donations"
-  );
-
-  console.log(
-    "===================================="
-  );
-}
-
-
-/* =========================================================
-   DOM READY
+   START APP
    ========================================================= */
 
 document.addEventListener(
@@ -2651,80 +2364,59 @@ document.addEventListener(
   async () => {
 
     console.log(
-      "🚀 Temple app starting..."
+      "🚀 MAA MANOKAMANA TEMPLE APP STARTING"
+    );
+
+    console.log(
+      "Firebase:",
+      firebaseConfig?.projectId
     );
 
 
-    /* Debug */
-
-    showDebugInfo();
-
-
-    /* Menu */
+    /* Basic */
 
     initMobileMenu();
-
-
-    /* Language */
-
     initLanguageToggle();
-
-
-    /* Map */
-
     initMapLinks();
 
 
     /* Donation */
 
     initDonationModal();
-
     initDonationForm();
 
 
     /* PWA */
 
     createInstallButton();
-
     checkIfAppIsInstalled();
 
 
-    /* ---------------------------------
-       FIREBASE SETTINGS
-       --------------------------------- */
+    /* Temple settings */
 
     await loadTempleSettings();
-
     listenTempleSettings();
 
 
-    /* ---------------------------------
-       GALLERY
-       --------------------------------- */
+    /* Gallery */
 
     await loadGallery();
-
     listenGallery();
 
 
-    /* ---------------------------------
-       SCHEDULE
-       --------------------------------- */
+    /* Schedule / Calendar */
 
     await loadSchedule();
-
     listenSchedule();
 
 
-    /* ---------------------------------
-       SERVICE WORKER
-       --------------------------------- */
+    /* Service Worker */
 
     registerServiceWorker();
 
 
     console.log(
-      "✅ Temple app ready"
+      "✅ MAA MANOKAMANA TEMPLE APP READY"
     );
 
   }
