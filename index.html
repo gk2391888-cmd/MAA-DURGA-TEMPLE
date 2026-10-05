@@ -292,6 +292,7 @@
 
       </div>
 
+      <!-- Gallery Preview -->
       <div
         class="gallery-grid"
         id="galleryGrid"
@@ -300,6 +301,31 @@
         <div class="gallery-loading">
           तस्वीरें लोड हो रही हैं...
         </div>
+
+      </div>
+
+      <!-- View More Button -->
+      <div
+        id="galleryViewMoreWrap"
+        style="
+          display:none;
+          width:100%;
+          text-align:center;
+          margin-top:24px;
+        "
+      >
+
+        <button
+          type="button"
+          id="galleryViewMoreBtn"
+          class="btn"
+          style="
+            min-width:210px;
+            justify-content:center;
+          "
+        >
+          📸 View More Gallery
+        </button>
 
       </div>
 
@@ -452,7 +478,6 @@
 
   <!-- =====================================================
        WELCOME POPUP
-       FIRST VISIT ONLY
   ====================================================== -->
   <div
     class="welcome-overlay"
@@ -640,6 +665,7 @@
       <div class="footer-divider"></div>
 
       <div class="footer-msme">
+
         <span class="footer-badge">
           MSME
         </span>
@@ -648,6 +674,7 @@
         <strong>
           BR-19-0017611
         </strong>
+
       </div>
 
       <div class="footer-tagline">
@@ -671,7 +698,6 @@
 
   <!-- =====================================================
        WELCOME POPUP SCRIPT
-       केवल पहली बार दिखेगा
   ====================================================== -->
   <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -686,6 +712,7 @@
         localStorage.getItem("maaManokamanaWelcomeShown");
 
       function closeWelcome() {
+
         popup.classList.remove("show");
         popup.setAttribute("aria-hidden", "true");
 
@@ -695,19 +722,24 @@
           "maaManokamanaWelcomeShown",
           "true"
         );
+
       }
 
       function openWelcome() {
+
         popup.classList.add("show");
         popup.setAttribute("aria-hidden", "false");
 
         document.body.classList.add("welcome-open");
+
       }
 
       if (!welcomeShown) {
+
         setTimeout(function () {
           openWelcome();
         }, 500);
+
       }
 
       if (closeBtn) {
@@ -719,15 +751,19 @@
       }
 
       popup.addEventListener("click", function (event) {
+
         if (event.target === popup) {
           closeWelcome();
         }
+
       });
 
       document.addEventListener("keydown", function (event) {
+
         if (event.key === "Escape") {
           closeWelcome();
         }
+
       });
 
     });
@@ -735,7 +771,7 @@
 
 
   <!-- =====================================================
-       WELCOME POPUP + FOOTER STYLE
+       CUSTOM STYLE
   ====================================================== -->
   <style>
 
@@ -862,6 +898,34 @@
 
 
     /* =========================
+       GALLERY VIEW MORE
+    ========================= */
+
+    #galleryViewMoreWrap {
+      animation: galleryButtonIn .25s ease;
+    }
+
+    #galleryViewMoreBtn {
+      border: 0;
+      cursor: pointer;
+    }
+
+    @keyframes galleryButtonIn {
+
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+    }
+
+
+    /* =========================
        PROFESSIONAL FOOTER
     ========================= */
 
@@ -884,6 +948,7 @@
         );
 
       border-top: 1px solid rgba(247,196,107,.25);
+
       box-shadow:
         0 -12px 35px rgba(0,0,0,.14);
 
