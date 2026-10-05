@@ -83,6 +83,7 @@ let templeSettings = {
 ========================================================= */
 
 let deferredInstallPrompt = null;
+let installButton = null;
 
 
 /* =========================================================
@@ -243,8 +244,6 @@ if (donationForm) {
       $("utr")?.value.trim() || "";
 
 
-    /* Validation */
-
     if (!amountValue) {
 
       showToast("कृपया Donation Amount भरें।");
@@ -280,8 +279,6 @@ if (donationForm) {
     }
 
 
-    /* Disable submit button */
-
     const submitBtn =
       donationForm.querySelector(
         'button[type="submit"]'
@@ -300,8 +297,6 @@ if (donationForm) {
 
 
     try {
-
-      /* Save donation to Firestore */
 
       await addDoc(
         collection(db, "donations"),
@@ -360,8 +355,6 @@ if (donationForm) {
 
 /* =========================================================
    LOAD TEMPLE SETTINGS
-   Firestore:
-   temple/settings
 ========================================================= */
 
 async function loadTempleSettings() {
@@ -503,8 +496,6 @@ function applyTempleSettings() {
     "समय जल्द अपडेट होगा";
 
 
-  /* Aarti time */
-
   if (todayAartiTime) {
 
     todayAartiTime.textContent =
@@ -521,8 +512,6 @@ function applyTempleSettings() {
   }
 
 
-  /* UPI ID */
-
   if (upiId) {
 
     upiId.textContent =
@@ -532,17 +521,9 @@ function applyTempleSettings() {
   }
 
 
-  /* QR */
-
   renderQRCode();
 
-
-  /* Live */
-
   renderLiveVideo();
-
-
-  /* Contact */
 
   renderContactNumber();
 
@@ -564,8 +545,6 @@ function renderContactNumber() {
     templeSettings.contactNumber?.trim();
 
 
-  /* No number */
-
   if (!number) {
 
     contactPhone.textContent =
@@ -581,13 +560,9 @@ function renderContactNumber() {
   }
 
 
-  /* Show number */
-
   contactPhone.textContent =
     number;
 
-
-  /* Clean number for tel link */
 
   const cleanNumber =
     number.replace(/[^\d+]/g, "");
@@ -621,8 +596,6 @@ function renderQRCode() {
     templeSettings.qrUrl?.trim();
 
 
-  /* No QR configured */
-
   if (!qrUrl) {
 
     qrBox.innerHTML = `
@@ -634,8 +607,6 @@ function renderQRCode() {
 
   }
 
-
-  /* Image URL */
 
   const img =
     document.createElement("img");
@@ -686,8 +657,6 @@ function renderLiveVideo() {
     templeSettings.liveUrl?.trim();
 
 
-  /* No live URL */
-
   if (!liveUrl) {
 
     liveVideo.innerHTML = `
@@ -704,8 +673,6 @@ function renderLiveVideo() {
   const embedUrl =
     getYouTubeEmbedUrl(liveUrl);
 
-
-  /* YouTube */
 
   if (embedUrl) {
 
@@ -726,8 +693,6 @@ function renderLiveVideo() {
 
   }
 
-
-  /* Other video / live URL */
 
   liveVideo.innerHTML = `
     <div class="play-icon">▶</div>
@@ -769,8 +734,6 @@ function getYouTubeEmbedUrl(url) {
       new URL(url);
 
 
-    /* youtube.com/watch?v= */
-
     if (
       parsed.hostname.includes("youtube.com") &&
       parsed.pathname === "/watch"
@@ -788,8 +751,6 @@ function getYouTubeEmbedUrl(url) {
 
     }
 
-
-    /* youtu.be/VIDEO_ID */
 
     if (
       parsed.hostname === "youtu.be" ||
@@ -809,8 +770,6 @@ function getYouTubeEmbedUrl(url) {
     }
 
 
-    /* youtube.com/live/VIDEO_ID */
-
     if (
       parsed.hostname.includes("youtube.com") &&
       parsed.pathname.startsWith("/live/")
@@ -828,8 +787,6 @@ function getYouTubeEmbedUrl(url) {
 
     }
 
-
-    /* Already embed URL */
 
     if (
       parsed.hostname.includes("youtube.com") &&
@@ -857,8 +814,6 @@ function getYouTubeEmbedUrl(url) {
 
 /* =========================================================
    LOAD SCHEDULE
-   Firestore:
-   schedule/{id}
 ========================================================= */
 
 async function loadSchedule() {
@@ -1143,10 +1098,8 @@ function formatScheduleDate(dateValue) {
   if (!dateValue) {
 
     return {
-
       day: "—",
       month: "DATE"
-
     };
 
   }
@@ -1161,17 +1114,14 @@ function formatScheduleDate(dateValue) {
     if (Number.isNaN(date.getTime())) {
 
       return {
-
         day: dateValue,
         month: "DATE"
-
       };
 
     }
 
 
     const months = [
-
       "JAN",
       "FEB",
       "MAR",
@@ -1184,7 +1134,6 @@ function formatScheduleDate(dateValue) {
       "OCT",
       "NOV",
       "DEC"
-
     ];
 
 
@@ -1220,15 +1169,6 @@ function formatScheduleDate(dateValue) {
 
 /* =========================================================
    GALLERY
-   Firestore:
-   gallery/{id}
-
-   Admin Panel saves:
-   - title
-   - category
-   - imageUrl
-   - publicId
-   - createdAt
 ========================================================= */
 
 async function loadGallery() {
@@ -1369,8 +1309,6 @@ function renderGallery(items) {
   }
 
 
-  /* No gallery photos */
-
   if (!items || items.length === 0) {
 
     renderEmptyGallery();
@@ -1392,8 +1330,6 @@ function renderGallery(items) {
     galleryItem.className =
       "gallery-item";
 
-
-    /* Image */
 
     const image =
       document.createElement("img");
@@ -1423,8 +1359,6 @@ function renderGallery(items) {
 
     };
 
-
-    /* Caption */
 
     const caption =
       document.createElement("div");
@@ -1629,10 +1563,11 @@ if ("serviceWorker" in navigator) {
 
       .register("./sw.js")
 
-      .then(() => {
+      .then((registration) => {
 
         console.log(
-          "Service Worker registered successfully."
+          "Service Worker registered successfully.",
+          registration
         );
 
       })
@@ -1652,104 +1587,231 @@ if ("serviceWorker" in navigator) {
 
 
 /* =========================================================
-   PWA INSTALL PROMPT
+   PWA INSTALL BUTTON
 ========================================================= */
 
 /*
-   Chrome/Android जब app को installable मानेगा,
-   तब यह event automatically आएगा.
+   IMPORTANT:
+
+   Button page open होते ही दिखाई देगा।
+
+   Native Chrome install prompt जब available होगा,
+   button उसी prompt को खोल देगा।
+
+   Browser अगर अभी native prompt नहीं देता,
+   तो button फिर भी दिखाई देगा और user को
+   simple message मिलेगा.
 */
+
+
+function createInstallButton() {
+
+  /* अगर पहले से मौजूद है तो वही use करें */
+
+  const existingButton =
+    $("installAppBtn");
+
+
+  if (existingButton) {
+
+    installButton =
+      existingButton;
+
+  } else {
+
+    installButton =
+      document.createElement("button");
+
+    installButton.id =
+      "installAppBtn";
+
+    installButton.type =
+      "button";
+
+    installButton.innerHTML =
+      "📱 Install App";
+
+    document.body.appendChild(
+      installButton
+    );
+
+  }
+
+
+  /*
+    Professional floating style.
+    Inline style इसलिए ताकि style.css पर
+    dependency न रहे.
+  */
+
+  installButton.style.position =
+    "fixed";
+
+  installButton.style.right =
+    "18px";
+
+  installButton.style.bottom =
+    "18px";
+
+  installButton.style.zIndex =
+    "99999";
+
+  installButton.style.display =
+    "flex";
+
+  installButton.style.alignItems =
+    "center";
+
+  installButton.style.justifyContent =
+    "center";
+
+  installButton.style.gap =
+    "7px";
+
+  installButton.style.border =
+    "0";
+
+  installButton.style.borderRadius =
+    "999px";
+
+  installButton.style.padding =
+    "12px 18px";
+
+  installButton.style.background =
+    "#7f1111";
+
+  installButton.style.color =
+    "#ffffff";
+
+  installButton.style.fontSize =
+    "14px";
+
+  installButton.style.fontWeight =
+    "800";
+
+  installButton.style.cursor =
+    "pointer";
+
+  installButton.style.boxShadow =
+    "0 8px 25px rgba(0,0,0,.25)";
+
+  installButton.style.transition =
+    "transform .2s ease, opacity .2s ease";
+
+  installButton.setAttribute(
+    "aria-label",
+    "Install App"
+  );
+
+
+  /*
+    Button click सिर्फ एक बार attach होगा.
+  */
+
+  if (
+    !installButton.dataset.installListener
+  ) {
+
+    installButton.addEventListener(
+      "click",
+      installApp
+    );
+
+    installButton.dataset.installListener =
+      "true";
+
+  }
+
+
+  /*
+    Hover effect
+  */
+
+  if (
+    !installButton.dataset.hoverListener
+  ) {
+
+    installButton.addEventListener(
+      "mouseenter",
+      () => {
+        installButton.style.transform =
+          "translateY(-2px)";
+      }
+    );
+
+
+    installButton.addEventListener(
+      "mouseleave",
+      () => {
+        installButton.style.transform =
+          "translateY(0)";
+      }
+    );
+
+
+    installButton.dataset.hoverListener =
+      "true";
+
+  }
+
+}
+
+
+/*
+   Page render होते ही button create करो.
+
+   इससे beforeinstallprompt का wait नहीं होगा.
+*/
+
+if (
+  document.readyState === "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    createInstallButton,
+    { once: true }
+  );
+
+} else {
+
+  createInstallButton();
+
+}
+
+
+/* =========================================================
+   BEFORE INSTALL PROMPT
+========================================================= */
 
 window.addEventListener(
   "beforeinstallprompt",
   (event) => {
 
+    /*
+      Browser का native prompt रोकते हैं.
+      बाद में हमारे Install button से खोलेंगे.
+    */
+
     event.preventDefault();
 
-    deferredInstallPrompt = event;
+    deferredInstallPrompt =
+      event;
 
-    showInstallButton();
+
+    console.log(
+      "PWA install prompt is ready."
+    );
+
+
+    /*
+      Button visible रखें.
+    */
+
+    createInstallButton();
 
   }
 );
-
-
-/* =========================================================
-   SHOW INSTALL BUTTON
-========================================================= */
-
-function showInstallButton() {
-
-  let installBtn =
-    $("installAppBtn");
-
-
-  /*
-    अगर index.html में button पहले से है
-    तो उसी को use करेंगे.
-  */
-
-  if (installBtn) {
-
-    installBtn.style.display =
-      "inline-flex";
-
-    installBtn.disabled =
-      false;
-
-    return;
-
-  }
-
-
-  /*
-    अगर button HTML में नहीं है,
-    तो छोटा floating install button
-    automatically create होगा.
-  */
-
-  installBtn =
-    document.createElement("button");
-
-
-  installBtn.id =
-    "installAppBtn";
-
-  installBtn.type =
-    "button";
-
-  installBtn.innerHTML =
-    "📱 App Install करें";
-
-
-  installBtn.style.cssText = `
-    position: fixed;
-    right: 18px;
-    bottom: 18px;
-    z-index: 9999;
-    border: 0;
-    border-radius: 999px;
-    padding: 12px 18px;
-    background: #7f1111;
-    color: #fff;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 8px 25px rgba(0,0,0,.25);
-  `;
-
-
-  document.body.appendChild(
-    installBtn
-  );
-
-
-  installBtn.addEventListener(
-    "click",
-    installApp
-  );
-
-}
 
 
 /* =========================================================
@@ -1758,10 +1820,15 @@ function showInstallButton() {
 
 async function installApp() {
 
+  /*
+     अगर Chrome ने अभी native install prompt
+     provide नहीं किया है.
+  */
+
   if (!deferredInstallPrompt) {
 
     showToast(
-      "इस device/browser में अभी Install option उपलब्ध नहीं है।"
+      "Install option अभी browser से available नहीं है। Chrome में थोड़ी देर बाद फिर Install App दबाएँ।"
     );
 
     return;
@@ -1771,6 +1838,10 @@ async function installApp() {
 
   try {
 
+    /*
+      Native browser install dialog.
+    */
+
     deferredInstallPrompt.prompt();
 
 
@@ -1778,10 +1849,18 @@ async function installApp() {
       await deferredInstallPrompt.userChoice;
 
 
-    if (choice.outcome === "accepted") {
+    console.log(
+      "Install choice:",
+      choice.outcome
+    );
+
+
+    if (
+      choice.outcome === "accepted"
+    ) {
 
       showToast(
-        "App install शुरू हो गया है।"
+        "App install हो रहा है..."
       );
 
     }
@@ -1794,46 +1873,20 @@ async function installApp() {
       error
     );
 
-  }
 
+  } finally {
 
-  deferredInstallPrompt =
-    null;
+    /*
+      Prompt एक बार use होने के बाद
+      फिर use नहीं किया जा सकता.
+    */
 
-
-  const installBtn =
-    $("installAppBtn");
-
-
-  if (installBtn) {
-
-    installBtn.style.display =
-      "none";
+    deferredInstallPrompt =
+      null;
 
   }
 
 }
-
-
-/* =========================================================
-   EXISTING INSTALL BUTTON
-========================================================= */
-
-document.addEventListener(
-  "click",
-  (event) => {
-
-    if (
-      event.target &&
-      event.target.id === "installAppBtn"
-    ) {
-
-      installApp();
-
-    }
-
-  }
-);
 
 
 /* =========================================================
@@ -1844,17 +1897,23 @@ window.addEventListener(
   "appinstalled",
   () => {
 
+    console.log(
+      "PWA successfully installed."
+    );
+
+
     deferredInstallPrompt =
       null;
 
 
-    const installBtn =
-      $("installAppBtn");
+    /*
+      Installed होने के बाद
+      Install button hide.
+    */
 
+    if (installButton) {
 
-    if (installBtn) {
-
-      installBtn.style.display =
+      installButton.style.display =
         "none";
 
     }
@@ -1869,6 +1928,62 @@ window.addEventListener(
 
 
 /* =========================================================
+   CHECK IF APP IS ALREADY INSTALLED
+========================================================= */
+
+function checkIfAppIsInstalled() {
+
+  /*
+    Android / Chrome
+  */
+
+  if (
+    window.matchMedia(
+      "(display-mode: standalone)"
+    ).matches
+  ) {
+
+    return true;
+
+  }
+
+
+  /*
+    iPhone / iPad Safari
+  */
+
+  if (
+    window.navigator.standalone === true
+  ) {
+
+    return true;
+
+  }
+
+
+  return false;
+
+}
+
+
+/*
+   अगर app पहले से installed है,
+   Install button मत दिखाओ.
+*/
+
+if (checkIfAppIsInstalled()) {
+
+  if (installButton) {
+
+    installButton.style.display =
+      "none";
+
+  }
+
+}
+
+
+/* =========================================================
    INITIAL LOAD
 ========================================================= */
 
@@ -1879,16 +1994,12 @@ async function initializeTempleApp() {
   );
 
 
-  /* Load Firebase data */
-
   await loadTempleSettings();
 
   await loadSchedule();
 
   await loadGallery();
 
-
-  /* Start realtime listeners */
 
   listenToTempleSettings();
 
